@@ -1,7 +1,7 @@
-from SerialPort import SerialPort
 import threading
 import time
 from enum import Enum
+from common_lib.SerialPort import SerialPort
 
 
 class BT900SerialPort():

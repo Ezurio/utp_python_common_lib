@@ -1,9 +1,9 @@
 import logging
-from DvkProbe import DvkProbe
-from HciSerialPort import HciSerialPort
-from HciProgrammer import HciProgrammer
-from EzSerialPort import EzSerialPort
-from CommonLib import CommonLib
+from common_lib.DvkProbe import DvkProbe
+from common_lib.HciSerialPort import HciSerialPort
+from common_lib.HciProgrammer import HciProgrammer
+from common_lib.EzSerialPort import EzSerialPort
+from common_lib.CommonLib import CommonLib
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1

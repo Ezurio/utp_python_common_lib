@@ -1,10 +1,10 @@
-import ezserial_host_api.ezslib as ez_serial
 import time
 import serial
 import threading
 import queue
 import logging
 from enum import Enum
+import ezserial_host_api.ezslib as ez_serial
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
 SUCCESS = 0
