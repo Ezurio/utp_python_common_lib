@@ -14,10 +14,10 @@ class Nx040Board(DvkProbe):
         DvkProbe (Object): Inherit from DvkProbe.
     """
 
-    BOOT_TIME_SECONDS = 2
+    BOOT_TIME_SECONDS = 3
     DEFAULT_BAUD_RATE = 115200
     PY_REPL_RX_DELIMITER = b'\n>>> '
-    ZEPHYR_SHELL_RX_DELIMITER = b'\n\x1b[1;32muart:~$ '
+    ZEPHYR_SHELL_RX_DELIMITER = b'\nuart:~$ '
 
     @staticmethod
     def get_board():
