@@ -436,16 +436,14 @@ class Pyboard:
         if not data.endswith(b"\x04"):
             raise PyboardError("could not complete raw paste: {}".format(data))
 
-    def exec_raw_no_follow(self, command):
+    def exec_raw_no_follow(self, command, flush_rx: bool = True):
         if isinstance(command, bytes):
             command_bytes = command
         else:
             command_bytes = bytes(command, encoding="utf8")
 
-        # check we have a prompt
-        data = self.read_until(1, b">")
-        if not data.endswith(b">"):
-            raise PyboardError("could not enter raw repl")
+        if flush_rx:
+            self.serial.reset_input_buffer()
 
         if self.use_raw_paste:
             # Try to enter raw-paste mode.
