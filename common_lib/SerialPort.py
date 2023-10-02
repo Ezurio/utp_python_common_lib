@@ -91,7 +91,6 @@ class SerialPort():
         # clear_queue_timeout_sec amount of time
         threading.Thread(target=self.__queue_monitor, daemon=True).start()
 
-
     def clear_rx_queue(self):
         """Clear all received bytes from the queue
         """
@@ -144,3 +143,8 @@ class SerialPort():
         """Signal that bytes have been received
         """
         self._bytes_received.clear()
+
+    @property
+    def port(self):
+        """Serial port object"""
+        return self._port

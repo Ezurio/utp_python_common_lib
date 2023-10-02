@@ -28,9 +28,7 @@ class CmdSerialPort(SerialPort):
         self._monitor_cmd_rx_queue = False
 
     def __cmd_rx_thread(self):
-        while True:
-            if self._stop_cmd_threads:
-                break
+        while not self._stop_cmd_threads:
             try:
                 if self.wait_for_bytes_received():
                     rx_bytes = self.get_rx_queue()
@@ -61,9 +59,7 @@ class CmdSerialPort(SerialPort):
         self._cmd_queue_monitor_event.set()
 
     def __cmd_queue_monitor(self):
-        while True:
-            if self._stop_cmd_threads:
-                break
+        while not self._stop_cmd_threads:
             self._cmd_queue_monitor_event.wait()
             self._cmd_queue_monitor_event.clear()
             size = len(self._cmd_rx_queue)

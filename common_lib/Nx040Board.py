@@ -2,6 +2,7 @@ import logging
 import time
 from common_lib.DvkProbe import DvkProbe
 from common_lib.CmdSerialPort import CmdSerialPort
+import common_lib.pyboard as pyboard
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -18,6 +19,7 @@ class Nx040Board(DvkProbe):
     DEFAULT_BAUD_RATE = 115200
     PY_REPL_RX_DELIMITER = b'\n>>> '
     ZEPHYR_SHELL_RX_DELIMITER = b'\nuart:~$ '
+    WAIT_FOR_BYTES_DELAY_SEC = 0.005
 
     @staticmethod
     def get_board():
@@ -55,13 +57,13 @@ class Nx040Board(DvkProbe):
         boards = []
         for probe in DvkProbe.get_connected_probes():
             board = Nx040Board()
-            board.probe = probe
+            board._probe = probe
             if not probe.ports[0].location:
                 logging.warning(
                     f'No COM port location found for board {probe.id}, assuming zephyr port {probe.ports[0].device}')
 
-            board.zephyr_port_name = probe.ports[0].device
-            board.python_port_name = probe.ports[1].device
+            board._zephyr_port_name = probe.ports[0].device
+            board._python_port_name = probe.ports[1].device
             boards.append(board)
         return boards
 
@@ -77,10 +79,19 @@ class Nx040Board(DvkProbe):
                 return board
         return None
 
+    def __init__(self):
+        self._probe = super().__init__()
+        self._zephyr_port_name = ""
+        self._python_port_name = ""
+        self._zephyr_uart = None
+        self._python_uart = None
+        self._python_raw_repl_uart = None
+        self._is_initialized = False
+
     def open_and_init_board(self):
         """
-        Opens the DvkProbe, and resets the Module.
-        The DvkProbe can then be accessed via instance.probe.
+        Opens the DvkProbe, UARTs, and resets the Module.
+        The DvkProbe and UARTs can then be accessed via the class properties.
         """
         # open dvk probe
         logging.info(f"Opening Dvk Probe ID {self.probe.id}")
@@ -90,21 +101,20 @@ class Nx040Board(DvkProbe):
                 f"Unable to open Dvk Probe at {self.probe.id}")
 
         # open python UART
-        self.python_uart = CmdSerialPort()
+        self._python_uart = CmdSerialPort()
         self.python_uart.set_rx_delimiter(Nx040Board.PY_REPL_RX_DELIMITER)
         self.python_uart.open(self.python_port_name,
                               Nx040Board.DEFAULT_BAUD_RATE)
 
         # open Zephyr UART
-        self.zephyr_uart = CmdSerialPort()
+        self._zephyr_uart = CmdSerialPort()
         self.zephyr_uart.set_rx_delimiter(Nx040Board.ZEPHYR_SHELL_RX_DELIMITER)
         self.zephyr_uart.open(self.zephyr_port_name,
                               Nx040Board.DEFAULT_BAUD_RATE)
 
         # reset the module
-        self.probe.reset_device()
-
-        time.sleep(Nx040Board.BOOT_TIME_SECONDS)
+        self.reset_module()
+        self._is_initialized = True
 
     def close_ports_and_reset(self):
         """
@@ -119,54 +129,74 @@ class Nx040Board(DvkProbe):
             self.probe.reboot()
             self.probe.close()
 
-    def __init__(self):
-        self._probe = super().__init__()
-        self._zephyr_port_name = ""
-        self._python_port_name = ""
-        self._zephyr_uart = ""
-        self._python_uart = ""
-
     @property
     def probe(self):
         """Pico Probe / Dvk Probe"""
         return self._probe
-
-    @probe.setter
-    def probe(self, p: DvkProbe):
-        self._probe = p
 
     @property
     def zephyr_port_name(self):
         """Zephyr UART Port Name (i.e. COM10)"""
         return self._zephyr_port_name
 
-    @zephyr_port_name.setter
-    def zephyr_port_name(self, p: str):
-        self._zephyr_port_name = p
-
     @property
     def python_port_name(self):
         """Python Port Name (i.e. COM10)"""
         return self._python_port_name
-
-    @python_port_name.setter
-    def python_port_name(self, p: str):
-        self._python_port_name = p
 
     @property
     def zephyr_uart(self):
         """Zephyr UART Port Instance"""
         return self._zephyr_uart
 
-    @zephyr_uart.setter
-    def zephyr_uart(self, u: CmdSerialPort):
-        self._zephyr_uart = u
-
     @property
     def python_uart(self):
         """Python Port Instance"""
         return self._python_uart
 
-    @python_uart.setter
-    def python_uart(self, u: CmdSerialPort):
-        self._python_uart = u
+    @property
+    def is_initialized(self):
+        return self._is_initialized
+
+    @property
+    def python_raw_repl_uart(self) -> pyboard.Pyboard:
+        """Python Raw REPL UART Instance"""
+        return self._python_raw_repl_uart
+
+    def open_raw_repl_uart(self):
+        self._python_raw_repl_uart = pyboard.Pyboard(
+            self.python_port_name, Nx040Board.DEFAULT_BAUD_RATE)
+        self.python_raw_repl_uart.enter_raw_repl(False)
+
+    def close_raw_repl_uart(self):
+        self.python_raw_repl_uart.exit_raw_repl()
+        # Wait for bytes to go out UART before closing
+        time.sleep(Nx040Board.WAIT_FOR_BYTES_DELAY_SEC)
+        self.python_raw_repl_uart.close()
+
+    def open_repl_uart(self):
+        self.python_uart.open(self.python_port_name,
+                              Nx040Board.DEFAULT_BAUD_RATE)
+
+    def close_repl_uart(self):
+        self.python_uart.close()
+
+    def upload_py_file(self, src: str, dst: str):
+        """Upload a python file to the board file system using the raw REPL UART.
+
+        Args:
+            src (str): Path to file to upload
+            dst (str): Destination path on board
+        """
+        self.python_raw_repl_uart.fs_put(src, dst)
+
+    def quit_running_app(self):
+        """Quit the running app on the board."""
+        # ctrl-C twice: interrupt any running program
+        self.python_uart.port.write(b"\r\x03\x03")
+        time.sleep(Nx040Board.WAIT_FOR_BYTES_DELAY_SEC)
+
+    def reset_module(self):
+        """Reset the module."""
+        self.probe.reset_device()
+        time.sleep(Nx040Board.BOOT_TIME_SECONDS)
