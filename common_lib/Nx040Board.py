@@ -200,3 +200,7 @@ class Nx040Board(DvkProbe):
         """Reset the module."""
         self.probe.reset_device()
         time.sleep(Nx040Board.BOOT_TIME_SECONDS)
+
+    def module_soft_reset(self):
+        """Soft reset the module."""
+        return self.python_uart.send(b'\x04', Nx040Board.BOOT_TIME_SECONDS)

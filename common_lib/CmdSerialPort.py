@@ -38,7 +38,8 @@ class CmdSerialPort(SerialPort):
                         d_len = len(self._rx_delimiter)
                         # If the delimiter is found, process the response
                         if (len(self._temp_cmd) >= d_len) and (bytes(self._temp_cmd[-d_len::]) == self._rx_delimiter):
-                            cmd = bytes(self._temp_cmd).decode('utf-8')
+                            cmd = bytes(self._temp_cmd).decode(
+                                'utf-8', 'ignore')
                             # Remove the delimiter from the response
                             cmd = cmd.replace(
                                 self._rx_delimiter.decode('utf8'), '')
@@ -116,15 +117,24 @@ class CmdSerialPort(SerialPort):
             string: Response string received
         """
         resp = None
+        consume_echo = self._consume_echo
         if clear_queue:
             self.clear_cmd_rx_queue()
 
         self.__pause_cmd_queue_monitor()
         self._cmd_received_event.clear()
-        super().send(b''.join([bytes(msg, 'utf-8'), self._tx_delimiter]))
+        if isinstance(msg, str):
+            tx = bytes(msg, 'utf-8')
+        elif isinstance(msg, bytes):
+            tx = msg
+            consume_echo = False
+        else:
+            raise Exception(
+                f'[{self._port.name}] Invalid message type [{type(msg)}]')
+        super().send(b''.join([tx, self._tx_delimiter]))
         if self._cmd_received_event.wait(timeout):
             resp = self._cmd_rx_queue.pop()
-            if self._consume_echo:
+            if consume_echo:
                 if msg not in resp:
                     self.__resume_cmd_queue_monitor()
                     raise Exception(
@@ -133,7 +143,8 @@ class CmdSerialPort(SerialPort):
                     resp = resp.replace(msg, '').strip()
         else:
             self.__resume_cmd_queue_monitor()
-            raise Exception(f'No response to command: {msg}')
+            raise Exception(
+                f'[{self._port.name}] No response to command [{msg}]: [{bytes(self._temp_cmd)}]')
 
         self.__resume_cmd_queue_monitor()
         return resp
@@ -157,6 +168,7 @@ class CmdSerialPort(SerialPort):
     def clear_cmd_rx_queue(self):
         """Clear all received responses from the queue
         """
-        logging.debug(f'Clear CMD RX queue ({len(self._cmd_rx_queue)})')
+        logging.debug(
+            f'[{self._port.name}] Clear CMD RX queue ({len(self._cmd_rx_queue)})')
         self._cmd_rx_queue = []
         self._temp_cmd = []
