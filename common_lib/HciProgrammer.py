@@ -1,7 +1,7 @@
 import intelhex
 import io
 import logging
-import HciSerialPort as hci
+import common_lib.HciSerialPort as hci
 
 
 class HciProgrammer():
@@ -19,7 +19,6 @@ class HciProgrammer():
     def __init__(self, mini_driver: str = '', port: str = '', baud_rate: int = 0, chip_erase: bool = False):
         self.mini_driver_path = mini_driver
         self.hci_port = hci.HciSerialPort()
-        self.hci_port.configure_app_logging(self.hci_port.INFO)
         self.com_port = port
         self.baud_rate = baud_rate
         self.chip_erase_enable = chip_erase

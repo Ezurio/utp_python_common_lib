@@ -172,3 +172,11 @@ class CmdSerialPort(SerialPort):
             f'[{self._port.name}] Clear CMD RX queue ({len(self._cmd_rx_queue)})')
         self._cmd_rx_queue = []
         self._temp_cmd = []
+
+    def consume_echo(self, consume: bool):
+        """Enable/disable consuming echo from the response
+
+        Args:
+            consume (bool): True to consume echo, False to ignore echo
+        """
+        self._consume_echo = consume

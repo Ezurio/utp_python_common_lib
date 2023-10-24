@@ -103,6 +103,8 @@ class SerialPort():
             data (bytes): data to send
         """
         self.__pause_queue_monitor()
+        if isinstance(data, str):
+            data = bytes(data, 'utf-8')
         logging.debug(f'[{self._port.name}] TX: {data}')
         self._port.write(data)
         self.__resume_queue_monitor()

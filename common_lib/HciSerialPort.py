@@ -30,7 +30,6 @@ class HciSerialPort():
     RAM_PAD = 0x00
 
     def __init__(self):
-        super().__init__('hci_port')
         self.port = None
         self.rx_queue = None
         self.stop_threads = False

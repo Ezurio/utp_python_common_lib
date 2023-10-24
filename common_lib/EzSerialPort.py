@@ -4,7 +4,7 @@ import threading
 import queue
 import logging
 from enum import Enum
-import ezserial_host_api.ezslib as ez_serial
+import common_lib.ezserial_host_api.ezslib as ez_serial
 
 CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
 SUCCESS = 0
@@ -301,7 +301,6 @@ class EzSerialPort(SystemCommands, BluetoothCommands,
     IF820_DEFAULT_BAUD = 115200
 
     def __init__(self):
-        super().__init__('ez_serial_port')
         self.port = None
         self.ez = None
         self.rx_queue = None
