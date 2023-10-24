@@ -186,6 +186,10 @@ class GapCommands:
     def EVENT_GAP_CONNECTED(self): return "gap_connected"
     @property
     def EVENT_GAP_CONNECTION_UPDATED(self): return "gap_connection_updated"
+    @property
+    def EVENT_GAP_ADV_STATE_CHANGED(self): return "gap_adv_state_changed"
+    @property
+    def EVENT_GAP_SCAN_STATE_CHANGED(self): return "gap_scan_state_changed"
 
 
 class GattServerCommands:
