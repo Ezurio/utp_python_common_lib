@@ -17,10 +17,6 @@ PROBE_BOOT_TIME = 5
 BOARD_ID_ADDRESS = 0
 MAX_READ_WRITE_LEN = 60
 MAX_SETTINGS_SIZE = 256
-PROBE_SETTING_TARGET_DEVICE_VENDOR = 'ARM'
-PROBE_SETTING_TARGET_DEVICE_NAME = 'cortex_m'
-PROBE_SETTING_BOARD_VENDOR = 'Laird Connectivity'
-PROBE_SETTING_BOARD_NAME = 'IF820'
 PROBE_VENDOR_STRING = 'Laird Connectivity'
 PROBE_PRODUCT_STRING = 'DVK Probe CMSIS-DAP'
 
@@ -238,25 +234,24 @@ class DvkProbe:
         res = self.probe.vendor(REBOOT_CMD, [bootloader])
         return res[0]
 
-    def program_v1_settings(self):
-        """Program the board settings for the first DVK Probe found.
-        Fail if more than one DVK Probe is found.
+    def program_v1_settings(self, board_vendor: str, board_name: str, target_device_vendor: str, target_device_name: str):
+        """Program settings into the I2C EEPROM of the DVK Probe
+
+        Args:
+            board_vendor (str): e.g. Laird Connectivity
+            board_name (str): e.g. Vela IF820 DVK
+            target_device_vendor (str): e.g. ARM
+            target_device_name (str): e.g. cortex_m
         """
-
-        probes = DAPAccessCMSISDAP.get_connected_devices()
-        assert len(probes) == 1, f'Expected 1 probe, found {len(probes)}'
-
-        self.probe = probes[0]
-        self.probe.open()
 
         settings = ProbeSettings(version=1,
                                  target_device_vendor=bytes(
-                                     PROBE_SETTING_TARGET_DEVICE_VENDOR, 'UTF-8'),
+                                     target_device_vendor, 'UTF-8'),
                                  target_device_name=bytes(
-                                     PROBE_SETTING_TARGET_DEVICE_NAME, 'UTF-8'),
+                                     target_device_name, 'UTF-8'),
                                  target_board_vendor=bytes(
-                                     PROBE_SETTING_BOARD_VENDOR, 'UTF-8'),
-                                 target_board_name=bytes(PROBE_SETTING_BOARD_NAME, 'UTF-8'))
+                                     board_vendor, 'UTF-8'),
+                                 target_board_name=bytes(board_name, 'UTF-8'))
 
         self.write_settings(settings)
         settings_read = self.read_settings()
@@ -271,5 +266,5 @@ class DvkProbe:
         time.sleep(PROBE_BOOT_TIME)
         self.probe.open()
         (device_vendor, device_name) = self.probe.target_names
-        assert device_vendor == PROBE_SETTING_TARGET_DEVICE_VENDOR and device_name == PROBE_SETTING_TARGET_DEVICE_NAME,\
+        assert device_vendor == target_device_vendor and device_name == target_device_name,\
             f'Target device vendor [{device_vendor}] and device name [{device_name}] do not match the programmed settings!'
