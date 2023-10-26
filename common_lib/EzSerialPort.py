@@ -1,15 +1,6 @@
-import time
-import serial
-import threading
-import queue
-import logging
 from enum import Enum
+from common_lib.SerialPort import SerialPort
 import common_lib.ezserial_host_api.ezslib as ez_serial
-
-CLEAR_QUEUE_TIMEOUT_DEFAULT = 0.1
-SUCCESS = 0
-ERROR_NO_RESPONSE = -1
-ERROR_RESPONSE = -2
 
 
 class SystemCommands:
@@ -295,62 +286,24 @@ class GattAttrCharProps(Enum):
     EXTENDED_PROPS = 0x80
 
 
-class EzSerialPort(SystemCommands, BluetoothCommands,
+class EzSerialPort(SerialPort, SystemCommands, BluetoothCommands,
                    SmpCommands, GapCommands, GattServerCommands,
                    GattClientCommands, GpioCommands, CYSPPCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
+    SUCCESS = 0
+    ERROR_NO_RESPONSE = -1
+    ERROR_RESPONSE = -2
     IF820_DEFAULT_BAUD = 115200
 
     def __init__(self):
-        self.port = None
+        super().__init__()
         self.ez = None
-        self.rx_queue = None
-        self.stop_threads = False
-        self.clear_queue_timeout_sec = CLEAR_QUEUE_TIMEOUT_DEFAULT
-        self.queue_monitor_event = threading.Event()
 
-    def __queue_monitor(self):
-        last_len = 0
-        curr_len = 0
-        while True:
-            if self.stop_threads:
-                break
-            self.queue_monitor_event.wait()
-            if not self.rx_queue.empty():
-                curr_len = self.rx_queue.qsize()
-                if curr_len == last_len:
-                    logging.debug(
-                        f'Clear RX queue ({curr_len})')
-                    self.clear_rx_queue()
-                    # TODO: Instead of clearing the queue, see if a packet can be parsed and fire an event
-                else:
-                    logging.debug(f'RX queue len: {curr_len}')
-                last_len = curr_len
-            time.sleep(self.clear_queue_timeout_sec)
-
-    def __pause_queue_monitor(self):
-        self.queue_monitor_event.clear()
-
-    def __resume_queue_monitor(self):
-        self.queue_monitor_event.set()
-
-    def __serial_port_rx_thread(self):
-        while True:
-            if self.stop_threads:
-                break
-            try:
-                data = self.port.read(1)
-                for byte in data:
-                    self.rx_queue.put(byte)
-                    logging.debug(f'RX: {hex(byte)}')
-            except:
-                pass
-
-    def __write_bytes(self, bytes):
-        res = self.port.write(bytes)
+    def __write_bytes(self, bytes: bytes):
+        res = self.send(bytes)
         return (bytes, res)
 
     def __read_bytes(self, rxtimeout):
@@ -360,52 +313,30 @@ class EzSerialPort(SystemCommands, BluetoothCommands,
         if rxtimeout == None or rxtimeout == 0:
             block = False
         try:
-            byte = self.rx_queue.get(block, rxtimeout)
-            res = self. ez.EZS_INPUT_RESULT_BYTE_READ
-        except queue.Empty:
+            bytes_available = len(self._rx_queue)
+            if block and bytes_available == 0:
+                if not self.wait_for_bytes_received(rxtimeout):
+                    return (byte, res)
+            byte = self._rx_queue.pop(0)
+            if len(self._rx_queue) == 0:
+                self.signal_bytes_received()
+            res = self.ez.EZS_INPUT_RESULT_BYTE_READ
+        except IndexError:
             pass
         return (byte, res)
 
-    def set_queue_timeout(self, timeout_sec):
-        self.clear_queue_timeout_sec = timeout_sec
-
-    def open(self, portName: str, baud: int, ctsrts: bool = False) -> tuple:
+    def open(self, portName: str, baud: int, ctsrts: bool = False):
         """Open the serial port and init the EZ-Serial API
 
         Args:
             portName (str): COM port name or device
             baud (int): baud rate
-
-        Returns:
-            tuple: (EZ-Serial API object, Serial Port Object)
+            ctsrts (bool, optional): Use CTS/RTS flow control. Defaults to False.
         """
-
-        # if the port is already open just return
-        if self.port and self.port.is_open:
-            return
 
         self.ez = ez_serial.API(hardwareOutput=self.__write_bytes,
                                 hardwareInput=self.__read_bytes)
-        self.port = serial.Serial(portName, baud)
-        self.port.rtscts = ctsrts
-        self.port.timeout = None
-        self.port.reset_input_buffer()
-        self.port.reset_output_buffer()
-        self.rx_queue = queue.Queue()
-        self.stop_threads = False
-        # The serial port RX thread reads all bytes received and places them in a queue
-        threading.Thread(target=self.__serial_port_rx_thread,
-                         daemon=True).start()
-        # The queue monitor thread clears stray RX bytes if they are not processed for
-        # CLEAR_QUEUE_TIMEOUT amount of time
-        threading.Thread(target=self.__queue_monitor, daemon=True).start()
-        return (self.ez, self.port)
-
-    def clear_rx_queue(self):
-        """Clear all received bytes from the queue
-        """
-        with self.rx_queue.mutex:
-            self.rx_queue.queue.clear()
+        super().open(portName, baud, ctsrts)
 
     def send_and_wait(self, command: str, apiformat: int = None, rxtimeout: int = 1, clear_queue: bool = True, **kwargs) -> tuple:
         """Send command and wait for a response
@@ -414,33 +345,34 @@ class EzSerialPort(SystemCommands, BluetoothCommands,
             command (str): Command to send
             apiformat (int, optional): API format to use 0=text, 1=binary. Defaults to None.
             rxtimeout (int, optional): Time to wait for response (in seconds). Defaults to False (Receive immediately).
+            clear_queue (bool, optional): Clear the RX queue before sending. Defaults to True.
 
         Returns:
-            int: 0 for success, else error. This is the received packet result code.
+            tuple: (err code - 0 for success else error, Packet object)
         """
-        self.__pause_queue_monitor()
+        self.pause_queue_monitor()
         if clear_queue:
             self.clear_rx_queue()
         res = self.ez.sendAndWait(
             command=command, apiformat=apiformat, rxtimeout=rxtimeout, **kwargs)
         if res[0] == None:
-            self.__resume_queue_monitor()
-            return (ERROR_NO_RESPONSE, None)
+            self.resume_queue_monitor()
+            return (EzSerialPort.ERROR_NO_RESPONSE, None)
         else:
             error = res[0].payload.get('error', None)
             result = res[0].payload.get('result', None)
             if error:
-                self.__resume_queue_monitor()
-                return (ERROR_RESPONSE, None)
+                self.resume_queue_monitor()
+                return (EzSerialPort.ERROR_RESPONSE, None)
             elif result:
-                self.__resume_queue_monitor()
+                self.resume_queue_monitor()
                 return (result, res[0])
             else:
-                self.__resume_queue_monitor()
-                return (SUCCESS, res[0])
+                self.resume_queue_monitor()
+                return (EzSerialPort.SUCCESS, res[0])
 
-    def send(self, command: str, apiformat: int = None, rxtimeout: int = 1, **kwargs):
-        """Send command
+    def send_cmd(self, command: str, apiformat: int = None, **kwargs):
+        """Send command and don't wait for a response
 
         Args:
             command (str): Command to send
@@ -461,19 +393,14 @@ class EzSerialPort(SystemCommands, BluetoothCommands,
         Returns:
             tuple: (err code - 0 for success else error, Packet object)
         """
-        self.__pause_queue_monitor()
+        self.pause_queue_monitor()
         res = self.ez.waitEvent(event, rxtimeout)
         if res[0] == None:
-            self.__resume_queue_monitor()
+            self.resume_queue_monitor()
             return (-1, None)
         else:
-            self.__resume_queue_monitor()
+            self.resume_queue_monitor()
             return (0, res[0])
-
-    def close(self):
-        self.stop_threads = True
-        if self.port and self.port.is_open:
-            self.port.close()
 
     def set_api_format(self, api: int):
         """Set API format to use for sending commands
@@ -482,23 +409,3 @@ class EzSerialPort(SystemCommands, BluetoothCommands,
             api (int): 0 = TEXT, 1 = BINARY
         """
         self.ez.defaults.apiformat = api
-
-    # these functions are needed to give the robot framework access
-    # to inherited classes
-    def get_sys_commands(self):
-        return SystemCommands()
-
-    def get_bluetooth_commands(self):
-        return BluetoothCommands()
-
-    def get_smp_commands(self):
-        return SmpCommands()
-
-    def get_cyspp_commands(self):
-        return CYSPPCommands()
-
-    def get_gatt_server_commands(self):
-        return GattServerCommands()
-
-    def get_gap_commands(self):
-        return GapCommands()

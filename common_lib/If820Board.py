@@ -99,12 +99,9 @@ class If820Board(DvkProbe):
         """
         # open ez-serial port
         self._p_uart = EzSerialPort()
-        logging.info(f'Port Name: {self.puart_port_name}')
-        open_result = self.p_uart.open(
+        logging.info(f'EZ-Serial Port: {self.puart_port_name}')
+        self.p_uart.open(
             self.puart_port_name, self.p_uart.IF820_DEFAULT_BAUD)
-        if (not open_result[1]):
-            raise Exception(
-                f"Error!  Unable to open device at {self.puart_port_name}")
 
         # open dvk probe
         logging.info(f"Opening Dvk Probe ID {self.probe.id}")

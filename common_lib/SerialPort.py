@@ -33,14 +33,16 @@ class SerialPort():
                 logging.debug(f'Clear RX queue ({size})')
                 self.clear_rx_queue()
 
-    def __pause_queue_monitor(self):
+    def pause_queue_monitor(self):
         self._monitor_rx_queue = False
         self._queue_monitor_timer.cancel()
 
-    def __resume_queue_monitor(self):
+    def resume_queue_monitor(self):
         self._monitor_rx_queue = True
         self._queue_monitor_timer = threading.Timer(
-            self._clear_queue_timeout_sec, self.__queue_monitor_timer_expired)
+            interval=self._clear_queue_timeout_sec,
+            function=self.__queue_monitor_timer_expired)
+        self._queue_monitor_timer.daemon = True
         self._queue_monitor_timer.start()
 
     def __serial_port_rx_thread(self):
@@ -53,7 +55,7 @@ class SerialPort():
                     #     f'[{self._port.name}] RX: {hex(byte)} ({len(self._rx_queue)})')
                     self._bytes_received.set()
                     if self._monitor_rx_queue and not self._queue_monitor_timer.is_alive():
-                        self.__resume_queue_monitor()
+                        self.resume_queue_monitor()
             except:
                 pass
 
@@ -64,6 +66,8 @@ class SerialPort():
             timeout_sec (float): Time in seconds
         """
         self._clear_queue_timeout_sec = timeout_sec
+        self.pause_queue_monitor()
+        self.resume_queue_monitor()
 
     def open(self, portName: str, baud: int, rtsCts: bool = False):
         """Open the serial port and start processing threads
@@ -83,7 +87,7 @@ class SerialPort():
         self.clear_rx_queue()
         self.signal_bytes_received()
         self._stop_threads = False
-        self.__resume_queue_monitor()
+        self.resume_queue_monitor()
         # The serial port RX thread reads all bytes received and places them in a queue
         threading.Thread(target=self.__serial_port_rx_thread,
                          daemon=True).start()
@@ -95,25 +99,27 @@ class SerialPort():
         """Clear all received bytes from the queue
         """
         self._rx_queue.clear()
+        self.signal_bytes_received()
 
-    def send(self, data: bytes):
+    def send(self, data: bytes) -> int | None:
         """Send bytes out the serial port
 
         Args:
             data (bytes): data to send
         """
-        self.__pause_queue_monitor()
+        self.pause_queue_monitor()
         if isinstance(data, str):
             data = bytes(data, 'utf-8')
         logging.debug(f'[{self._port.name}] TX: {data}')
-        self._port.write(data)
-        self.__resume_queue_monitor()
+        res = self._port.write(data)
+        self.resume_queue_monitor()
+        return res
 
     def close(self):
         """Close the serial port and stop all threads
         """
         self._stop_threads = True
-        self.__pause_queue_monitor()
+        self.pause_queue_monitor()
         self._queue_monitor_event.set()
         self._bytes_received.set()
         if self._port and self._port.is_open:
@@ -150,3 +156,17 @@ class SerialPort():
     def port(self):
         """Serial port object"""
         return self._port
+
+    def read(self) -> bytes:
+        """Read bytes from the serial port
+
+        Returns:
+            bytes: bytes read from the serial port
+        """
+        self.pause_queue_monitor()
+        num_bytes = len(self._rx_queue)
+        rx = bytes(self._rx_queue[:num_bytes])
+        del self._rx_queue[:num_bytes]
+        self.resume_queue_monitor()
+
+        return rx

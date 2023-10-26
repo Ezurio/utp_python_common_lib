@@ -16,7 +16,6 @@ class CmdSerialPort(SerialPort):
     def __init__(self):
         super().__init__()
         self._cmd_received_event = threading.Event()
-        self._cmd_rx_queue = None
         self._stop_cmd_threads = False
         self._temp_cmd = []
         self._cmd_rx_queue = []
@@ -75,6 +74,7 @@ class CmdSerialPort(SerialPort):
         self._monitor_cmd_rx_queue = True
         self._cmd_queue_monitor_timer = threading.Timer(
             self._clear_cmd_queue_timeout_sec, self.__cmd_queue_monitor_timer_expired)
+        self._cmd_queue_monitor_timer.daemon = True
         self._cmd_queue_monitor_timer.start()
 
     def open(self, portName: str, baud: int, rtsCts: bool = False):
