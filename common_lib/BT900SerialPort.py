@@ -7,6 +7,7 @@ class BT900SerialPort(CmdSerialPort):
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
 
     RX_DELIMITER = b'\n00\r'
+    CMD_MODE_RX_DELIMITER = b'\r\n>'
     BT900_CMD_QUERY_FW = "ati 3"
     BT900_CMD_QUERY_MAC_ADDR = "ati 4"
     BT900_CMD_MODE = "cmd"
@@ -46,16 +47,19 @@ class BT900SerialPort(CmdSerialPort):
         self.set_rx_delimiter(BT900SerialPort.RX_DELIMITER)
         self.consume_echo(False)
 
+    def open(self, portName: str, baud: int = BT900_DEFAULT_BAUD, rtsCts: bool = False):
+        super().open(portName, baud, rtsCts)
+
     @staticmethod
     def check_bt900_response(response: str, expected_response: str = OK):
-        # decode raw bytes from serial port to utf-84
+        # decode raw bytes from serial port to utf-8
         string_utf8 = bytes(response).decode('utf-8')
         if (expected_response in string_utf8):
             logging.info(f"BT900 response = {string_utf8}")
         else:
             raise Exception(f"BT900 response error! {string_utf8}")
 
-    def parse_response(self, response: str):
+    def __parse_response(self, response: str):
         parse_rsp = {}
         rsp_parts = []
         rsp_parts = response.split("\t")
@@ -66,15 +70,25 @@ class BT900SerialPort(CmdSerialPort):
                          "val": value_part[0]}
         return parse_rsp
 
-    def get_bt900_fw_ver(self):
+    def get_bt900_fw_ver(self) -> str:
+        """Get the firmware version
+
+        Returns:
+            str: firmware version
+        """
         response = self.send(self.BT900_CMD_QUERY_FW)
-        response_parts = self.parse_response(response)
+        response_parts = self.__parse_response(response)
         fw_ver = response_parts["val"]
         return fw_ver
 
-    def get_bt900_bluetooth_mac(self):
+    def get_bt900_bluetooth_mac(self) -> tuple[str, list[int]]:
+        """Get the bluetooth mac address
+
+        Returns:
+            tuple[str, list[int]]: mac address in string and list of bytes
+        """
         response = self.send(self.BT900_CMD_QUERY_MAC_ADDR)
-        response_parts = self.parse_response(response)
+        response_parts = self.__parse_response(response)
         mac = response_parts["val"]
         mac_parts = mac.split(' ')
         str_mac = mac_parts[1]
@@ -82,3 +96,15 @@ class BT900SerialPort(CmdSerialPort):
         mac_bytes = bytes.fromhex(str_mac)
         list_bytes_mac = list(mac_bytes)
         return str_mac, list_bytes_mac
+
+    def enter_command_mode(self):
+        """Enter command mode
+        """
+        self.set_rx_delimiter(BT900SerialPort.CMD_MODE_RX_DELIMITER)
+        return self.send(self.BT900_CMD_MODE)
+
+    def exit_command_mode(self):
+        """Exit command mode
+        """
+        self.set_rx_delimiter(BT900SerialPort.RX_DELIMITER)
+        return self.send(self.BT900_EXIT)

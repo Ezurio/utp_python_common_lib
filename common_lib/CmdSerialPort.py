@@ -180,3 +180,17 @@ class CmdSerialPort(SerialPort):
             consume (bool): True to consume echo, False to ignore echo
         """
         self._consume_echo = consume
+
+    def read(self) -> bytes:
+        """Read bytes from the serial port
+
+        Returns:
+            bytes: bytes read from the serial port
+        """
+        self.__pause_cmd_queue_monitor()
+        num_bytes = len(self._temp_cmd)
+        rx = bytes(self._temp_cmd[:num_bytes])
+        del self._temp_cmd[:num_bytes]
+        self.__resume_cmd_queue_monitor()
+
+        return rx
