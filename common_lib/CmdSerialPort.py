@@ -194,3 +194,25 @@ class CmdSerialPort(SerialPort):
         self.__resume_cmd_queue_monitor()
 
         return rx
+
+    def wait_for_response(self, timeout: float = 1.0) -> str | None:
+        """Wait for a response to be received
+
+        Args:
+            timeout (float, optional): Time to wait for a response in seconds. Defaults to 1.0.
+
+        Returns:
+            str: None if no response received, otherwise the response string
+        """
+        self.__pause_cmd_queue_monitor()
+        self._cmd_received_event.clear()
+
+        if len(self._cmd_rx_queue) > 0:
+            resp = self._cmd_rx_queue.pop()
+        elif self._cmd_received_event.wait(timeout):
+            resp = self._cmd_rx_queue.pop()
+        else:
+            resp = None
+        self.__resume_cmd_queue_monitor()
+
+        return resp

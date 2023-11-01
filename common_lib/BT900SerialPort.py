@@ -35,7 +35,6 @@ class BT900SerialPort(CmdSerialPort):
     BT900_GATTC_CLOSE = "gattc close"
     BT900_ENABLE_CYSPP_NOT = "gattc write 1 18 0100"
     BT900_CYSPP_WRITE_DATA_STRING = "gattc writecmd$ 1 17 "
-    BT900_CYSPP_DISCONNECT = "disconnect"
 
     BT900_DEFAULT_BAUD = 115200
     DEFAULT_WAIT_TIME_SEC = 1
