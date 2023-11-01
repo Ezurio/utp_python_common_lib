@@ -20,6 +20,7 @@ class SerialPort():
         self._queue_monitor_event = threading.Event()
         self._bytes_received = threading.Event()
         self._monitor_rx_queue = False
+        self._enable_queue_monitor = False
 
     def __queue_monitor_timer_expired(self):
         self._queue_monitor_event.set()
@@ -34,16 +35,18 @@ class SerialPort():
                 self.clear_rx_queue()
 
     def pause_queue_monitor(self):
-        self._monitor_rx_queue = False
-        self._queue_monitor_timer.cancel()
+        if self._enable_queue_monitor:
+            self._monitor_rx_queue = False
+            self._queue_monitor_timer.cancel()
 
     def resume_queue_monitor(self):
-        self._monitor_rx_queue = True
-        self._queue_monitor_timer = threading.Timer(
-            interval=self._clear_queue_timeout_sec,
-            function=self.__queue_monitor_timer_expired)
-        self._queue_monitor_timer.daemon = True
-        self._queue_monitor_timer.start()
+        if self._enable_queue_monitor:
+            self._monitor_rx_queue = True
+            self._queue_monitor_timer = threading.Timer(
+                interval=self._clear_queue_timeout_sec,
+                function=self.__queue_monitor_timer_expired)
+            self._queue_monitor_timer.daemon = True
+            self._queue_monitor_timer.start()
 
     def __serial_port_rx_thread(self):
         while not self._stop_threads:
@@ -170,3 +173,16 @@ class SerialPort():
         self.resume_queue_monitor()
 
         return rx
+
+    def enable_rx_queue_monitor(self, enable: bool):
+        """Enable RX queue monitor. When the monitor is enabled, the rx byte
+        queue is cleared if bytes are not received for clear_queue_timeout_sec amount of time.
+
+        Args:
+            enable (bool): True to enable, False to disable
+        """
+        self._enable_queue_monitor = enable
+        if enable:
+            self.resume_queue_monitor()
+        else:
+            self.pause_queue_monitor()
