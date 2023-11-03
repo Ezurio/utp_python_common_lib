@@ -56,7 +56,7 @@ import sys
 import re
 import struct
 import time
-
+import logging
 
 class dotdict(dict):
     # dot.notation access to dictionary attributes
@@ -1196,6 +1196,11 @@ class API():
 
         # send back results
         if parseResult == self.EZS_PARSE_RESULT_PACKET_COMPLETE:
+            if self.lastRxPacket.origin == Packet.EZS_ORIGIN_BINARY:
+                rx_bytes = bytes(self.lastRxPacket.binaryByteArray)
+            else:
+                rx_bytes = bytes(self.lastRxPacket.textString, "utf-8")
+            logging.debug(f'RX: {rx_bytes}')
             return (self.lastRxPacket, readResult, parseResult)
         else:
             return (None, readResult, parseResult)

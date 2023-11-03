@@ -113,6 +113,8 @@ class SerialPort():
         self.pause_queue_monitor()
         if isinstance(data, str):
             data = bytes(data, 'utf-8')
+        elif not isinstance(data, bytes):
+            data = bytes(data)
         logging.debug(f'[{self._port.name}] TX: {data}')
         res = self._port.write(data)
         self.resume_queue_monitor()

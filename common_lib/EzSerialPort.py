@@ -172,6 +172,8 @@ class GapCommands:
     @property
     def CMD_GAP_STOP_SCAN(self): return "gap_stop_scan"
     @property
+    def CMD_GAP_GET_CONN_PARAMS(self): return "gap_get_conn_parameters"
+    @property
     def CMD_GAP_CONNECT(self): return "gap_connect"
     @property
     def EVENT_GAP_CONNECTED(self): return "gap_connected"
@@ -284,6 +286,11 @@ class GattAttrCharProps(Enum):
     INDICATE = 0x20
     SIGNED_WRITE = 0x40
     EXTENDED_PROPS = 0x80
+
+
+class EzSerialApiMode(Enum):
+    TEXT = 0
+    BINARY = 1
 
 
 class EzSerialPort(SerialPort, SystemCommands, BluetoothCommands,
