@@ -90,12 +90,15 @@ class If820Board(DvkProbe):
         str_mac = bytearray(response).hex()
         return str_mac
 
-    def open_and_init_board(self, wait_for_boot: bool = True):
+    def open_and_init_board(self, wait_for_boot: bool = True) -> object | None:
         """Opens the IF820 PUART at the default baud rate,
         opens the DvkProbe, and resets the IF280 Module.
 
         Args:
             wait_for_boot (bool, optional): Wait for the boot event. Defaults to True.
+
+        Returns:
+            object | None: Returns the boot event packet if wait_for_boot is True, else None
         """
         # open ez-serial port
         self._p_uart = EzSerialPort()
@@ -111,9 +114,10 @@ class If820Board(DvkProbe):
                 f"Unable to open Dvk Probe at {self.probe.id}")
 
         # reset dvk and module
-        self.reset_module(wait_for_boot)
+        res = self.reset_module(wait_for_boot)
         time.sleep(If820Board.BOOT_DELAY)
         self._is_initialized = True
+        return res[1]
 
     def close_ports_and_reset(self, reset_probe: bool = True):
         """Close all UART ports and reset the probe and module
@@ -211,14 +215,38 @@ class If820Board(DvkProbe):
     def cancel_flash_firmware(self):
         self.hci_programmer.hci_port.close()
 
-    def reset_module(self, wait_for_boot: bool = True):
+    def reset_module(self, wait_for_boot: bool = True) -> tuple:
         """Reset the module.
 
         Args:
             wait_for_boot (bool, optional): Wait for the boot event. Defaults to True.
+
+        Returns:
+            tuple: (err code - 0 for success else error, Packet object)
         """
         self.probe.reset_device()
+        ez_rsp = (0, None)
         if wait_for_boot:
             ez_rsp = self.p_uart.wait_event(self.p_uart.EVENT_SYSTEM_BOOT)
             If820Board.check_if820_response(
                 self.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
+        return ez_rsp
+
+    def stop_advertising(self):
+        """Stop BLE advertising.
+        """
+        cmd = self.p_uart.CMD_GAP_STOP_ADV
+        If820Board.check_if820_response(cmd, self.p_uart.send_and_wait(cmd))
+        cmd = self.p_uart.EVENT_GAP_ADV_STATE_CHANGED
+        If820Board.check_if820_response(cmd, self.p_uart.wait_event(cmd))
+
+    def wait_for_ble_connection(self) -> object:
+        """Wait for a BLE connection to be made.
+
+        Returns:
+            object: BLE connection event packet
+        """
+        cmd = self.p_uart.EVENT_GAP_CONNECTED
+        res = self.p_uart.wait_event(cmd)
+        If820Board.check_if820_response(cmd, res)
+        return res[1]
