@@ -51,12 +51,10 @@ class BT900SerialPort(CmdSerialPort):
 
     @staticmethod
     def check_bt900_response(response: str, expected_response: str = OK):
-        # decode raw bytes from serial port to utf-8
-        string_utf8 = bytes(response).decode('utf-8')
-        if (expected_response in string_utf8):
-            logging.info(f"BT900 response = {string_utf8}")
+        if (expected_response in response):
+            logging.info(f"BT900 response = {response}")
         else:
-            raise Exception(f"BT900 response error! {string_utf8}")
+            raise Exception(f"BT900 response error! {response}")
 
     def __parse_response(self, response: str):
         parse_rsp = {}
