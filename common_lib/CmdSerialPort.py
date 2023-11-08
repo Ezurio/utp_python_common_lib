@@ -149,6 +149,22 @@ class CmdSerialPort(SerialPort):
         self.__resume_cmd_queue_monitor()
         return resp
 
+    def send_raw(self, data: bytes, clear_queue: bool = True) -> int | None:
+        """Send raw bytes out the serial port without waiting for a response.
+
+        Args:
+            data (bytes): data to send
+            clear_queue (bool, optional): Clear the receive queue. Defaults to True.
+
+        Returns:
+            int | None: Number of bytes sent or None if no bytes sent
+        """
+        if clear_queue:
+            self.clear_cmd_rx_queue()
+        if not isinstance(data, bytes):
+            data = bytes(data, 'utf-8')
+        return super().send(data)
+
     def set_tx_delimiter(self, delimiter: bytes):
         """Set byte string that is used to delimit send commands
 
