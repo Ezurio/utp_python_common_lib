@@ -210,6 +210,9 @@ class GattClientCommands:
     def EVENT_GATTC_REMOTE_PROCEDURE_COMPLETE(
         self): return "gattc_remote_procedure_complete"
 
+    @property
+    def EVENT_GATTC_WRITE_RESPONSE(self): return "gattc_write_response"
+
 
 class GpioCommands:
     @property
