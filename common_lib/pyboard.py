@@ -362,7 +362,7 @@ class Pyboard:
             data = self.read_until(1, b"raw REPL; CTRL-B to exit\r\n>")
             if not data.endswith(b"raw REPL; CTRL-B to exit\r\n>"):
                 print(data)
-                raise PyboardError("could not enter raw repl")
+                raise PyboardError("could not enter raw repl (soft reset)")
 
             self.serial.write(b"\x04")  # ctrl-D: soft reset
 
@@ -372,7 +372,7 @@ class Pyboard:
             data = self.read_until(1, b"soft reboot\r\n")
             if not data.endswith(b"soft reboot\r\n"):
                 print(data)
-                raise PyboardError("could not enter raw repl")
+                raise PyboardError("could not enter raw repl (after reboot)")
 
         data = self.read_until(1, b"raw REPL; CTRL-B to exit\r\n")
         if not data.endswith(b"raw REPL; CTRL-B to exit\r\n"):
@@ -449,18 +449,23 @@ class Pyboard:
             # Try to enter raw-paste mode.
             self.serial.write(b"\x05A\x01")
             data = self.serial.read(2)
+            # Strip > from stream if it's there.
+            if data[0] == ord(">"):
+                data = data[1:] + self.serial.read(1)
             if data == b"R\x00":
                 # Device understood raw-paste command but doesn't support it.
                 pass
             elif data == b"R\x01":
                 # Device supports raw-paste mode, write out the command using this mode.
                 return self.raw_paste_write(command_bytes)
-            else:
+            elif data == b"ra":
                 # Device doesn't support raw-paste, fall back to normal raw REPL.
                 data = self.read_until(1, b"w REPL; CTRL-B to exit\r\n>")
                 if not data.endswith(b"w REPL; CTRL-B to exit\r\n>"):
                     print(data)
-                    raise PyboardError("could not enter raw repl")
+                    raise PyboardError("could not enter raw repl (raw paste)")
+            else:
+                raise PyboardError("Unexpected response to raw-paste command: {}".format(data))
             # Don't try to use raw-paste mode again for this connection.
             self.use_raw_paste = False
 
@@ -493,7 +498,7 @@ class Pyboard:
     def exec_(self, command, data_consumer=None):
         ret, ret_err = self.exec_raw(command, data_consumer=data_consumer)
         if ret_err:
-            raise PyboardError("exception", ret, ret_err)
+            raise PyboardError("exec exception", ret, ret_err)
         return ret
 
     def execfile(self, filename):
