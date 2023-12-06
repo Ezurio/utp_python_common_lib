@@ -27,7 +27,7 @@ def test2():
 
 def test3():
     logger.info("Get Nx040 boards")
-    allow_list = ['Nx040Board']
+    allow_list = ['SeraNX040Dvk']
     boards = Board.get_connected(allow_list)
     logger.info(f"Boards found: {len(boards)}")
     i = 0
