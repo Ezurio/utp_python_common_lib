@@ -1,7 +1,7 @@
 import threading
 import logging
 
-from common_lib.SerialPort import SerialPort
+from SerialPort import SerialPort
 
 
 class CmdSerialPort(SerialPort):

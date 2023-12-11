@@ -1,6 +1,6 @@
 import logging
 import time
-from common_lib.DvkProbe import DvkProbe
+from common_lib.dvk_probe import DvkProbe
 from common_lib.HciSerialPort import HciSerialPort
 from common_lib.HciProgrammer import HciProgrammer
 from common_lib.EzSerialPort import EzSerialPort
