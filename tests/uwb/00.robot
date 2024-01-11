@@ -19,7 +19,7 @@ ${INVALID_RANGE}                        ${65535}
 UWB Two-Way-Range
     [Documentation]    This test runs the same script used for our Tag-to-Tag ranging demo.
     ...    UWB, BLE scanning, advertising, and Python callbacks are all tested as part of this test.
-    Set Tags    VAS-241
+    Set Tags    PROD-2476
 
     ${board1_id}=    Get Board Device ID    ${settings_board1}
     ${board2_id}=    Get Board Device ID    ${settings_board2}

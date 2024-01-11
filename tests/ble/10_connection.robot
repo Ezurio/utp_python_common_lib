@@ -38,7 +38,7 @@ BLE Single Connection Legacy 1M PHY Central Disconnect
     ...    RSSI is read from both devices
     ...    Central Disconnects
 
-    Set Tags    VAS-348
+    Set Tags    PROD-2452
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_1M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
@@ -51,7 +51,7 @@ BLE Single Connection Legacy 1M PHY Peripheral Disconnect
     ...    RSSI is read from both devices
     ...    Peripheral Disconnects
 
-    Set Tags    VAS-349
+    Set Tags    PROD-2451
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_1M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
@@ -64,7 +64,7 @@ BLE Single Connection Extended 125K PHY Central Disconnect
     ...    RSSI is read from both devices
     ...    Central Disconnects
 
-    Set Tags    VAS-350
+    Set Tags    PROD-2450
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_125K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -77,7 +77,7 @@ BLE Single Connection Extended 125K PHY Peripheral Disconnect
     ...    RSSI is read from both devices
     ...    Peripheral Disconnects
 
-    Set Tags    VAS-351
+    Set Tags    PROD-2449
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_125K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -90,7 +90,7 @@ BLE Single Connection Extended 500K PHY Central Disconnect
     ...    RSSI is read from both devices
     ...    Central Disconnects
 
-    Set Tags    VAS-352
+    Set Tags    PROD-2456
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_500K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -103,7 +103,7 @@ BLE Single Connection Extended 500K PHY Peripheral Disconnect
     ...    RSSI is read from both devices
     ...    Peripheral Disconnects
 
-    Set Tags    VAS-353
+    Set Tags    PROD-2455
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_500K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -116,7 +116,7 @@ BLE Single Connection Extended 2M PHY Central Disconnect
     ...    RSSI is read from both devices
     ...    Central Disconnects
 
-    Set Tags    VAS-354
+    Set Tags    PROD-2454
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_2M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
@@ -129,7 +129,7 @@ BLE Single Connection Extended 2M PHY Peripheral Disconnect
     ...    RSSI is read from both devices
     ...    Peripheral Disconnects
 
-    Set Tags    VAS-355
+    Set Tags    PROD-2453
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_2M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
@@ -139,7 +139,7 @@ BLE Single Connection Extended 2M PHY Peripheral Disconnect
 BLE Single Connection Legacy 1M PHY Stress
     [Documentation]    Repeated connect and disconnect with peripheral and central swapping between DUT1 and DUT2
 
-    Set Tags    VAS-356
+    Set Tags    PROD-2457
 
     ${loops_remaining}=    Set Variable    ${10}
 

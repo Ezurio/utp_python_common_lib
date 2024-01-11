@@ -19,7 +19,7 @@ ${FILE_READ_BINARY}     rb
 
 *** Tasks ***
 Query firmware version
-    Set Tags    VAS-216
+    Set Tags    PROD-2640
 
     ${resp}=    DUT1 User REPL Send    os.uname()
     Should Contain    ${resp}    version
@@ -29,7 +29,7 @@ Query firmware version
     Log    ${resp}
 
 File Operations
-    Set Tags    VAS-222
+    Set Tags    PROD-2441
 
     ${file_name}=    Set Variable    test_file
     ${string_file_contents}=    Set Variable    'This is a test file'
@@ -50,7 +50,7 @@ File Operations
     Make Change Delete Directory    test_dir
 
 Query Device ID
-    Set Tags    VAS-225
+    Set Tags    PROD-2438
 
     ${resp}=    DUT1 User REPL Send    import machine
     ${resp}=    DUT1 User REPL Send    import binascii
@@ -59,7 +59,7 @@ Query Device ID
     Length Should Be    ${id}    ${16}
 
 Time delay
-    Set Tags    VAS-223
+    Set Tags    PROD-2443
 
     ${delay_ms}=    Set Variable    ${2000}
     ${wait_respose_sconds}=    Evaluate    ${delay_ms} / 1000.0 + 1.0
@@ -88,7 +88,7 @@ Time delay
     END
 
 Heap overflow test
-    Set Tags    VAS-269
+    Set Tags    PROD-2432
 
     ${buff_var}=    Set Variable    b
     ${buff_size}=    Set Variable    ${1000}
@@ -122,7 +122,7 @@ Heap overflow test
 Switch REPL Modes
     [Documentation]    This test switches the REPL to raw REPL mode and back to REPL mode
     ...    and verifies the device is still responsive.
-    Set Tags    VAS-224
+    Set Tags    PROD-2435
 
     ${resp}=    DUT1 User REPL Send    os.uname()
     Should Contain    ${resp}    version
@@ -135,7 +135,7 @@ Switch REPL Modes
     Should Contain    ${resp}    version
 
 ZCBOR Encode Decode
-    Set Tags    VAS-245
+    Set Tags    PROD-2466
 
     ${obj}=    Set Variable    o
     ${obj_data}=    Set Variable    {'string': 'ryan', 'int': 5, 'list': [4, 6, 7]}
@@ -152,7 +152,7 @@ ZCBOR Encode Decode
 REPL Control Characters
     [Documentation]    This test sends control characters (Ctrl+C, Ctrl+D)
     ...    to the REPL and verifies the device is still responsive.
-    Set Tags    VAS-315
+    Set Tags    PROD-2446
 
     ${dut}=    Set Variable    ${settings_board1}
 

@@ -36,7 +36,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy connectible scannable advert using the 1M PHY
     ...    DUT2 Scans using the 1M PHY passively
 
-    Set Tags    VAS-330
+    Set Tags    PROD-2459
 
     Start Advertising
     ...    ${settings_board1}
@@ -63,7 +63,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible scannable advert using the 1M PHY
     ...    DUT2 Scans using the 1M PHY passively
 
-    Set Tags    VAS-331
+    Set Tags    PROD-2458
 
     Start Advertising
     ...    ${settings_board1}
@@ -90,7 +90,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible non scannable advert using the 1M PHY
     ...    DUT2 Scans using the 1M PHY passively
 
-    Set Tags    VAS-332
+    Set Tags    PROD-2464
 
     Start Advertising
     ...    ${settings_board1}
@@ -117,7 +117,7 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     [Documentation]    DUT1 Advertises a legacy connectible non scannable advert using the 1M PHY
     ...    DUT2 Scans using the 1M PHY actively
 
-    Set Tags    VAS-333
+    Set Tags    PROD-2463
 
     Start Advertising
     ...    ${settings_board1}
@@ -150,7 +150,7 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 125K PHY
     ...    DUT2 Scans using the coded PHY passively
 
-    Set Tags    VAS-334
+    Set Tags    PROD-2462
 
     Start Advertising
     ...    ${settings_board1}
@@ -177,7 +177,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 125K PHY
     ...    DUT2 Scans using the coded PHY passively
 
-    Set Tags    VAS-335
+    Set Tags    PROD-2461
 
     Start Advertising
     ...    ${settings_board1}
@@ -204,7 +204,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 125K PHY
     ...    DUT2 Scans using the coded PHY actively
 
-    Set Tags    VAS-337
+    Set Tags    PROD-2442
 
     Start Advertising
     ...    ${settings_board1}
@@ -237,7 +237,7 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 500K PHY
     ...    DUT2 Scans using the coded PHY passively
 
-    Set Tags    VAS-338
+    Set Tags    PROD-2440
 
     Start Advertising
     ...    ${settings_board1}
@@ -264,7 +264,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
     ...    DUT2 Scans using the coded PHY passively
 
-    Set Tags    VAS-339
+    Set Tags    PROD-2437
 
     Start Advertising
     ...    ${settings_board1}
@@ -291,7 +291,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
     ...    DUT2 Scans using the coded PHY Actively
 
-    Set Tags    VAS-340
+    Set Tags    PROD-2436
 
     Start Advertising
     ...    ${settings_board1}
@@ -324,7 +324,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
     [Documentation]    DUT1 Advertises an Extended Non connectible non scannable advert using the 1M & 2M PHYs
     ...    DUT2 Scans using the 1M PHY passively
 
-    Set Tags    VAS-341
+    Set Tags    PROD-2434
 
     Start Advertising
     ...    ${settings_board1}
@@ -351,7 +351,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 1M & 2M PHYs
     ...    DUT2 Scans using the 1M PHY passively
 
-    Set Tags    VAS-342
+    Set Tags    PROD-2433
 
     Start Advertising
     ...    ${settings_board1}
@@ -384,7 +384,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     [Documentation]    DUT1 Advertises a legacy connectible scannable advert using the 1M PHY Scannable data is available
     ...    DUT2 Scans using custom scanner to catch the scan data response
 
-    Set Tags    VAS-343
+    Set Tags    PROD-2439
 
     Start Scannable Advert
     ...    ${settings_board1}

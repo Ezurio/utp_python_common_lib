@@ -10,7 +10,7 @@ Test Timeout        1 minute
 
 *** Tasks ***
 Python in Thread
-    Set Tags    VAS-247
+    Set Tags    PROD-2468
 
     ${resp}=    Zephyr Shell Send    ${settings_board1}    kernel threads
     Should Contain    ${resp}    micropython
