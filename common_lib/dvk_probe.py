@@ -5,6 +5,7 @@ import operator
 from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
 import serial.tools.list_ports as list_ports
 import time
+from lc_util import logger_setup
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class DvkProbe(Probe):
                 probes.append(
                     DvkProbe(dap_probe._unique_id,
                              PROBE_PRODUCT_STRING,
-                             {"zephyr_shell": com_ports[0].device, 
+                             {"zephyr_shell": com_ports[0].device,
                               "python": com_ports[1].device}))
 
         return probes
@@ -99,7 +100,7 @@ class DvkProbe(Probe):
 
         logger.info(f"Opening Dvk Probe ID {self.id}")
         if not self.__probe_handle.is_open:
-            self.__probe_handle.open()       
+            self.__probe_handle.open()
         if not self.__probe_handle.is_open:
             raise Exception(f"Unable to open Dvk Probe at {self.id}")
 
@@ -115,7 +116,8 @@ class DvkProbe(Probe):
         return res[0]
 
     def gpio_to_output(self, gpio: int, option: int = 0):
-        res = self.__probe_handle.vendor(SET_IO_DIR_CMD, [gpio, OUTPUT, option])
+        res = self.__probe_handle.vendor(
+            SET_IO_DIR_CMD, [gpio, OUTPUT, option])
         return res[0]
 
     def gpio_to_output_low(self, gpio: int):
@@ -168,7 +170,8 @@ class DvkProbe(Probe):
                 write_len = bytes_left
             write_cmd.append(write_len)
             write_cmd.extend(settings_bytes[0:write_len])
-            res = self.__probe_handle.vendor(WRITE_BOARD_ID_BYTES_CMD, write_cmd)
+            res = self.__probe_handle.vendor(
+                WRITE_BOARD_ID_BYTES_CMD, write_cmd)
             assert res[0] == write_len, 'Could not write board ID bytes'
             settings_bytes = settings_bytes[write_len:]
             bytes_left -= res[0]
@@ -241,5 +244,17 @@ class DvkProbe(Probe):
         time.sleep(PROBE_BOOT_TIME)
         self.__probe_handle.open()
         (device_vendor, device_name) = self.__probe_handle.target_names
-        assert device_vendor == target_device_vendor and device_name == target_device_name,\
+        assert device_vendor == target_device_vendor and device_name == target_device_name, \
             f'Target device vendor [{device_vendor}] and device name [{device_name}] do not match the programmed settings!'
+
+
+if __name__ == "__main__":
+    logger = logger_setup(__file__)
+    probes = DvkProbe.get_connected_probes()
+    logger.info(f"Probes found: {len(probes)}")
+    for p in probes:
+        logger.info(p)
+        for port in p.ports:
+            port_info = DvkProbe.get_com_port_info(p.ports[port])
+            logger.info(
+                f"\tProbe port {port_info.device} HWID: {port_info.hwid}")

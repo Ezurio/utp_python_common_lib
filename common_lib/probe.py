@@ -1,5 +1,6 @@
 from lc_util import logger_setup, logger_get
 import typing
+import serial.tools.list_ports as list_ports
 
 logger = logger_get(__name__)
 
@@ -12,10 +13,11 @@ class ProbePorts(typing.TypedDict):
 class Probe:
     """
     Base class for debug/programming probe.
-    
-    It contains methods that are common to all probes and 
+
+    It contains methods that are common to all probes and
     stubs for those that must be implemented by subclasses.
     """
+
     def __init__(self,
                  id=None | int | str,
                  description: str = "",
@@ -88,6 +90,21 @@ class Probe:
         Reset the probe (and the device connected to it).
         """
         raise NotImplementedError
+
+    @staticmethod
+    def get_com_port_info(port: str):
+        """Get the detailed COM port information for the probe.
+
+        Args:
+            port (str): The COM port name
+
+        Returns:
+            ListPortInfo: COM port information
+        """
+
+        for comport in list_ports.comports():
+            if port == comport.device:
+                return comport
 
 
 if __name__ == "__main__":
