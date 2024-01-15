@@ -63,8 +63,14 @@ Time delay
 
     ${delay_ms}=    Set Variable    ${2000}
     ${wait_respose_sconds}=    Evaluate    ${delay_ms} / 1000.0 + 1.0
-    ${tolerance_percent}=    Set Variable    ${2.0}
-    ${tolerance_percent_board}=    Set Variable    ${3.0}
+    # Lyra needs a slightly wider error window to allow reliable testing
+    IF    ${board1_type} == ${LYRA_BOARD_TYPE}
+        ${tolerance_percent}=    Set Variable    ${3.0}
+        ${tolerance_percent_board}=    Set Variable    ${4.0}
+    ELSE
+        ${tolerance_percent}=    Set Variable    ${2.0}
+        ${tolerance_percent_board}=    Set Variable    ${3.0}
+    END
 
     ${resp}=    DUT1 User REPL Send    import time
     ${resp}=    DUT1 User REPL Send    time.ticks_ms()
@@ -167,6 +173,10 @@ REPL Control Characters
 Setup
     Get Boards
     Init Board    ${settings_board1}
+    ${tmp}=    DUT1 User REPL Send    os.uname().sysname
+    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
+    Set Global Variable    ${board1_type}    ${tmp}
+
 
 Teardown
     De-Init Board    ${settings_board1}

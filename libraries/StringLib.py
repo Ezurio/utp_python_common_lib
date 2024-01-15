@@ -97,6 +97,29 @@ def ConvertASCIIToHexadecimal(in_string: str) -> str:
 
     return (hex_string)
 
+def ConvertASCIIToHexadecimalNoCRLF(in_string: str) -> str:
+    """ Converts a string containing ASCII hexadecimal values to a string containing the ASCII characters.
+    Args:
+        in_string (str): is the string that contains the ASCII hex value.
+
+    Returns:
+        str: returns a string containing the ASCII characters.
+
+    Examples:
+        | result =  | ConvertASCIIToHexadecimal | b"\\x48\\x65\\x6C\\x6C\\x6F\\x2C\\x20\\x57\\x6F\\x72\\x6C\\x64\\x21" | # Result is 48656C6C6F2C20576F726C6421 |
+        | result =  | ConvertASCIIToHexadecimal | b"\\x31\\x32\\x33\\x34\\x35" | # Result is 3132333435 |
+    """
+    # Use codecs to escape the escape sequences and decode the bytes
+    escaped_data = codecs.escape_decode(in_string)[0]
+
+    # Convert the escaped data to a hexadecimal string
+    hex_string = escaped_data.hex()
+    # Remove the b" and " characters
+    hex_string = hex_string[4:-2]
+    hex_string = hex_string.upper()
+
+    return (hex_string)
+
 
 def ConvertStringToHexadecimalString(in_string: str) -> str:
     """ Converts a string to a string containing the hexadecimal codes for each character in the string.

@@ -16,8 +16,6 @@ ${ADVERTISER_SCRIPT_START_RESP}=    advert object available
 ${SCAN_SCRIPT}=                     common_lib${/}scripts${/}BLE_scripts${/}scan.py
 ${SCAN_DATA_SCRIPT}=                common_lib${/}scripts${/}BLE_scripts${/}scan_for_scan_data.py
 ${SCAN_SCRIPT_START_RESP}=          scan object available
-${BLE_ADDR_SCRIPT}=                 common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
-${BLE_ADDR_FAIL_RESP}=              Error
 ${BLE_ADVERT_NAME}=                 C
 ${NAME_FILTER}=                     0
 ${ADDRESS_FILTER}=                  2
@@ -119,6 +117,8 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
 
     Set Tags    PROD-2463
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -152,6 +152,8 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2462
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -179,6 +181,8 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2461
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -205,6 +209,8 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    DUT2 Scans using the coded PHY actively
 
     Set Tags    PROD-2442
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -239,6 +245,8 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2440
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -266,6 +274,8 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2437
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -292,6 +302,8 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    DUT2 Scans using the coded PHY Actively
 
     Set Tags    PROD-2436
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -326,6 +338,8 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
 
     Set Tags    PROD-2434
 
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -352,6 +366,8 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     ...    DUT2 Scans using the 1M PHY passively
 
     Set Tags    PROD-2433
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -397,7 +413,14 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ...    240
     ...    250
     Scan For Scan Data    ${settings_board2}    ${board1_adv_name}
-    Check Scan Data result    ${settings_board2}    ${27}
+
+    # Lyra 24 does not include some type information in type field
+    IF    ${board1_type} == ${LYRA_BOARD_TYPE}
+        ${expected_type}=    Set Variable    ${24}
+    ELSE
+        ${expected_type}=    Set Variable    ${27}
+    END
+    Check Scan Data result    ${settings_board2}    ${expected_type}
 
 
 *** Keywords ***
@@ -415,6 +438,15 @@ Setup
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_addr}    ${tmp}
     Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
+
+    ${tmp}=    Get Board Type    ${settings_board1}
+    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
+    Set Global Variable    ${board1_type}    ${tmp}
+
+    ${tmp}=    Get Board Type    ${settings_board2}
+    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
+    Set Global Variable    ${board2_type}    ${tmp}
+
 
 Teardown
     De-Init Board    ${settings_board1}
@@ -591,13 +623,3 @@ Run Scan Data Script on Board
     ${resp}=    Run Script on Board    ${board}    ${SCAN_DATA_SCRIPT}
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    ${SCAN_SCRIPT_START_RESP}
-
-Get Board Addr
-    [Arguments]    ${board}
-
-    ${resp}=    Run Script on Board    ${board}    ${BLE_ADDR_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-
-    Should Not Contain    ${resp}    ${BLE_ADDR_FAIL_RESP}
-    RETURN    ${resp}
-

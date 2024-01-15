@@ -4,8 +4,13 @@ Library     String
 
 
 *** Variables ***
-${settings_board1}      ${EMPTY}
-${settings_board2}      ${EMPTY}
+${settings_board1}          ${EMPTY}
+${settings_board2}          ${EMPTY}
+${LYRA_BOARD_TYPE}=         'Lyra'
+${ZEPHYR_BOARD_TYPE}=       'zephyr'
+${BLE_ADDR_SCRIPT}=         common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
+${BLE_ADDR_FAIL_RESP}=      Error
+
 
 *** Keywords ***
 Get Boards
@@ -18,12 +23,14 @@ Get Boards
     ${num_boards}=    Get Length    ${boards}
     Log    ${num_boards} boards found!
 
-    IF    ${num_boards} < ${minimum_boards}    Fail    Minimum number of boards (${minimum_boards}) not found
+    IF    ${num_boards} < ${minimum_boards}
+        Fail    Minimum number of boards (${minimum_boards}) not found
+    END
 
     IF    ${num_boards} >= ${1}
         Set Global Variable    ${settings_board1}    ${boards[0]}
     END
-    
+
     IF    ${num_boards} > ${1}
         IF    ${allow_many} == ${False}
             Fail    Please ensure only one board is connected!
@@ -36,9 +43,7 @@ Init Board
 
     IF    ${board.is_initialized} == ${False}
         Call Method    ${board}    open_and_init_board
-        IF    ${board.is_initialized} == ${False}
-            Fail    Board is not ready
-        END
+        IF    ${board.is_initialized} == ${False}    Fail    Board is not ready
     END
     # For all automated testing, upload an empty boot.py to the board to
     # prevent the default script from running.
@@ -142,5 +147,23 @@ Board Soft Reboot
     [Arguments]    ${board}
 
     ${resp}=    Call Method    ${board}    soft_reset_module
+
+    RETURN    ${resp}
+
+Get Board Addr
+    [Arguments]    ${board}
+
+    ${resp}=    Run Script on Board    ${board}    ${BLE_ADDR_SCRIPT}
+    ${resp}=    Convert To String    ${resp}
+
+    Should Not Contain    ${resp}    ${BLE_ADDR_FAIL_RESP}
+    ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
+
+    RETURN    ${resp}
+
+Get Board Type
+    [Arguments]    ${board}
+
+    ${resp}=    User REPL Send    ${board}    os.uname().sysname
 
     RETURN    ${resp}
