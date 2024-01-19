@@ -331,18 +331,16 @@ Teardown
     De-Init Board    ${settings_board1}
 
 Teardown Test
-    # Test teardown prevents the hardfault. Not sure why.
-    # The original idea was to remove the pins from memory and garbage collect them however this on
-    # its own does not prevent the hardfault.
+    # For Lyra, there are a limited number of pin interrupts.
+    # Explicitly remove the pin objects even though garbage collection should do it
+    # (https://rfpros.atlassian.net/browse/PROD-5310.
     FOR    ${element}    IN    @{GPIO_PAIR_A_LIST}
-        # None is not a callable object which produces an exception, removing this causes the hardfault to reappear
-        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_BOTH)
+        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
         ${resp}=    DUT1 User REPL Send    ${element} = None
     END
 
     FOR    ${element}    IN    @{GPIO_PAIR_B_LIST}
-        # None is not a callable object which produces an exception, removing this causes the hardfault to reappear
-        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_BOTH)
+        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
         ${resp}=    DUT1 User REPL Send    ${element} = None
     END
 
