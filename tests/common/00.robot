@@ -19,7 +19,7 @@ ${FILE_READ_BINARY}     rb
 
 *** Tasks ***
 Query firmware version
-    Set Tags    PROD-2640
+    Set Tags    PROD-2460
 
     ${resp}=    DUT1 User REPL Send    os.uname()
     Should Contain    ${resp}    version
@@ -176,7 +176,6 @@ Setup
     ${tmp}=    DUT1 User REPL Send    os.uname().sysname
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
-
 
 Teardown
     De-Init Board    ${settings_board1}
