@@ -1,6 +1,8 @@
 *** Settings ***
 Library     ./common_lib/libraries/discovery.py    WITH NAME    Discovery
 Library     String
+Library     ./common_lib/libraries/upload_robot_xray.py    WITH NAME    Upload
+Library     ./common_lib/libraries/xray_listener.py    WITH NAME    XListen
 
 
 *** Variables ***
@@ -10,6 +12,7 @@ ${LYRA_BOARD_TYPE}=         'Lyra'
 ${ZEPHYR_BOARD_TYPE}=       'zephyr'
 ${BLE_ADDR_SCRIPT}=         common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
 ${BLE_ADDR_FAIL_RESP}=      Error
+${JIRA_PROJECT}=            PROD
 
 
 *** Keywords ***
@@ -51,6 +54,9 @@ Init Board
     Board Reset Module    ${board}
     ${resp}=    Call Method    ${board.python_uart}    send    import os
     ${resp}=    Call Method    ${board.python_uart}    send    import sys
+
+    # Setup the XRay uploader to use the test plan associated with DUT1
+    IF    $board==$settings_board1    Setup Xray Upload
 
 De-Init Board
     [Arguments]    ${board}
@@ -167,3 +173,12 @@ Get Board Type
     ${resp}=    User REPL Send    ${board}    os.uname().sysname
 
     RETURN    ${resp}
+
+Setup Xray Upload
+    ${machine_name}=    DUT1 User REPL Send    os.uname().machine
+    ${machine_name}=    Replace String    ${machine_name}    \r\n    ${EMPTY}
+
+    ${resp}=    Upload.Get Test Set Value    ${machine_name}
+    ${test_plan}=    Set Variable    ${JIRA_PROJECT}-${resp}
+
+    XListen.Setup    ${JIRA_PROJECT}    ${test_plan}    ${OUTPUT_FILE}

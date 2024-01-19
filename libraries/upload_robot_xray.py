@@ -1,7 +1,12 @@
 import requests
 import json
 import os
-
+import yaml
+from yaml import load
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 
 def upload_robot_to_xray(project, test_plan, result_file):
     xray_cloud_base_url = "https://xray.cloud.getxray.app/api/v2"
@@ -34,4 +39,23 @@ def upload_robot_to_xray(project, test_plan, result_file):
         raise Exception("Error uploading Robot Framework XML reports to Xray Cloud: "+response.text+" Status Code: "+str(response.status_code))
 
 
+def get_test_set_value(machine_name, test_plan_file="test_plans.yml"):
+    test_plan = None
 
+    try:
+        with open(test_plan_file, 'r') as stream:
+            dictionary = yaml.load(stream, Loader)
+            for key, value in dictionary.items():
+                if key in machine_name:
+                    test_plan = value["test_plan"]
+
+    except FileNotFoundError:
+        print("No test_plans.yml file found")
+
+    except Exception as e:
+        print(e)
+
+    if test_plan == None:
+        raise Exception("No test plan found for machine: "+machine_name)
+
+    return test_plan

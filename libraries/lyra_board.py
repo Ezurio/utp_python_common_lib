@@ -12,7 +12,7 @@ logger = logger_get(__name__)
 
 class LyraBoard(Board, JLinkProbe, PythonUart):
     """
-    This is the base class for Lyra Boards. 
+    This is the base class for Lyra Boards.
     """
     #: The family is used by the debug probe so that it knows the base kind of
     #: device it is communicating with.
@@ -86,7 +86,7 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
         Get a list of all connected boards.
 
         Args:
-            allow_list (list[str]): List of board names to allow. 
+            allow_list (list[str]): List of board names to allow.
             If empty, all boards with a J-Link probe are allowed.
 
         Returns:
@@ -154,6 +154,29 @@ class Lyra24P_20dBm(LyraBoard):
     def __init__(self, probe):
         super().__init__(probe)
 
+class Lyra24P_20dBm_RF(LyraBoard):
+    """
+    Lyra24P module with 20 dBm output and rf pin.
+    """
+    #:
+    MODULE_PART_NUMBER = "BGM240PB32VNN"
+    #:
+    MODULE_PART_NUMBER_ADDR = 0x0FE08130
+
+    def __init__(self, probe):
+        super().__init__(probe)
+
+class Lyra24S_10dBm(LyraBoard):
+    """
+    Lyra24S module with 10 dBm output.
+    """
+    #:
+    MODULE_PART_NUMBER = "BGM240SB22VNA"
+    #:
+    MODULE_PART_NUMBER_ADDR = 0x0FE08130
+
+    def __init__(self, probe):
+        super().__init__(probe)
 
 if __name__ == "__main__":
     logger = logger_setup(__file__)
