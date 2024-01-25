@@ -2,11 +2,12 @@ import requests
 import json
 import os
 import yaml
-from yaml import load
+import logging
 try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
+
 
 def upload_robot_to_xray(project, test_plan, result_file):
     xray_cloud_base_url = "https://xray.cloud.getxray.app/api/v2"
@@ -25,18 +26,22 @@ def upload_robot_to_xray(project, test_plan, result_file):
 
     # endpoint doc for authenticating and obtaining token from Xray Cloud
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    auth_data = { "client_id": client_id, "client_secret": client_secret }
-    response = requests.post(f'{xray_cloud_base_url}/authenticate', data=json.dumps(auth_data), headers=headers)
+    auth_data = {"client_id": client_id, "client_secret": client_secret}
+    response = requests.post(
+        f'{xray_cloud_base_url}/authenticate', data=json.dumps(auth_data), headers=headers)
     auth_token = response.json()
 
     # endpoint doc for importing Robot Framework XML reports
-    params = (('projectKey', project),('testPlanKey',test_plan))
+    params = (('projectKey', project), ('testPlanKey', test_plan))
     report_content = open(result_file, 'rb')
-    headers = {'Authorization': 'Bearer ' + auth_token, 'Content-Type': 'application/xml'}
-    response = requests.post(f'{xray_cloud_base_url}/import/execution/robot', params=params, data=report_content, headers=headers)
+    headers = {'Authorization': 'Bearer ' +
+               auth_token, 'Content-Type': 'application/xml'}
+    response = requests.post(f'{xray_cloud_base_url}/import/execution/robot',
+                             params=params, data=report_content, headers=headers)
 
     if response.status_code != 200:
-        raise Exception("Error uploading Robot Framework XML reports to Xray Cloud: "+response.text+" Status Code: "+str(response.status_code))
+        raise Exception("Error uploading Robot Framework XML reports to Xray Cloud: " +
+                        response.text+" Status Code: "+str(response.status_code))
 
 
 def get_test_set_value(machine_name, test_plan_file="test_plans.yml"):
@@ -50,12 +55,9 @@ def get_test_set_value(machine_name, test_plan_file="test_plans.yml"):
                     test_plan = value["test_plan"]
 
     except FileNotFoundError:
-        print("No test_plans.yml file found")
+        logging.warn(f"No {test_plan_file} file found")
 
     except Exception as e:
-        print(e)
-
-    if test_plan == None:
-        raise Exception("No test plan found for machine: "+machine_name)
+        raise e
 
     return test_plan
