@@ -1,7 +1,7 @@
 #
 # This contains the base class for Zephyr boards and its simply subclasses.
 #
-from board import Board
+from board import Board, GenericBoard
 from dvk_probe import DvkProbe
 from python_uart import PythonUart
 from lc_util import logger_setup, logger_get
@@ -13,7 +13,7 @@ logger = logger_get(__name__)
 
 class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
     """
-    A class to represent a generic Zephyr Board.
+    A class to represent a generic Zephyr Board that has a DVK Probe.
     """
     #: :meta hide-value:
     #:
@@ -21,12 +21,15 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
     BOOT_TIME_SECONDS = 3
 
     @classmethod
-    def get_connected(cls, allow_list=list()) -> list['ZephyrBoard']:
+    def get_connected(cls, allow_list=list(), boards_conf: list[GenericBoard] = list()) -> list['ZephyrBoard']:
         """ Get a list of all connected boards.
 
         Args:
-            allow_list (list[str]): List of board names to allow. 
+            allow_list (list[str]): List of board names to allow.
             If empty, all boards with a DVK probe are allowed.
+
+            boards_conf (list[GenericBoard]): List of board configs to search for and create.
+            This is not used for this board type.
 
         Returns:
             list['ZephyrBoard']: List of connected boards

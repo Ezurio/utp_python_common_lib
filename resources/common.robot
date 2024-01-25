@@ -3,6 +3,7 @@ Library     ./common_lib/libraries/discovery.py    WITH NAME    Discovery
 Library     String
 Library     ./common_lib/libraries/upload_robot_xray.py    WITH NAME    Upload
 Library     ./common_lib/libraries/xray_listener.py    WITH NAME    XListen
+Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardConfig
 
 
 *** Variables ***
@@ -19,10 +20,12 @@ ${JIRA_PROJECT}=            PROD
 Get Boards
     [Arguments]    ${allow_many}=${True}    ${allow_list}=[]    ${minimum_boards}=1
 
+    ${boards_conf}=    BoardConfig.Read Board Config
+
     # Delay in case boards are re-enumerating over USB
     Sleep    ${2}
 
-    @{boards}=    Discovery.Get Connected Boards    ${allow_list}
+    @{boards}=    Discovery.Get Connected Boards    ${allow_list}    ${boards_conf}
     ${num_boards}=    Get Length    ${boards}
     Log    ${num_boards} boards found!
 
