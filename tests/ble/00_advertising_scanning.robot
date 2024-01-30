@@ -19,7 +19,7 @@ ${SCAN_SCRIPT_START_RESP}=          scan object available
 ${BLE_ADVERT_NAME}=                 C
 ${NAME_FILTER}=                     0
 ${ADDRESS_FILTER}=                  2
-${RSSI_THRESHOLD}=                  -50
+${RSSI_THRESHOLD}=                  -70
 ${SCAN_DATA}=                       [0x77, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
 ${SCAN_BYTES}=                      \\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07
 
