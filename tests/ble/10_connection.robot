@@ -303,7 +303,6 @@ Teardown
 Test Setup
     ${resp}=    Board Soft Reboot    ${settings_board1}
     ${resp}=    Board Soft Reboot    ${settings_board2}
-    Sleep    2s
 
     ${resp}=    User REPL Send    ${settings_board1}    import canvas_ble as ble
     ${resp}=    User REPL Send    ${settings_board2}    import canvas_ble as ble
