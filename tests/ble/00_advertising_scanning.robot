@@ -22,7 +22,7 @@ ${ADDRESS_FILTER}=                  2
 ${RSSI_THRESHOLD}=                  -70
 ${SCAN_DATA}=                       [0x77, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
 ${SCAN_BYTES}=                      \\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07
-
+${SCAN_TIMOUT_SECONDS}=             ${20}
 
 *** Tasks ***
 # **********************************************************************
@@ -174,6 +174,94 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    60
     ...    0
     Check Scan result    ${settings_board2}    ${32}
+
+BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
+    [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 1M PHY
+    ...    DUT2 Scans using the coded PHY passively. The scanner should not find the advert.
+
+    Set Tags    PROD-6133
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
+    Start Advertising
+    ...    ${settings_board1}
+    ...    ${board1_adv_name}
+    ...    ble.PHY_1M
+    ...    ble.PHY_1M
+    ...    False
+    ...    False
+    ...    True
+    ...    240
+    ...    250
+    Scan With Filter
+    ...    ${settings_board2}
+    ...    ${board1_adv_name}
+    ...    ${NAME_FILTER}
+    ...    ble.PHY_CODED
+    ...    ble.PHY_CODED
+    ...    250
+    ...    60
+    ...    0
+    ...    ${False}
+
+
+BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
+    [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 125k PHY
+    ...    DUT2 Scans using the 1M PHY passively. The scanner should not find the advert.
+
+    Set Tags    PROD-6134
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
+    Start Advertising
+    ...    ${settings_board1}
+    ...    ${board1_adv_name}
+    ...    ble.PHY_125K
+    ...    ble.PHY_125K
+    ...    False
+    ...    False
+    ...    True
+    ...    240
+    ...    250
+    Scan With Filter
+    ...    ${settings_board2}
+    ...    ${board1_adv_name}
+    ...    ${NAME_FILTER}
+    ...    ble.PHY_1M
+    ...    ble.PHY_1M
+    ...    250
+    ...    60
+    ...    0
+    ...    ${False}
+
+BLE Ad 500k Non Connectable Non Scannable 1M Passive Scan
+    [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 500k PHY
+    ...    DUT2 Scans using the 1M PHY passively. The scanner should not find the advert.
+
+    Set Tags    PROD-6135
+
+    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
+
+    Start Advertising
+    ...    ${settings_board1}
+    ...    ${board1_adv_name}
+    ...    ble.PHY_500K
+    ...    ble.PHY_500K
+    ...    False
+    ...    False
+    ...    True
+    ...    240
+    ...    250
+    Scan With Filter
+    ...    ${settings_board2}
+    ...    ${board1_adv_name}
+    ...    ${NAME_FILTER}
+    ...    ble.PHY_1M
+    ...    ble.PHY_1M
+    ...    250
+    ...    60
+    ...    0
+    ...    ${False}
 
 BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 125K PHY
@@ -447,7 +535,6 @@ Setup
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_type}    ${tmp}
 
-
 Teardown
     De-Init Board    ${settings_board1}
     De-Init Board    ${settings_board2}
@@ -509,6 +596,7 @@ Scan With Filter
     ...    ${interval}
     ...    ${window}
     ...    ${active}
+    ...    ${expect_device}=True
 
     Run Scan Script on Board    ${board}
 
@@ -527,7 +615,7 @@ Scan With Filter
     ${resp}=    Raw REPL Exec    ${board}    scanner.set_timing(${interval}, ${window})
     ${resp}=    Raw REPL Exec    ${board}    scanner.start(${active})
 
-    ${total_time}=    Set Variable    ${20}
+    ${total_time}=    Set Variable    ${SCAN_TIMOUT_SECONDS}
 
     WHILE    $total_time > ${0}
         ${resp}=    Raw REPL Exec    ${board}    print(found)
@@ -538,7 +626,11 @@ Scan With Filter
     END
     ${result}=    Set Variable    ${resp}
     Switch Board to User REPL    ${board}
-    IF    ${result} == False    Fail    Failed to find Advert
+    IF    ${expect_device}
+        IF    ${result} == False    Fail    Failed to find Advert
+    ELSE
+        IF    ${result} == True    Fail    Should not have found Advert
+    END
 
 Scan For Scan Data
     [Arguments]    ${board}    ${filter}
@@ -549,7 +641,7 @@ Scan For Scan Data
 
     Switch Board to Raw REPL    ${board}
 
-    ${total_time}=    Set Variable    ${20}
+    ${total_time}=    Set Variable    ${SCAN_TIMOUT_SECONDS}
 
     WHILE    $total_time > ${0}
         ${resp}=    Raw REPL Exec    ${board}    print(found)
@@ -576,7 +668,6 @@ Get Scan result
     ${addr}=    Convert To Bytes    ${resp}
     Switch Board to User REPL    ${board}
     RETURN    ${rssi}    ${type}    ${data}    ${addr}
-
 
 Check Scan result
     [Arguments]    ${board}    ${type_expected}
