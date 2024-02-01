@@ -1,42 +1,48 @@
+#!/usr/bin/env python3
+
 import requests
 import json
 import os
 import yaml
 import logging
+import argparse
 try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
 
+XRAY_CLOUD_BASE_URL = "https://xray.cloud.getxray.app/api/v2"
+ENV_XRAY_CLIENT_ID = 'XRAY_CLIENT_ID'
+ENV_XRAY_CLIENT_SECRET = 'XRAY_CLIENT_SECRET'
+
 
 def upload_robot_to_xray(project, test_plan, result_file):
-    xray_cloud_base_url = "https://xray.cloud.getxray.app/api/v2"
-
     if project == None or test_plan == None:
         raise Exception("Please provide project and test plan keys")
-
-    client_id = os.environ.get('XRAY_CLIENT_ID')
-    client_secret = os.environ.get('XRAY_CLIENT_SECRET')
-
-    if client_id == None or client_secret == None:
-        raise Exception("Please provide client id and client secret")
-
     if result_file == None:
         raise Exception("Please provide result file")
 
-    # endpoint doc for authenticating and obtaining token from Xray Cloud
+    client_id = os.environ.get(ENV_XRAY_CLIENT_ID)
+    client_secret = os.environ.get(ENV_XRAY_CLIENT_SECRET)
+    if client_id == None:
+        raise Exception(f"{ENV_XRAY_CLIENT_ID} environment variable not set")
+    if client_secret == None:
+        raise Exception(
+            f"{ENV_XRAY_CLIENT_SECRET} environment variable not set")
+
+    # endpoint API for authenticating and obtaining token from Xray Cloud
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     auth_data = {"client_id": client_id, "client_secret": client_secret}
     response = requests.post(
-        f'{xray_cloud_base_url}/authenticate', data=json.dumps(auth_data), headers=headers)
+        f'{XRAY_CLOUD_BASE_URL}/authenticate', data=json.dumps(auth_data), headers=headers)
     auth_token = response.json()
 
-    # endpoint doc for importing Robot Framework XML reports
+    # endpoint API for importing Robot Framework XML reports
     params = (('projectKey', project), ('testPlanKey', test_plan))
     report_content = open(result_file, 'rb')
     headers = {'Authorization': 'Bearer ' +
                auth_token, 'Content-Type': 'application/xml'}
-    response = requests.post(f'{xray_cloud_base_url}/import/execution/robot',
+    response = requests.post(f'{XRAY_CLOUD_BASE_URL}/import/execution/robot',
                              params=params, data=report_content, headers=headers)
 
     if response.status_code != 200:
@@ -61,3 +67,23 @@ def get_test_set_value(machine_name, test_plan_file="test_plans.yml"):
         raise e
 
     return test_plan
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='Upload Robot Framework XML reports to Xray Cloud')
+    parser.add_argument('-p', '--project', default="PROD",
+                        help="Jira project key")
+    parser.add_argument('-t', '--test_plan', required=True,
+                        help="Jira test plan issue key")
+    parser.add_argument('-r', '--results', required=True,
+                        help="Robot Framework XML results file")
+    args = parser.parse_args()
+    project = args.project
+    test_plan = args.test_plan
+    result_file = args.results
+    print(
+        f"""Uploading Robot Framework results {result_file} to Xray Cloud
+        \tProject: {project} Test Plan: {test_plan} ...""")
+    upload_robot_to_xray(project, test_plan, result_file)
+    print("Upload completed!")
