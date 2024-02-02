@@ -117,8 +117,6 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
 
     Set Tags    PROD-2463
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -152,8 +150,6 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2462
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -180,8 +176,6 @@ BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     ...    DUT2 Scans using the coded PHY passively. The scanner should not find the advert.
 
     Set Tags    PROD-6133
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -211,8 +205,6 @@ BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
 
     Set Tags    PROD-6134
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -239,8 +231,6 @@ BLE Ad 500k Non Connectable Non Scannable 1M Passive Scan
     ...    DUT2 Scans using the 1M PHY passively. The scanner should not find the advert.
 
     Set Tags    PROD-6135
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -269,8 +259,6 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2461
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -297,8 +285,6 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    DUT2 Scans using the coded PHY actively
 
     Set Tags    PROD-2442
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -333,8 +319,6 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2440
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -362,8 +346,6 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
 
     Set Tags    PROD-2437
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -390,8 +372,6 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    DUT2 Scans using the coded PHY Actively
 
     Set Tags    PROD-2436
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}
@@ -426,8 +406,6 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
 
     Set Tags    PROD-2434
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Advertising
     ...    ${settings_board1}
     ...    ${board1_adv_name}
@@ -454,8 +432,6 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     ...    DUT2 Scans using the 1M PHY passively
 
     Set Tags    PROD-2433
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Advertising
     ...    ${settings_board1}

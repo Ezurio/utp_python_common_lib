@@ -64,8 +64,6 @@ BLE Single Connection Extended 125K PHY Central Disconnect
 
     Set Tags    PROD-2450
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_125K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
     Check Connection    ${settings_board1}    ${settings_board2}
@@ -78,8 +76,6 @@ BLE Single Connection Extended 125K PHY Peripheral Disconnect
     ...    Peripheral Disconnects
 
     Set Tags    PROD-2449
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_125K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -94,8 +90,6 @@ BLE Single Connection Extended 500K PHY Central Disconnect
 
     Set Tags    PROD-2456
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_500K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
     Check Connection    ${settings_board1}    ${settings_board2}
@@ -108,8 +102,6 @@ BLE Single Connection Extended 500K PHY Peripheral Disconnect
     ...    Peripheral Disconnects
 
     Set Tags    PROD-2455
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_500K
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_CODED
@@ -124,8 +116,6 @@ BLE Single Connection Extended 2M PHY Central Disconnect
 
     Set Tags    PROD-2454
 
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
-
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_2M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
     Check Connection    ${settings_board1}    ${settings_board2}
@@ -138,8 +128,6 @@ BLE Single Connection Extended 2M PHY Peripheral Disconnect
     ...    Peripheral Disconnects
 
     Set Tags    PROD-2453
-
-    Skip If    condition=${board1_type}==${LYRA_BOARD_TYPE}    msg=Lyra 24 does not support extended scanning
 
     Start Peripheral    ${settings_board1}    ${board1_adv_name}    ble.PHY_2M
     Connect Central    ${settings_board2}    ${board1_adv_name}    ble.PHY_1M
