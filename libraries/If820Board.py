@@ -1,9 +1,9 @@
 import logging
 import time
-from common_lib.dvk_probe import DvkProbe
-from common_lib.HciSerialPort import HciSerialPort
-from common_lib.HciProgrammer import HciProgrammer
-from common_lib.EzSerialPort import EzSerialPort
+from dvk_probe import DvkProbe
+from HciSerialPort import HciSerialPort
+from HciProgrammer import HciProgrammer
+from EzSerialPort import EzSerialPort
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -54,14 +54,10 @@ class If820Board(DvkProbe):
         """
         boards = []
         for probe in DvkProbe.get_connected_probes():
-            board = If820Board()
+            board = If820Board(probe)
             board._probe = probe
-            if not probe.ports[0].location:
-                logging.warning(
-                    f'No COM port location found for board {probe.id}, assuming HCI port {probe.ports[0].device}')
-
-            board._hci_port_name = probe.ports[0].device
-            board._puart_port_name = probe.ports[1].device
+            board._hci_port_name = probe.ports['zephyr_shell']
+            board._puart_port_name = probe.ports['python']
             boards.append(board)
         return boards
 
@@ -108,7 +104,7 @@ class If820Board(DvkProbe):
 
         # open dvk probe
         logging.info(f"Opening Dvk Probe ID {self.probe.id}")
-        self.probe.open(self.probe.id)
+        self.probe.open()
         if (not self.probe.is_open):
             raise Exception(
                 f"Unable to open Dvk Probe at {self.probe.id}")
@@ -135,8 +131,11 @@ class If820Board(DvkProbe):
             self.probe.close()
         self._is_initialized = False
 
-    def __init__(self):
-        self._probe = super().__init__()
+    def __init__(self, probe: DvkProbe = None):
+        if probe is None:
+            self._probe = None
+        else:
+            self._probe = super().__init__(probe.id, probe.description, probe.ports)
         self._hci_port_name = ""
         self._puart_port_name = ""
         self._hci_uart = None
@@ -196,7 +195,7 @@ class If820Board(DvkProbe):
         self.hci_uart.open(board.hci_port_name,
                            HciProgrammer.HCI_DEFAULT_BAUDRATE)
         board.probe.open()
-        board.probe.reset_device()
+        board.probe.reset_target()
         board.probe.close()
         self.hci_uart.close()
         return ERR_OK
@@ -224,7 +223,7 @@ class If820Board(DvkProbe):
         Returns:
             tuple: (err code - 0 for success else error, Packet object)
         """
-        self.probe.reset_device()
+        self.probe.reset_target()
         ez_rsp = (0, None)
         if wait_for_boot:
             ez_rsp = self.p_uart.wait_event(self.p_uart.EVENT_SYSTEM_BOOT)

@@ -1,7 +1,7 @@
 import intelhex
 import io
 import logging
-import common_lib.HciSerialPort as hci
+import HciSerialPort as hci
 
 
 class HciProgrammer():

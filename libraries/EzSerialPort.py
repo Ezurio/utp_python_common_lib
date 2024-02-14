@@ -1,6 +1,6 @@
 from enum import Enum
-from common_lib.SerialPort import SerialPort
-import common_lib.ezserial_host_api.ezslib as ez_serial
+from SerialPort import SerialPort
+import ezserial_host_api.ezslib as ez_serial
 
 
 class SystemCommands:

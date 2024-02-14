@@ -104,6 +104,10 @@ class DvkProbe(Probe):
         if not self.__probe_handle.is_open:
             raise Exception(f"Unable to open Dvk Probe at {self.id}")
 
+    @property
+    def is_open(self):
+        return self.__probe_handle.is_open
+
     def close(self):
         self.__probe_handle.close()
 

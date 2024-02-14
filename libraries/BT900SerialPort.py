@@ -1,5 +1,5 @@
 import logging
-from common_lib.CmdSerialPort import CmdSerialPort
+from CmdSerialPort import CmdSerialPort
 
 
 class BT900SerialPort(CmdSerialPort):
