@@ -139,7 +139,7 @@ class DvkProbe(Probe):
     def get_dap_ids(self):
         return DAPAccessCMSISDAP.ID
 
-    def reset_probe(self):
+    def reset_target(self):
         self.__probe_handle.assert_reset(True)
         time.sleep(0.050)
         self.__probe_handle.assert_reset(False)

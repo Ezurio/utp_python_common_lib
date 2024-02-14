@@ -75,12 +75,18 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
         self.python_uart.close()
 
     def reset_module(self):
-        self.reset_probe()
+        self.reset_target()
         time.sleep(ZephyrBoard.BOOT_TIME_SECONDS)
 
     def soft_reset_module(self):
         """Soft reset the module by sending Ctrl-D to the Python REPL."""
         return self.python_uart.send(b'\x04', ZephyrBoard.BOOT_TIME_SECONDS)
+
+    def close_ports_and_reset(self, reset_probe: bool = True):
+        self.close_ports()
+        if reset_probe:
+            self.reboot()
+        self.close()
 
 
 class SeraNX040Dvk(ZephyrBoard):

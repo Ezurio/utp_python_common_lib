@@ -85,9 +85,15 @@ class Probe:
         """
         raise NotImplementedError
 
-    def reset_probe(self):
+    def reset_target(self):
         """
-        Reset the probe (and the device connected to it).
+        Reset the target device with the reset line.
+        """
+        raise NotImplementedError
+
+    def reboot(self):
+        """
+        Reboot the probe itself.
         """
         raise NotImplementedError
 

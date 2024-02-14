@@ -192,14 +192,14 @@ class Board(object):
         """
         raise NotImplementedError
 
-    def close_ports_and_reset(self):
+    def close_ports_and_reset(self, reset_probe: bool = True):
+        """Close all UARTs and reset the probe and module.
+
+        Args:
+            reset_probe (bool, optional): reset the debug probe. Defaults to True.
         """
-        Close all UARTs and reset the probe and module.
-        Note: Resetting the probe resets the IO and the module.
-        """
-        self.close_ports()
-        self.reset_probe()
-        self.close()
+
+        raise NotImplementedError
 
     def reset_module(self):
         """

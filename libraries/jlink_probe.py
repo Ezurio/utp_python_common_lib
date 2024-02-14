@@ -11,6 +11,7 @@ class JLinkProbe(Probe):
     Wrapper for the pylink.jlink module that combines probe discovery with
     serial port discovery.
     """
+
     def __init__(self,
                  id: int,
                  family: str,
@@ -120,7 +121,7 @@ class JLinkProbe(Probe):
     def close(self):
         self.__probe_handle.close()
 
-    def reset_probe(self):
+    def reset_target(self):
         self.__probe_handle.reset(halt=False)
 
     def memory_read(self, address=0, length=0, close_after_read=True):
@@ -130,7 +131,7 @@ class JLinkProbe(Probe):
         Args:
             address (int, optional): Start address. Defaults to 0.
             length (int, optional): Number of bytes to read. Defaults to 0.
-            close_after_read (bool, optional): Close the probe after reading. Defaults to True.            
+            close_after_read (bool, optional): Close the probe after reading. Defaults to True.
         """
         self.open()
         data = self.__probe_handle.memory_read(address, length)

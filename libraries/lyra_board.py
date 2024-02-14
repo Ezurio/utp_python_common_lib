@@ -121,11 +121,16 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
         self.python_uart.close()
 
     def reset_module(self):
-        self.reset_probe()
+        self.reset_target()
         time.sleep(LyraBoard.BOOT_TIME_SECONDS)
 
     def soft_reset_module(self):
         return self.python_uart.send(b'\x04', LyraBoard.BOOT_TIME_SECONDS)
+
+    def close_ports_and_reset(self, reset_probe: bool = True):
+        self.close_ports()
+        self.reset_module()
+        self.close()
 
 #
 # Subclasses are a Python compatible name of the board
@@ -157,6 +162,7 @@ class Lyra24P_20dBm(LyraBoard):
     def __init__(self, probe):
         super().__init__(probe)
 
+
 class Lyra24P_20dBm_RF(LyraBoard):
     """
     Lyra24P module with 20 dBm output and rf pin.
@@ -169,6 +175,7 @@ class Lyra24P_20dBm_RF(LyraBoard):
     def __init__(self, probe):
         super().__init__(probe)
 
+
 class Lyra24S_10dBm(LyraBoard):
     """
     Lyra24S module with 10 dBm output.
@@ -180,6 +187,7 @@ class Lyra24S_10dBm(LyraBoard):
 
     def __init__(self, probe):
         super().__init__(probe)
+
 
 if __name__ == "__main__":
     logger = logger_setup(__file__)

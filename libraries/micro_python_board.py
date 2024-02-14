@@ -165,17 +165,18 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         if self._zephyr:
             ZephyrUart.__init__(self, self._zephyr.device)
 
-    def close_ports_and_reset(self):
+    def close_ports_and_reset(self, reset_probe: bool = True):
         self.close_ports()
         if self._probe:
-            self._probe.reset_probe()
+            if reset_probe:
+                self._probe.reboot()
             self._probe.close()
 
     def reset_module(self):
         """Hard reset the module with the debug probe if available, otherwise soft reset.
         """
         if self._probe:
-            self._probe.reset_probe()
+            self._probe.reset_target()
             time.sleep(MicroPythonBoard.BOOT_TIME_SECONDS)
         else:
             self.soft_reset_module(False)
