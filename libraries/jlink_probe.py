@@ -58,6 +58,9 @@ class JLinkProbe(Probe):
         probes = list()
         try:
             ports = JLinkProbe.__list_ports()
+            # Try with name found on Ubuntu and Raspberry Pi OS
+            if len(ports) == 0:
+                ports = JLinkProbe.__list_ports("J-Link OB - CDC")
         except:
             pass
 
@@ -155,7 +158,7 @@ class JLinkProbe(Probe):
 
 
 if __name__ == "__main__":
-    logger = logger_setup(__file__)
+    logger = logger_setup(__file__, True)
 
     probes = JLinkProbe.get_connected_probes()
     logger.info(f"Number of J-Link probes with comports found: {len(probes)}")
