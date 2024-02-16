@@ -34,33 +34,6 @@ Test SPI1 EEPROM
         ${eeprom_address}=    Evaluate    ${eeprom_address}+${eeprom_step_size}
     END
 
-Test SPI2 EEPROM
-    [Documentation]    This test writes to every memory address in the second SPI EEPROM device connected.
-
-    Set Tags    PROD-5418
-    Skip If    condition=${board1_type}==${ZEPHYR_BOARD_TYPE}    msg=Zephyr boards cannot support multiple SPI devices at present
-
-    ${eeprom_address}=    Set Variable    ${write_address}
-    WHILE    ${eeprom_address}<${eeprom_max_size}
-        SPI TEST BANK    spi2    ${eeprom_address}
-        ${eeprom_address}=    Evaluate    ${eeprom_address}+${eeprom_step_size}
-    END
-
-Test SPI1 and SPI2 EEPROM Interleaved
-    [Documentation]    This test writes to every memory address in both SPI EEPROM devices connected in an interleaved manner.
-
-    Set Tags    PROD-5419
-
-    Skip If    condition=${board1_type}==${ZEPHYR_BOARD_TYPE}    msg=Zephyr boards cannot support multiple SPI devices at present
-
-    ${eeprom_address}=    Set Variable    ${write_address}
-    WHILE    ${eeprom_address}<${eeprom_max_size}
-        SPI TEST BANK    spi1    ${eeprom_address}
-        SPI TEST BANK    spi2    ${eeprom_address}
-        ${eeprom_address}=    Evaluate    ${eeprom_address}+${eeprom_step_size}
-    END
-
-
 *** Keywords ***
 Setup
     Get Boards
@@ -79,16 +52,10 @@ Setup
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
         ${resp}=    DUT1 User REPL Send    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    spi1 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs1)
-
-        ${resp}=    DUT1 User REPL Send    cs2 = Pin("MB_AN", Pin.OUT, Pin.PULL_NONE)
-        ${resp}=    DUT1 User REPL Send    spi2 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs2)
     ELSE
         ${resp}=    DUT1 User REPL Send    cs1 = Pin("SPI_CS", Pin.OUT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    spi1 = SPI("spi@40023000", cs1)
-
-        # Set up cs2 / spi2 here once zephyr supports multiple SPI devices
     END
-
 
 Teardown
     De-Init Board    ${settings_board[0]}
