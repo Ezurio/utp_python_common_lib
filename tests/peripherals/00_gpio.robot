@@ -17,8 +17,13 @@ ${GPIO_SCRIPT}                  common_lib${/}scripts${/}GPIO_scripts${/}gpio_ge
 ${GPIO_SCRIPT_START_RESP}       gpio ready
 
 # MB_RX and MB_TX are not used because they are used for the Python UART by the Sera DVK
-@{GPIO_PAIR_A_LIST}             MB_PWM    MB_RST    MB_SCL    MB_AN    MB_MISO
-@{GPIO_PAIR_B_LIST}             MB_INT    MB_SCK    MB_SDA    MB_CS    MB_MOSI
+#
+# The Sera DVK has pullups on the I2C pins because the peripheral is used by the application.
+# Therefore, the disonnect test will fail if the I2C pins are checked.
+# They are listed last so that the loop can skip them by decreasing the list size by 1.
+@{GPIO_PAIR_A_LIST}             MB_PWM    MB_RST    MB_AN    MB_MISO    MB_SCL
+@{GPIO_PAIR_B_LIST}             MB_INT    MB_SCK    MB_CS    MB_MOSI    MB_SDA
+
 
 *** Tasks ***
 GPIO A To B No Pull
@@ -126,7 +131,7 @@ GPIO A To B Pull Up
 
     # All pins low at this point so disconnect outputs and check pullups make input high
     ${GPIO_INDEX}=    Set Variable    0
-    WHILE    ${GPIO_INDEX} < ${LIST_A_SIZE}
+    WHILE    ${GPIO_INDEX} < ${DISCONNECT_LIST_SIZE}
         ${resp}=    DUT1 User REPL Send
         ...    ${GPIO_PAIR_A_LIST}[${GPIO_INDEX}].reconfigure("${GPIO_PAIR_A_LIST}[${GPIO_INDEX}]", Pin.NO_CONNECT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    ${GPIO_PAIR_B_LIST}[${GPIO_INDEX}].value()
@@ -231,7 +236,7 @@ GPIO A To B Pull Down
 
     # All pins high at this point so disconnect outputs and check pulldowns make input low
     ${GPIO_INDEX}=    Set Variable    0
-    WHILE    ${GPIO_INDEX} < ${LIST_A_SIZE}
+    WHILE    ${GPIO_INDEX} < ${DISCONNECT_LIST_SIZE}
         ${resp}=    DUT1 User REPL Send
         ...    ${GPIO_PAIR_A_LIST}[${GPIO_INDEX}].reconfigure("${GPIO_PAIR_A_LIST}[${GPIO_INDEX}]", Pin.NO_CONNECT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    ${GPIO_PAIR_B_LIST}[${GPIO_INDEX}].value()
@@ -278,7 +283,7 @@ GPIO B To A Pull Down
 
     # All pins high at this point so disconnect outputs and check pulldowns make input low
     ${GPIO_INDEX}=    Set Variable    0
-    WHILE    ${GPIO_INDEX} < ${LIST_A_SIZE}
+    WHILE    ${GPIO_INDEX} < ${DISCONNECT_LIST_SIZE}
         ${resp}=    DUT1 User REPL Send
         ...    ${GPIO_PAIR_B_LIST}[${GPIO_INDEX}].reconfigure("${GPIO_PAIR_B_LIST}[${GPIO_INDEX}]", Pin.NO_CONNECT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    ${GPIO_PAIR_ALIST}[${GPIO_INDEX}].value()
@@ -315,7 +320,8 @@ Setup
     END
 
     Set Global Variable    ${LIST_A_SIZE}    ${a_size}
-    Set Global Variable    ${LIST_B_SIZE}    ${b_size}
+    ${tmp}=    Evaluate    ${LIST_A_SIZE} - 1
+    Set Global Variable    ${DISCONNECT_LIST_SIZE}    ${tmp}
 
 Teardown
     De-Init Board    ${settings_board[0]}
