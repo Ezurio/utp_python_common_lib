@@ -4,23 +4,21 @@ Documentation       Embedded Python GPIO tests. Only one DUT board is required f
 Resource            common_lib/resources/common.robot
 Library             String
 Library             RPA.Tables
-Library    RPA.RobotLogListener
+Library             RPA.RobotLogListener
 
 Suite Setup         Setup
 Suite Teardown      Teardown
 Test Teardown       Teardown Test
-Test Timeout        5 minute
+Test Timeout        1 minute
 
 
 *** Variables ***
 ${GPIO_SCRIPT}                  common_lib${/}scripts${/}GPIO_scripts${/}gpio_generic_script.py
 ${GPIO_SCRIPT_START_RESP}       gpio ready
 
-@{GPIO_PAIR_A_LIST_LYRA}        MB_PWM    MB_RX    MB_SCL    MB_AN    MB_MISO
-@{GPIO_PAIR_B_LIST_LYRA}        MB_INT    MB_TX    MB_SDA    MB_CS    MB_MOSI
-@{GPIO_PAIR_A_LIST_ZEPHYR}      GPIO8    GPIO3    GPIO7    GPIO5
-@{GPIO_PAIR_B_LIST_ZEPHYR}      GPIO2    GPIO1    GPIO4    GPIO6
-
+# MB_RX and MB_TX are not used because they are used for the Python UART by the Sera DVK
+@{GPIO_PAIR_A_LIST}             MB_PWM    MB_RST    MB_SCL    MB_AN    MB_MISO
+@{GPIO_PAIR_B_LIST}             MB_INT    MB_SCK    MB_SDA    MB_CS    MB_MOSI
 
 *** Tasks ***
 GPIO A To B No Pull
@@ -309,14 +307,6 @@ Setup
     ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
-
-    IF    ${board1_type} == ${LYRA_BOARD_TYPE}
-        Set Global Variable    @{GPIO_PAIR_A_LIST}    @{GPIO_PAIR_A_LIST_LYRA}
-        Set Global Variable    @{GPIO_PAIR_B_LIST}    @{GPIO_PAIR_B_LIST_LYRA}
-    ELSE
-        Set Global Variable    @{GPIO_PAIR_A_LIST}    @{GPIO_PAIR_A_LIST_ZEPHYR}
-        Set Global Variable    @{GPIO_PAIR_B_LIST}    @{GPIO_PAIR_B_LIST_ZEPHYR}
-    END
 
     ${a_size}=    Get Length    ${GPIO_PAIR_A_LIST}
     ${b_size}=    Get Length    ${GPIO_PAIR_B_LIST}
