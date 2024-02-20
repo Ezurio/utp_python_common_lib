@@ -7,24 +7,28 @@ Library             ./common_lib/libraries/StringLib.py    WITH NAME    STRING_L
 
 Suite Setup         Setup
 Suite Teardown      Teardown
-Test Timeout        17 minute
+Test Timeout        2 minute
 
 
 *** Variables ***
-${eeprom_step_size}         16
-${eeprom_max_size}          2048
-${write_address}            0x0000
+# The DUT in the test rack uses a https://www.mikroe.com/eeprom-5-click board.
+# A shuttle click board may be used to connect multiple boards to the DUT.
+${eeprom_chunk_size}    16
+${eeprom_step_size}     4096
+${eeprom_max_size}      524288
+${write_address}        0
 
-${WREN}                     \\x06
-${WRDI}                     \\x04
-${RDSR}                     \\x05
-${WRSR}                     \\x01
-${READ}                     \\x03
-${WRITE}                    \\x02
+${WREN}                 \\x06
+${WRDI}                 \\x04
+${RDSR}                 \\x05
+${WRSR}                 \\x01
+${READ}                 \\x03
+${WRITE}                \\x02
+
 
 *** Tasks ***
 Test SPI1 EEPROM
-    [Documentation]    This test writes to every memory address in the first SPI EEPROM device connected.
+    [Documentation]    Writes to memory addresses in the EEPROM and reads them back.
 
     Set Tags    PROD-5417
 
@@ -33,6 +37,7 @@ Test SPI1 EEPROM
         SPI TEST BANK    spi1    ${eeprom_address}
         ${eeprom_address}=    Evaluate    ${eeprom_address}+${eeprom_step_size}
     END
+
 
 *** Keywords ***
 Setup
@@ -49,11 +54,18 @@ Setup
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
+    # Set active low Hold and Write Protect to 1
+    # Note: On the Sera NX040 DVK, there are other devices on this SPI bus.
+    ${resp}=    DUT1 User REPL Send    hold = Pin("MB_RST", Pin.OUT, Pin.PULL_NONE)
+    ${resp}=    DUT1 User REPL Send    hold.high()
+    ${resp}=    DUT1 User REPL Send    wp = Pin("MB_PWM", Pin.OUT, Pin.PULL_NONE)
+    ${resp}=    DUT1 User REPL Send    wp.high()
+
+    # Set up the SPI bus
+    ${resp}=    DUT1 User REPL Send    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
-        ${resp}=    DUT1 User REPL Send    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    spi1 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs1)
     ELSE
-        ${resp}=    DUT1 User REPL Send    cs1 = Pin("SPI_CS", Pin.OUT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    spi1 = SPI("spi@40023000", cs1)
     END
 
@@ -67,11 +79,11 @@ SPI TEST BANK
 
     # First generate the random data to be written.
     # -------------------------------------------------------------------------------
-    ${hex_string_size}=    Evaluate    ${eeprom_step_size}*2
+    ${hex_string_size}=    Evaluate    ${eeprom_chunk_size}*2
     ${write_string_data}=    STRING_LIB.BuildHexString    ${hex_string_size}
     # -------------------------------------------------------------------------------
     # Convert the address to hex
-    ${hex_write_address}=    Convert To Hex    ${eeprom_address}    length=4
+    ${hex_write_address}=    Convert To Hex    ${eeprom_address}    length=6
     # -------------------------------------------------------------------------------
     # Let the device know we want to access its write array. Do this by clocking in
     # a WREN instruction.
