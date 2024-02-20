@@ -24,13 +24,16 @@ ${GPIO_SCRIPT_START_RESP}       gpio ready
 @{GPIO_PAIR_A_LIST}             MB_PWM    MB_RST    MB_AN    MB_MISO    MB_SCL
 @{GPIO_PAIR_B_LIST}             MB_INT    MB_SCK    MB_CS    MB_MOSI    MB_SDA
 
+${GPIO_PAIR_A_IS_OUTPUT}        True
 
 *** Tasks ***
 GPIO A To B No Pull
     [Documentation]    This test will toggle all pins in list A and check that the corresponding pins in list B are also toggled. No Pull is set.
-    Pin Setup    ${GPIO_PAIR_A_LIST}    ${GPIO_PAIR_B_LIST}    Pin.PULL_NONE    Pin.PULL_NONE    low
 
     Set Tags    PROD-5406
+
+    Pin Setup    ${GPIO_PAIR_A_LIST}    ${GPIO_PAIR_B_LIST}    Pin.PULL_NONE    Pin.PULL_NONE    low
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${True}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -62,9 +65,11 @@ GPIO A To B No Pull
 
 GPIO B To A No Pull
     [Documentation]    This test will toggle all pins in list B and check that the corresponding pins in list A are also toggled. No Pull is set.
-    Pin Setup    ${GPIO_PAIR_B_LIST}    ${GPIO_PAIR_A_LIST}    Pin.PULL_NONE    Pin.PULL_NONE    low
 
     Set Tags    PROD-5407
+
+    Pin Setup    ${GPIO_PAIR_B_LIST}    ${GPIO_PAIR_A_LIST}    Pin.PULL_NONE    Pin.PULL_NONE    low
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${False}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -100,6 +105,7 @@ GPIO A To B Pull Up
     Set Tags    PROD-5408
 
     Pin Setup    ${GPIO_PAIR_A_LIST}    ${GPIO_PAIR_B_LIST}    Pin.PULL_NONE    Pin.PULL_UP    low
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${True}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -153,6 +159,7 @@ GPIO B To A Pull Up
     Set Tags    PROD-5409
 
     Pin Setup    ${GPIO_PAIR_B_LIST}    ${GPIO_PAIR_A_LIST}    Pin.PULL_NONE    Pin.PULL_UP    low
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${False}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -184,7 +191,7 @@ GPIO B To A Pull Up
 
     # All pins low at this point so disconnect outputs and check pullups make input high
     ${GPIO_INDEX}=    Set Variable    0
-    WHILE    ${GPIO_INDEX} < ${LIST_A_SIZE}
+    WHILE    ${GPIO_INDEX} < ${DISCONNECT_LIST_SIZE}
         ${resp}=    DUT1 User REPL Send
         ...    ${GPIO_PAIR_B_LIST}[${GPIO_INDEX}].reconfigure("${GPIO_PAIR_B_LIST}[${GPIO_INDEX}]", Pin.NO_CONNECT, Pin.PULL_NONE)
         ${resp}=    DUT1 User REPL Send    ${GPIO_PAIR_A_LIST}[${GPIO_INDEX}].value()
@@ -206,6 +213,7 @@ GPIO A To B Pull Down
     Set Tags    PROD-5410
 
     Pin Setup    ${GPIO_PAIR_A_LIST}    ${GPIO_PAIR_B_LIST}    Pin.PULL_NONE    Pin.PULL_DOWN    high
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${True}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -252,6 +260,7 @@ GPIO B To A Pull Down
     Set Tags    PROD-5411
 
     Pin Setup    ${GPIO_PAIR_B_LIST}    ${GPIO_PAIR_A_LIST}    Pin.PULL_NONE    Pin.PULL_DOWN    high
+    Set Global Variable    ${GPIO_PAIR_A_IS_OUTPUT}    ${False}
 
     # toggle all pins and check
     ${GPIO_INDEX}=    Set Variable    0
@@ -328,16 +337,20 @@ Teardown
 
 Teardown Test
     # For Lyra, there are a limited number of pin interrupts.
-    # Explicitly remove the pin objects even though garbage collection should do it
-    # (https://rfpros.atlassian.net/browse/PROD-5310.
-    FOR    ${element}    IN    @{GPIO_PAIR_A_LIST}
-        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
-        ${resp}=    DUT1 User REPL Send    ${element} = None
-    END
-
-    FOR    ${element}    IN    @{GPIO_PAIR_B_LIST}
-        ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
-        ${resp}=    DUT1 User REPL Send    ${element} = None
+    # Explicitly remove the pin objects even though garbage collection should do it.
+    # https://rfpros.atlassian.net/browse/PROD-5310.
+    #
+    # To prevent warnings, only remove event handlers for input pins.
+    IF    ${GPIO_PAIR_A_IS_OUTPUT} == ${True}
+        FOR    ${element}    IN    @{GPIO_PAIR_B_LIST}
+            ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
+            ${resp}=    DUT1 User REPL Send    ${element} = None
+        END
+    ELSE
+        FOR    ${element}    IN    @{GPIO_PAIR_A_LIST}
+            ${resp}=    DUT1 User REPL Send    ${element}.configure_event(None, Pin.EVENT_NONE)
+            ${resp}=    DUT1 User REPL Send    ${element} = None
+        END
     END
 
     ${resp}=    DUT1 User REPL Send    gc.collect()
