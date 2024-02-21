@@ -72,6 +72,22 @@ Test I2C EEPROM Interleaved
         Increment EEPROM Address
     END
 
+Test I2C EEPROM Page Write
+    [Documentation]    Write an entire page of the first I2C EEPROM device.
+
+    Set Tags    PROD-7159
+
+    Reset EEPROM Address
+    ${hex_write_address}    ${write_string_data}=    I2C EEPROM Setup and Write
+    ...    i2c1
+    ...    ${eeprom_access_address}
+    ...    ${EEPROM_PAGE_SIZE}
+    I2C EEPROM Read and Compare
+    ...    i2c1
+    ...    ${hex_write_address}
+    ...    ${write_string_data}
+    ...    ${EEPROM_PAGE_SIZE}
+
 
 *** Keywords ***
 Setup
@@ -98,16 +114,16 @@ Teardown
     De-Init Board    ${settings_board[0]}
 
 I2C EEPROM Setup and Write
-    [Arguments]    ${i2c}    ${eeprom_access_address}
+    [Arguments]    ${i2c}    ${eeprom_access_address}    ${chunk_size}=${EEPROM_CHUNK_SIZE}
     # First generate the random data to be written.
     # -------------------------------------------------------------------------------
-    ${hex_string_size}=    Evaluate    ${EEPROM_CHUNK_SIZE}*2
+    ${hex_string_size}=    Evaluate    ${chunk_size}*2
     ${write_string_data}=    STRING_LIB.BuildHexString    ${hex_string_size}
     # -------------------------------------------------------------------------------
     # Convert the address to hex
     ${hex_write_address}=    Convert To Hex    ${eeprom_access_address}    length=4
     # -------------------------------------------------------------------------------
-    # The peripheral handles sending the device address and sets the r/w bit.
+    # The peripheral handles sending the device address and handles the r/w bit.
     # The write address is two bytes, followed by the write data (1 byte).
     # -------------------------------------------------------------------------------
     ${hex_write_address_data}=    Catenate    ${hex_write_address}${write_string_data}
@@ -119,12 +135,12 @@ I2C EEPROM Setup and Write
     RETURN    ${hex_write_address}    ${write_string_data}
 
 I2C EEPROM Read and Compare
-    [Arguments]    ${i2c}    ${hex_write_address}    ${write_string_data}
+    [Arguments]    ${i2c}    ${hex_write_address}    ${write_string_data}    ${chunk_size}=${EEPROM_CHUNK_SIZE}
     # -------------------------------------------------------------------------------
-    # Read back the data - same id and address but set the lsb for a read.
+    # Read back the previously written data.
     # -------------------------------------------------------------------------------
     ${byte_write_address}=    STRING_LIB.ConvertHexadecimalStringtoByteArray    ${hex_write_address}
-    ${resp}=    DUT1 User REPL Send    read = ${i2c}.write_read(b"${byte_write_address}",${EEPROM_CHUNK_SIZE})
+    ${resp}=    DUT1 User REPL Send    read = ${i2c}.write_read(b"${byte_write_address}",${chunk_size})
     ${Read_result}=    DUT1 User REPL Send    print(read)
     ${Read_string}=    Convert To String    ${Read_result}
     ${HEX}=    STRING_LIB.ConvertASCIIToHexadecimalNoCRLF    ${Read_string}
