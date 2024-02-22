@@ -68,8 +68,9 @@ class Board(object):
     be implemented by subclasses.
     """
 
-    def __init__(self):
+    def __init__(self, id: str = ''):
         self.__initialized = False
+        self.__id = id
 
     def __del__(self):
         try:
@@ -174,6 +175,10 @@ class Board(object):
                     pass
 
         return None
+
+    @property
+    def id(self):
+        return self.__id
 
     def open_and_init_board(self):
         """

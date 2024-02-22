@@ -10,6 +10,7 @@ from zephyr_uart import ZephyrUart
 import time
 import serial.tools.list_ports as list_ports
 import operator
+import itertools
 
 logger = logger_get(__name__)
 
@@ -68,7 +69,10 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         boards = []
 
         detected_ports = list_ports.comports()
-        if len(boards_conf) > 0 and len(detected_ports) > 0:
+        if len(detected_ports) < 0:
+            return boards
+
+        if len(boards_conf) > 0:
             for board in boards_conf:
                 repl = None
                 zephyr = None
@@ -130,8 +134,9 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
     def __init__(self, repl: ComPort,
                  board_name: str = "",
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None):
-        super().__init__()
+                 probe: DvkProbe | JLinkProbe | None = None,
+                 id: str = ''):
+        super().__init__(id=id)
         self._repl = repl
         self._zephyr = zephyr
         self._probe = probe
@@ -247,3 +252,79 @@ class BL5340Dvk(MicroPythonBoard):
                  zephyr: ComPort | None = None,
                  probe: DvkProbe | JLinkProbe | None = None):
         super().__init__(repl, board_name, zephyr, probe)
+
+
+class BL654UsbDongle(MicroPythonBoard, Board):
+    """
+    A class to represent the BL654 USB Dongle.
+    """
+
+    USB_VID = 0x3016
+    USB_PID = 0x0003
+
+    def __init__(self, repl: ComPort,
+                 board_name: str = '',
+                 zephyr: ComPort | None = None,
+                 probe: DvkProbe | JLinkProbe | None = None,
+                 id: str = ''):
+        super().__init__(repl, board_name, zephyr, probe, id)
+
+    @classmethod
+    def get_connected(cls, allow_list: list[str] = list(),
+                      boards_conf: list[GenericBoard] = list()) -> list['BL654UsbDongle']:
+        """ Get a list of all connected boards.
+
+        Args:
+            allow_list (list[str]): List of board class names to allow.
+
+            boards_conf (list[GenericBoard]): List of board configs to search for and create.
+            If this list is empty, the function will search for connected boards.
+
+        Returns:
+            list['BL654UsbDongle']: List of connected boards
+        """
+
+        boards = []
+        if len(boards_conf) > 0:
+            # TODO: This can return boards that are not BL654UsbDongle. PROD-7207
+            boards = super().get_connected(allow_list, boards_conf)
+        else:
+            detected_ports = list_ports.comports()
+            if len(detected_ports) < 0:
+                return boards
+
+            # Find the serial ports with matching VID and PID.
+            matching_ports = [
+                x for x in detected_ports if x.vid == BL654UsbDongle.USB_VID and x.pid == BL654UsbDongle.USB_PID]
+            # Sort by location and device to make sure the ports are in
+            # order by lowest USB port index to largest.
+            # This is important because the REPL port is the first port enumerated.
+            matching_ports.sort(
+                key=operator.attrgetter('location', 'device'))
+
+            # Group the matching ports by serial number and create a board for each group.
+            for k, g in itertools.groupby(matching_ports, key=lambda x: x.serial_number):
+                ports = list(g)
+                repl_index = 0
+                zephyr_index = 1
+                repl_port = ports[repl_index]
+                zephyr_port = ports[zephyr_index]
+                repl = ComPort({
+                    "sn": repl_port.serial_number,
+                    "index": repl_index,
+                    "type": ComPortType.REPL.name.casefold(),
+                    "source": ComPortSource.DEVICE.name.casefold(),
+                    "name": "Python REPL",
+                    "device": repl_port.device
+                })
+                zephyr = ComPort({
+                    "sn": zephyr_port.serial_number,
+                    "index": zephyr_index,
+                    "type": ComPortType.ZEPHYR.name.casefold(),
+                    "source": ComPortSource.DEVICE.name.casefold(),
+                    "name": "Zephyr shell",
+                    "device": zephyr_port.device
+                })
+                boards.append(BL654UsbDongle(repl=repl, zephyr=zephyr, id=k))
+
+        return boards
