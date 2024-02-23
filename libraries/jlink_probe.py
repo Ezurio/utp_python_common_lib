@@ -45,7 +45,7 @@ class JLinkProbe(Probe):
         return jlink_comport_info
 
     @staticmethod
-    def get_connected_probes(family: str = "Cortex-M33") -> list['JLinkProbe']:
+    def get_connected_probes(family: str = "Cortex-M33", uart_interface_type: str = "python") -> list['JLinkProbe']:
         """
         Look for JLink probes.
 
@@ -88,7 +88,7 @@ class JLinkProbe(Probe):
                     p = JLinkProbe(emu.SerialNumber,
                                    family,
                                    emu.acProduct.decode(),
-                                   {"python": device})
+                                   {uart_interface_type: device})
                     probes.append(p)
 
             j_link.close()
