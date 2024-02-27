@@ -177,7 +177,7 @@ class Board(object):
         return None
 
     @property
-    def id(self):
+    def unique_id(self):
         return self.__id
 
     def open_and_init_board(self):
