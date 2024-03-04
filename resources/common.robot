@@ -1,6 +1,7 @@
 *** Settings ***
 Library     ./common_lib/libraries/discovery.py    WITH NAME    Discovery
 Library     String
+Library     Collections
 Library     ./common_lib/libraries/upload_robot_xray.py    WITH NAME    Upload
 Library     ./common_lib/libraries/xray_listener.py    WITH NAME    XListen
 Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardConfig
@@ -33,16 +34,18 @@ Get Boards
         Fail    Minimum number of boards (${minimum_boards}) not found
     END
 
-    IF    ${num_boards} >= ${1}
-        Set Global Variable    ${settings_board1}    ${boards[0]}
-    END
-
     IF    ${num_boards} > ${1}
         IF    ${allow_many} == ${False}
             Fail    Please ensure only one board is connected!
         END
-        Set Global Variable    ${settings_board2}    ${boards[1]}
     END
+
+    ${settings_boards}=    Create List
+    FOR    ${i}    IN RANGE    ${num_boards}
+        Append To List    ${settings_boards}    ${boards[${i}]}
+    END
+
+    Set Global Variable    ${settings_boards}
 
 Init Board
     [Arguments]    ${board}
