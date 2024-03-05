@@ -64,7 +64,7 @@ Test SPI1 and SPI2 EEPROM Interleaved
 *** Keywords ***
 Setup
     Get Boards
-    Init Board    ${settings_board1}
+    Init Board    ${settings_board[0]}
 
     # Prerequisites for I2C control
     DUT1 User REPL Send    import canvas
@@ -72,7 +72,7 @@ Setup
     DUT1 User REPL Send    from machine import Pin
     DUT1 User REPL Send    from machine import SPI
 
-    ${tmp}=    Get Board Type    ${settings_board1}
+    ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
@@ -91,7 +91,7 @@ Setup
 
 
 Teardown
-    De-Init Board    ${settings_board1}
+    De-Init Board    ${settings_board[0]}
 
 SPI TEST BANK
     [Arguments]    ${spi}    ${eeprom_address}

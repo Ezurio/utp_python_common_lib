@@ -300,13 +300,13 @@ GPIO B To A Pull Down
 *** Keywords ***
 Setup
     Get Boards
-    Init Board    ${settings_board1}
+    Init Board    ${settings_board[0]}
 
-    ${resp}=    Run Script on Board    ${settings_board1}    ${GPIO_SCRIPT}
+    ${resp}=    Run Script on Board    ${settings_board[0]}    ${GPIO_SCRIPT}
     ${resp_string}=    Convert To String    ${resp}
     Should Contain    ${resp_string}    ${GPIO_SCRIPT_START_RESP}
 
-    ${tmp}=    Get Board Type    ${settings_board1}
+    ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
@@ -328,7 +328,7 @@ Setup
     Set Global Variable    ${LIST_B_SIZE}    ${b_size}
 
 Teardown
-    De-Init Board    ${settings_board1}
+    De-Init Board    ${settings_board[0]}
 
 Teardown Test
     # For Lyra, there are a limited number of pin interrupts.

@@ -28,8 +28,8 @@ Gatt Database Initialise
 
     Set Tags    PROD-5400
 
-    ${resp}=    User REPL Send    ${settings_board2}    gatt_dict = gatt_client.get_dict()    ${5.0}
-    ${resp}=    User REPL Send    ${settings_board2}    print(gatt_dict)
+    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_dict = gatt_client.get_dict()    ${5.0}
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict)
     ${resp}=    Convert To String    ${resp}
 
     Should Contain    ${resp}    B8D00001-6329-EF96-8A4D-55B376D8B25A
@@ -46,15 +46,15 @@ Gatt Database Read
 
     Set Tags    PROD-5401
 
-    ${resp}=    User REPL Send    ${settings_board1}    gatt_server.write("ReadChar", bytes("Hello Client", "utf-8"))
+    ${resp}=    User REPL Send    ${settings_board[0]}    gatt_server.write("ReadChar", bytes("Hello Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board2}    read_val = gatt_client.read("ReadChar")
+    ${resp}=    User REPL Send    ${settings_board[1]}    read_val = gatt_client.read("ReadChar")
     ${resp}=    Convert To String    ${resp}
 
-    ${resp}=    User REPL Send    ${settings_board2}    print(read_val.decode("utf-8"))
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(read_val.decode("utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     Should Contain    ${resp}    Hello Client
@@ -63,12 +63,12 @@ Gatt Database Write
     [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
 
     Set Tags    PROD-5402
-    ${resp}=    User REPL Send    ${settings_board2}    gatt_client.write("WriteChar", bytes("Hello Server", "utf-8"))
+    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.write("WriteChar", bytes("Hello Server", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board1}    print(write_value)
+    ${resp}=    User REPL Send    ${settings_board[0]}    print(write_value)
     ${resp}=    Convert To String    ${resp}
 
     Should Contain    ${resp}    Hello Server
@@ -77,43 +77,43 @@ Gatt Database Notify
     [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
 
     Set Tags    PROD-5403
-    ${resp}=    User REPL Send    ${settings_board2}    gatt_client.set_callbacks(cb_notify, cb_indicate)
+    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.set_callbacks(cb_notify, cb_indicate)
     ${resp}=    Convert To String    ${resp}
 
     ${resp}=    User REPL Send
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_NOTIFY)
     ${resp}=    Convert To String    ${resp}
 
     # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board1}    print(do_notify)
+    ${resp}=    User REPL Send    ${settings_board[0]}    print(do_notify)
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    True
 
     ${resp}=    User REPL Send
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    gatt_server.notify(connection, "NotifyChar", bytes("Notify Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board2}    print(notify_message)
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(notify_message)
     ${resp}=    Convert To String    ${resp}
 
     Should Contain    ${resp}    Notify Client
 
     ${resp}=    User REPL Send
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_DISABLE)
     ${resp}=    Convert To String    ${resp}
 
     # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board1}    print(do_notify)
+    ${resp}=    User REPL Send    ${settings_board[0]}    print(do_notify)
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    False
 
@@ -122,34 +122,34 @@ Gatt Database Indicate
 
     Set Tags    PROD-5404
 
-    ${resp}=    User REPL Send    ${settings_board2}    gatt_client.set_callbacks(cb_notify, cb_indicate)
+    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.set_callbacks(cb_notify, cb_indicate)
     ${resp}=    Convert To String    ${resp}
 
     ${resp}=    User REPL Send
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    gatt_client.enable("IndicateChar", ble.GattClient.CCCD_STATE_INDICATE)
     ${resp}=    Convert To String    ${resp}
 
     # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board1}    print(do_indicate)
+    ${resp}=    User REPL Send    ${settings_board[0]}    print(do_indicate)
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    True
 
     ${resp}=    User REPL Send
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    gatt_server.indicate(connection, "IndicateChar", bytes("Indicate Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board2}    print(indicate_message)
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(indicate_message)
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    Indicate Client
 
-    ${resp}=    User REPL Send    ${settings_board1}    print(indicate_ack)
+    ${resp}=    User REPL Send    ${settings_board[0]}    print(indicate_ack)
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    True
 
@@ -157,24 +157,24 @@ Gatt Database Indicate
 *** Keywords ***
 Setup
     Get Boards
-    Init Board    ${settings_board1}
-    Init Board    ${settings_board2}
+    Init Board    ${settings_board[0]}
+    Init Board    ${settings_board[1]}
 
-    ${tmp}=    Get Board Addr    ${settings_board1}
+    ${tmp}=    Get Board Addr    ${settings_board[0]}
     Set Global Variable    ${board1_addr}    ${tmp}
     Set Global Variable    ${board1_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 
-    ${tmp}=    Get Board Addr    ${settings_board2}
+    ${tmp}=    Get Board Addr    ${settings_board[1]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_addr}    ${tmp}
     Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 
-    Init Server    ${settings_board1}    ${board1_adv_name}
-    Init Client    ${settings_board2}    ${board1_addr}
+    Init Server    ${settings_board[0]}    ${board1_adv_name}
+    Init Client    ${settings_board[1]}    ${board1_addr}
 
 Teardown
-    De-Init Board    ${settings_board1}
-    De-Init Board    ${settings_board2}
+    De-Init Board    ${settings_board[0]}
+    De-Init Board    ${settings_board[1]}
     Sleep    3s
 
 Wait for data

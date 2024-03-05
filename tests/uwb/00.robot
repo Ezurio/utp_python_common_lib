@@ -21,28 +21,28 @@ UWB Two-Way-Range
     ...    UWB, BLE scanning, advertising, and Python callbacks are all tested as part of this test.
     Set Tags    PROD-2476
 
-    ${board1_id}=    Get Board Device ID    ${settings_board1}
-    ${board2_id}=    Get Board Device ID    ${settings_board2}
+    ${board1_id}=    Get Board Device ID    ${settings_board[0]}
+    ${board2_id}=    Get Board Device ID    ${settings_board[1]}
 
-    Setup Board for Ranging    ${settings_board1}
-    Setup Board for Ranging    ${settings_board2}
+    Setup Board for Ranging    ${settings_board[0]}
+    Setup Board for Ranging    ${settings_board[1]}
 
-    Run Ranging Script on Board    ${settings_board1}
-    Run Ranging Script on Board    ${settings_board2}
+    Run Ranging Script on Board    ${settings_board[0]}
+    Run Ranging Script on Board    ${settings_board[1]}
 
-    Verify Board Range    ${settings_board1}    ${board2_id}
-    Verify Board Range    ${settings_board2}    ${board1_id}
+    Verify Board Range    ${settings_board[0]}    ${board2_id}
+    Verify Board Range    ${settings_board[1]}    ${board1_id}
 
 
 *** Keywords ***
 Setup
     Get Boards    allow_list=['SeraNX040Dvk']    minimum_boards=2
-    Init Board    ${settings_board1}
-    Init Board    ${settings_board2}
+    Init Board    ${settings_board[0]}
+    Init Board    ${settings_board[1]}
 
 Teardown
-    De-Init Board    ${settings_board1}
-    De-Init Board    ${settings_board2}
+    De-Init Board    ${settings_board[0]}
+    De-Init Board    ${settings_board[1]}
 
 Run Ranging Script on Board
     [Arguments]    ${board}

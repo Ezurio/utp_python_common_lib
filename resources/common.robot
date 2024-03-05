@@ -8,8 +8,7 @@ Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardCon
 
 
 *** Variables ***
-${settings_board1}          ${EMPTY}
-${settings_board2}          ${EMPTY}
+${settings_board}           @{EMPTY}
 ${LYRA_BOARD_TYPE}=         'Lyra'
 ${ZEPHYR_BOARD_TYPE}=       'zephyr'
 ${BLE_ADDR_SCRIPT}=         common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
@@ -40,12 +39,7 @@ Get Boards
         END
     END
 
-    ${settings_boards}=    Create List
-    FOR    ${i}    IN RANGE    ${num_boards}
-        Append To List    ${settings_boards}    ${boards[${i}]}
-    END
-
-    Set Global Variable    ${settings_boards}
+    Set Global Variable    ${settings_board}    ${boards}
 
 Init Board
     [Arguments]    ${board}
@@ -62,7 +56,7 @@ Init Board
     ${resp}=    Call Method    ${board.python_uart}    send    import sys
 
     # Setup the XRay uploader to use the test plan associated with DUT1
-    IF    $board==$settings_board1    Setup Xray Upload
+    IF    $board==$settings_board[0]    Setup Xray Upload
 
 De-Init Board
     [Arguments]    ${board}
@@ -134,7 +128,7 @@ Zephyr Shell Send
 DUT1 User REPL Send
     [Arguments]    ${cmd}    ${timeout}=${1.0}
 
-    ${resp}=    User REPL Send    ${settings_board1}    ${cmd}    ${timeout}
+    ${resp}=    User REPL Send    ${settings_board[0]}    ${cmd}    ${timeout}
 
     RETURN    ${resp}
 

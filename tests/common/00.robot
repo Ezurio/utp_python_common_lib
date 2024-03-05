@@ -132,9 +132,9 @@ Switch REPL Modes
 
     ${resp}=    DUT1 User REPL Send    os.uname()
     Should Contain    ${resp}    version
-    Switch Board to Raw REPL    ${settings_board1}
-    ${resp}=    Raw REPL Exec    ${settings_board1}    print(os.uname())
-    Switch Board to User REPL    ${settings_board1}
+    Switch Board to Raw REPL    ${settings_board[0]}
+    ${resp}=    Raw REPL Exec    ${settings_board[0]}    print(os.uname())
+    Switch Board to User REPL    ${settings_board[0]}
     ${resp}=    Convert To String    ${resp}
     Should Contain    ${resp}    version
     ${resp}=    DUT1 User REPL Send    os.uname()
@@ -160,7 +160,7 @@ REPL Control Characters
     ...    to the REPL and verifies the device is still responsive.
     Set Tags    PROD-2446
 
-    ${dut}=    Set Variable    ${settings_board1}
+    ${dut}=    Set Variable    ${settings_board[0]}
 
     ${resp}=    Upload Script to Board    ${dut}    common_lib/scripts/loop_forever.py    main.py
     Board Reset Module    ${dut}
@@ -172,13 +172,13 @@ REPL Control Characters
 *** Keywords ***
 Setup
     Get Boards
-    Init Board    ${settings_board1}
+    Init Board    ${settings_board[0]}
     ${tmp}=    DUT1 User REPL Send    os.uname().sysname
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
 Teardown
-    De-Init Board    ${settings_board1}
+    De-Init Board    ${settings_board[0]}
 
 Write Read Rename Delete File
     [Arguments]    ${file_name}    ${file_contents}    ${write_mode}    ${read_mode}

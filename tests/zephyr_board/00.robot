@@ -12,16 +12,16 @@ Test Timeout        1 minute
 Python in Thread
     Set Tags    PROD-2468
 
-    ${resp}=    Zephyr Shell Send    ${settings_board1}    kernel threads
+    ${resp}=    Zephyr Shell Send    ${settings_board[0]}    kernel threads
     Should Contain    ${resp}    micropython
-    ${resp}=    Zephyr Shell Send    ${settings_board1}    kernel version
+    ${resp}=    Zephyr Shell Send    ${settings_board[0]}    kernel version
     Should Contain    ${resp}    Zephyr version
 
 
 *** Keywords ***
 Setup
     Get Boards    allow_list=['SeraNX040Dvk']
-    Init Board    ${settings_board1}
+    Init Board    ${settings_board[0]}
 
 Teardown
-    De-Init Board    ${settings_board1}
+    De-Init Board    ${settings_board[0]}
