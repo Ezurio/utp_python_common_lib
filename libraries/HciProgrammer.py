@@ -2,6 +2,7 @@ import intelhex
 import io
 import logging
 import HciSerialPort as hci
+import hci.command as hci_cmd
 
 
 class HciProgrammer():
@@ -52,46 +53,83 @@ class HciProgrammer():
         self.hci_port.send_chip_erase()
         logging.info('Chip erase finished')
 
-    def program_firmware(self, baud_rate: int, file_path: str, chip_erase_enable: bool = False):
+    def program_firmware(self, baud_rate: int = 115200, file_path: str | None = None, chip_erase_enable: bool = False):
         """Program the firmware file
 
         Args:
             baud_rate (int): Baud rate to program the firmware at
-            file_path (str): Path to firmware hex file
+            file_path (str): Path to firmware file (hex or hcd)
 
         Raises:
             Exception: raise exception on error
         """
         if chip_erase_enable or file_path:
-            logging.info('Programming firmware...')
+            logging.info('Loading minidriver...')
             self.open_com_init_mini_driver()
         else:
             logging.info('No firmware or chip erase specified, exiting')
             return
 
         if chip_erase_enable:
-            logging.info('Erasing chip...')
             self.chip_erase()
 
         if file_path:
-            logging.info('Changing baud to 3mbps...')
+            is_hex = False
+            # Get file extension from path
+            file_ext = file_path.split('.')[-1].casefold()
+            if file_ext == 'hex':
+                is_hex = True
+            elif file_ext != 'hcd':
+                raise Exception('Invalid file extension, must be .hex or .hcd')
+
+            logging.info(f'Changing baud to {baud_rate}')
             self.hci_port.change_baud_rate(baud_rate)
 
-            # Write SS section
-            if chip_erase_enable:
-                logging.info("Writing SS section...")
-                ss_bin = io.BytesIO()
-                if intelhex.hex2bin(file_path, ss_bin, start=self.SS_ADDR, size=self.SS_LEN, pad=self.hci_port.FLASH_PAD):
-                    raise Exception('Could not create SS binary')
-                self.hci_port.write_ram(self.SS_ADDR, ss_bin, verify=True)
+            if is_hex:
+                logging.info('Programming firmware...')
+                # Write SS section
+                if chip_erase_enable:
+                    logging.info("Writing SS section...")
+                    ss_bin = io.BytesIO()
+                    if intelhex.hex2bin(file_path, ss_bin, start=self.SS_ADDR, size=self.SS_LEN, pad=self.hci_port.FLASH_PAD):
+                        raise Exception('Could not create SS binary')
+                    self.hci_port.write_ram(self.SS_ADDR, ss_bin, verify=True)
 
-            # Write DS section
-            logging.info("Writing DS section...")
-            ds_bin = io.BytesIO()
-            ds_len = self.FLASH_SIZE-self.SS_LEN
-            if intelhex.hex2bin(file_path, ds_bin, start=self.DS_ADDR, size=ds_len, pad=self.hci_port.FLASH_PAD):
-                raise Exception('Could not create DS binary')
-            self.hci_port.write_ram(self.DS_ADDR, ds_bin, verify=True)
-            self.hci_port.send_launch_ram(self.LAUNCH_FIRMWARE_ADDR)
-            logging.info('Finished programming firmware')
+                # Write DS section
+                logging.info("Writing DS section...")
+                ds_bin = io.BytesIO()
+                ds_len = self.FLASH_SIZE-self.SS_LEN
+                if intelhex.hex2bin(file_path, ds_bin, start=self.DS_ADDR, size=ds_len, pad=self.hci_port.FLASH_PAD):
+                    raise Exception('Could not create DS binary')
+                self.hci_port.write_ram(self.DS_ADDR, ds_bin, verify=True)
+                self.hci_port.send_launch_ram(self.LAUNCH_FIRMWARE_ADDR)
+            else:
+                logging.info('Programming HCD file...')
+                # read in file_path as binary
+                firmware_bin = []
+                with open(file_path, 'rb') as f:
+                    firmware_bin = f.read()
+
+                data_index = 0
+                total_bytes = remaining_bytes = len(firmware_bin)
+
+                while remaining_bytes > 0:
+                    payload_len = firmware_bin[data_index + 2]
+                    payload_start = data_index + 2 + 1
+                    data_len = payload_len + 3
+                    cmd_opcode = firmware_bin[data_index + 1]
+                    cmd_opcode = cmd_opcode << 8
+                    cmd_opcode |= firmware_bin[data_index]
+                    logging.debug(f'Write HCD cmd {hex(cmd_opcode)}')
+                    (success, payload) = self.hci_port.send_command_wait_response(hci_cmd.CommandPacket(
+                        cmd_opcode, firmware_bin[payload_start: (payload_start + payload_len)]))
+                    if not success:
+                        raise Exception(
+                            f'No response for {hex(cmd_opcode)} at index {data_index}')
+                    data_index += data_len
+                    remaining_bytes -= data_len
+                    logging.debug(
+                        f'HCD progress: {data_index}/{total_bytes} ({round(data_index/total_bytes*100, 1)}%)')
+
+            logging.info('Finished programming!')
             self.hci_port.close()

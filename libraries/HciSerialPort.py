@@ -94,7 +94,7 @@ class HciSerialPort():
                 # logging.warning(str(e))
                 pass
 
-    def __send_command_wait_response(self, packet: hci.command.CommandPacket, timeout: float = 1, tries: int = 1) -> tuple:
+    def send_command_wait_response(self, packet: hci.command.CommandPacket, timeout: float = 1, tries: int = 1) -> tuple:
         if self.port == None or not self.port.is_open:
             raise Exception('Port is not open')
         success = False
@@ -128,10 +128,19 @@ class HciSerialPort():
         return (success, resp_payload)
 
     def __verify_crc(self, address: int, length: int) -> int:
+        """Verify CRC command (Infineon Vendor Specific HCI command)
+
+        Args:
+            address (int): Start address
+            length (int): Length of data to verify from start address
+
+        Returns:
+            int: CRC value
+        """
         payload = []
         payload.extend(address.to_bytes(4, self.LITTLE_ENDIAN))
         payload.extend(length.to_bytes(4, self.LITTLE_ENDIAN))
-        (success, payload) = self.__send_command_wait_response(hci.command.CommandPacket(
+        (success, payload) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_VERIFY_CRC, bytearray(payload)))
         if not success:
             raise Exception('Failed to verify CRC')
@@ -181,12 +190,12 @@ class HciSerialPort():
         Raises:
             Exception: raise exception if no response
         """
-        (success, _) = self.__send_command_wait_response(hci.command.HCI_Reset())
+        (success, _) = self.send_command_wait_response(hci.command.HCI_Reset())
         if not success:
             raise Exception('Failed HCI reset')
 
     def write_ram(self, address: int, data: io.BytesIO, pad: int = FLASH_PAD, verify: bool = False):
-        """Write RAM command
+        """Write RAM command (Infineon Vendor Specific HCI command)
 
         Args:
             address (int): Address to write to
@@ -218,7 +227,7 @@ class HciSerialPort():
             else:
                 payload = bytearray(addr.to_bytes(4, self.LITTLE_ENDIAN))
                 payload.extend(write_data)
-                (success, _) = self.__send_command_wait_response(
+                (success, _) = self.send_command_wait_response(
                     hci.command.CommandPacket(self.OPCODE_WRITE_RAM, payload))
             if success:
                 if not no_write and verify:
@@ -241,7 +250,7 @@ class HciSerialPort():
                 raise Exception(f'Failed to write to address {hex(addr)}')
 
     def send_launch_ram(self, address: int):
-        """Launch RAM command
+        """Launch RAM command (Infineon Vendor Specific HCI command)
 
         Args:
             address (int): address to launch
@@ -249,14 +258,14 @@ class HciSerialPort():
         Raises:
             Exception: raise exception if no response
         """
-        (success, _) = self.__send_command_wait_response(hci.command.CommandPacket(
+        (success, _) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_LAUNCH_RAM, address.to_bytes(4, self.LITTLE_ENDIAN)))
         if not success:
             raise Exception('Failed launch RAM')
         time.sleep(self.LAUNCH_RAM_DELAY)
 
     def send_chip_erase(self, timeout: int = 1):
-        """Chip erase command
+        """Chip erase command (Infineon Vendor Specific HCI command)
 
         Args:
             timeout (int, optional): Time to wait for response in seconds. Defaults to 1.
@@ -264,15 +273,20 @@ class HciSerialPort():
         Raises:
             Exception: raise exception if no response
         """
-        (success, _) = self.__send_command_wait_response(hci.command.CommandPacket(
+        (success, _) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_CHIP_ERASE, self.ERASE_ALL_FLASH_MAGIC.to_bytes(4, self.LITTLE_ENDIAN)), timeout)
         if not success:
             raise Exception('Failed chip erase')
 
     def change_baud_rate(self, baud: int):
+        """Change device baud rate (Infineon Vendor Specific HCI command)
+
+        Args:
+            baud (int): baud rate to change to
+        """
         payload = [0, 0]
         payload.extend(baud.to_bytes(4, self.LITTLE_ENDIAN))
-        (success, _) = self.__send_command_wait_response(hci.command.CommandPacket(
+        (success, _) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_UPDATE_BAUDRATE, bytearray(payload)))
         if not success:
             raise Exception('Failed to update baud rate')
