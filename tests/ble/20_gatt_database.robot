@@ -29,7 +29,8 @@ Gatt Database Initialise
     Set Tags    PROD-5400
 
     ${resp}=    User REPL Send    ${settings_board[1]}    gatt_dict = gatt_client.get_dict()    ${5.0}
-    ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict)
+    # In order to limit the size of the print, only the test service is requested.
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict['Service 1'])
     ${resp}=    Convert To String    ${resp}
 
     Should Contain    ${resp}    B8D00001-6329-EF96-8A4D-55B376D8B25A
