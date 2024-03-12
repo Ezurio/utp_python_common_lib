@@ -10,7 +10,7 @@ Test Timeout        1 minute
 
 
 *** Variables ***
-${TWO_WAY_RANGE_SCRIPT}                 canvas_python_sample_apps/uwb_simple/main.py
+${TWO_WAY_RANGE_SCRIPT}                 canvas_python_samples/apps/sera_nx040_dvk/uwb_ranging_demo/uwb_ranging_demo.py
 ${TWO_WAY_RANGE_SCRIPT_START_RESP}      My device ID is
 ${INVALID_RANGE}                        ${65535}
 
