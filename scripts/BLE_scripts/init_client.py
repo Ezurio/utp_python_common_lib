@@ -3,6 +3,8 @@ import time
 
 connection = None
 current_state = 0
+notify_message = None
+indicate_message = None
 
 def cb_con(conn):
     global current_state, connection

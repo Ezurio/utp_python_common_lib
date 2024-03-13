@@ -3,6 +3,9 @@ import gc
 
 connection = None
 current_state = 0
+do_notify = None
+do_indicate = None
+indicate_ack = None
 
 def cb_con(conn):
     global current_state, connection
