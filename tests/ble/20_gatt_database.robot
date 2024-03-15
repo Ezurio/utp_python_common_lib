@@ -86,7 +86,6 @@ Gatt Database Notify
     ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_NOTIFY)
     ${resp}=    Convert To String    ${resp}
 
-    # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
     ${resp}=    User REPL Send    ${settings_board[0]}    print(do_notify)
@@ -98,7 +97,6 @@ Gatt Database Notify
     ...    gatt_server.notify(connection, "NotifyChar", bytes("Notify Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
-    # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
     ${resp}=    User REPL Send    ${settings_board[1]}    print(notify_message)
@@ -111,7 +109,6 @@ Gatt Database Notify
     ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_DISABLE)
     ${resp}=    Convert To String    ${resp}
 
-    # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
     ${resp}=    User REPL Send    ${settings_board[0]}    print(do_notify)
@@ -131,7 +128,6 @@ Gatt Database Indicate
     ...    gatt_client.enable("IndicateChar", ble.GattClient.CCCD_STATE_INDICATE)
     ${resp}=    Convert To String    ${resp}
 
-    # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
     ${resp}=    User REPL Send    ${settings_board[0]}    print(do_indicate)
@@ -143,7 +139,6 @@ Gatt Database Indicate
     ...    gatt_server.indicate(connection, "IndicateChar", bytes("Indicate Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
-    # Delay to allow previous command to execute and callback to fire - if this is not present we can sometimes miss the callback
     Wait for data
 
     ${resp}=    User REPL Send    ${settings_board[1]}    print(indicate_message)
@@ -179,7 +174,10 @@ Teardown
     Sleep    3s
 
 Wait for data
-    [Documentation]    This latency is dependent on the BLE connection parameters.
+    [Documentation]    Delay to allow previous command to execute and callback to fire.
+    ...    If this is not present we can sometimes miss the callback.
+    ...    
+    ...    This latency is dependent on the BLE connection parameters.
     ...    To make testing more robust, this value should be calculated based on
     ...    the connection parameters.
     ...    This could be dynamically calculated in the future.
