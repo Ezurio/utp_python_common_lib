@@ -1,7 +1,7 @@
 #
 # This contains the base class for MicroPython boards and its subclasses.
 #
-from board import Board, ComPort, GenericBoard, ComPortType, ComPortSource, DebugProbeType
+from board import Board, ComPort, BoardConfig, ComPortType, ComPortSource, DebugProbeType
 from dvk_probe import DvkProbe
 from jlink_probe import JLinkProbe
 from probe import Probe
@@ -27,11 +27,11 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
     BOOT_TIME_SECONDS = 6
 
     @classmethod
-    def get_specified(cls, boards_conf: list[GenericBoard]) -> list['MicroPythonBoard']:
+    def get_specified(cls, boards_conf: list[BoardConfig]) -> list['MicroPythonBoard']:
         """ Get a list of all connected boards that match the specified board configurations.
 
         Args:
-            boards_conf (list[GenericBoard]): List of board configs to search for and create.
+            boards_conf (list[BoardConfig]): List of board configs to search for and create.
             At a minimum, a board config must contain the serial port config for a REPL port.
 
             A board config yaml file would look like:

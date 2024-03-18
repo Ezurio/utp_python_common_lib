@@ -4,7 +4,7 @@ try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
-from board import GenericBoard, Properties
+from board import BoardConfig, Properties
 
 DEFAULT_CONFIG_FILE = "board_config.yml"
 
@@ -53,7 +53,7 @@ def valid_properties(properties: list) -> bool:
 
 
 def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties: list = None):
-    """Read a board configuration file and return a list of GenericBoard objects.
+    """Read a board configuration file and return a list of BoardConfig objects.
 
     Args:
         board_config_file (str, optional): A board config file that
@@ -66,10 +66,10 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
         If desired properties is a lists of lists, then the order of the output list
         will match the order of the input list.
     Returns:
-        list[GenericBoard]: list of boards
+        list[BoardConfig]: list of boards
     """
 
-    boards = list[GenericBoard]()
+    boards = list[BoardConfig]()
 
     # If Robot framework passes and empty string, then use the default file name
     if not board_config_file:
@@ -102,7 +102,7 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
             dictionary = yaml.load(stream, Loader)
             board_configurations = dictionary['boards']
             if not desired_properties:
-                return [GenericBoard(b) for b in board_configurations]
+                return [BoardConfig(b) for b in board_configurations]
 
             
             # Find a board with all desired properties, the order of the input list matters.
@@ -116,7 +116,7 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
                         if all(x in properties for x in sublist):
                             logging.info(
                                 f"Board {b['name']} has all desired properties")
-                            boards.append(GenericBoard(b))
+                            boards.append(BoardConfig(b))
                             board_configurations.remove(b)
                             break
 

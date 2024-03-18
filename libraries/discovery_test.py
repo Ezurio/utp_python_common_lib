@@ -1,4 +1,4 @@
-from board import Board, GenericBoard
+from board import Board, BoardConfig
 from lc_util import logger_setup
 import json
 
@@ -167,9 +167,9 @@ def test6():
 
 def read_boards_conf(boards_conf: str):
     data = json.loads(boards_conf)
-    boards_in = list[GenericBoard]()
+    boards_in = list[BoardConfig]()
     for b in data['boards']:
-        boards_in.append(GenericBoard(b))
+        boards_in.append(BoardConfig(b))
     return boards_in
 
 

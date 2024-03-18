@@ -1,7 +1,7 @@
 #
 # This contains the base class for Lyra boards and its simple subclasses.
 #
-from board import Board, GenericBoard
+from board import Board, BoardConfig
 from jlink_probe import JLinkProbe
 from python_uart import PythonUart
 from lc_util import logger_setup, logger_get

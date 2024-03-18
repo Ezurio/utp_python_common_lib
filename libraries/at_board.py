@@ -1,7 +1,7 @@
 #
 # This contains the base class for AT boards and its simple subclasses.
 #
-from board import Board, GenericBoard
+from board import Board, BoardConfig
 from jlink_probe import JLinkProbe
 from at_uart import AtUart
 from lc_util import logger_setup, logger_get
@@ -32,12 +32,12 @@ class AtBoard(Board, JLinkProbe, AtUart):
 
 
     @classmethod
-    def get_specified(cls, boards_conf: list[GenericBoard]) -> list['AtBoard']:
+    def get_specified(cls, boards_conf: list[BoardConfig]) -> list['AtBoard']:
         """
         Get a list of all connected AT boards.
 
         Args:
-            boards_conf (list[GenericBoard]): List of board configs to search for and create.
+            boards_conf (list[BoardConfig]): List of board configs to search for and create.
 
         Returns:
             list['AtBoard']: List of connected AT boards

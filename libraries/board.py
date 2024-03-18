@@ -78,7 +78,7 @@ class DebugProbe(dotdict):
     name: str | None
 
 
-class GenericBoard(dotdict):
+class BoardConfig(dotdict):
     name: str | None
     ports: list[ComPort]
     probe: DebugProbe | None
@@ -153,7 +153,7 @@ class Board(object):
         """Look for all boards in the current scope that match the specified configuration.
 
         Args:
-            boards_conf (list[GenericBoard]): List of board configs to
+            boards_conf (list[BoardConfig]): List of board configs to
             search for and create.
         """
         boards = list()
@@ -171,12 +171,12 @@ class Board(object):
         return boards
 
     @staticmethod
-    def get_single(boards_conf: list[GenericBoard] = list()):
+    def get_single(boards_conf: list[BoardConfig] = list()):
         """Helper method to get a single board, or prompt user to select a board
         in the case of multiples.
 
         Args:
-            boards_conf (list[GenericBoard], optional): List of board configs to
+            boards_conf (list[BoardConfig], optional): List of board configs to
             search for and create. Defaults to list().
 
         Returns:

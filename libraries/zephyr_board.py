@@ -1,7 +1,7 @@
 #
 # This contains the base class for Zephyr boards and its simply subclasses.
 #
-from board import Board, GenericBoard
+from board import Board, BoardConfig
 from dvk_probe import DvkProbe
 from python_uart import PythonUart
 from lc_util import logger_setup, logger_get
