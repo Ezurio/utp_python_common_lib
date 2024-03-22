@@ -11,6 +11,8 @@ class SerialPort():
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
     CLEAR_QUEUE_TIMEOUT_DEFAULT = 5
+    SERIAL_PORT_RX_TIMEOUT_SECS = 0.000003 # Based on 1 byte at 3000000 baud
+    SERIAL_PORT_RX_SIZE_BYTES = 1024
 
     def __init__(self):
         self._port = None
@@ -51,11 +53,9 @@ class SerialPort():
     def __serial_port_rx_thread(self):
         while not self._stop_threads:
             try:
-                bytes = self._port.read(1)
-                for byte in bytes:
-                    self._rx_queue.append(byte)
-                    # logging.debug(
-                    #     f'[{self._port.name}] RX: {hex(byte)} ({len(self._rx_queue)})')
+                bytes = self._port.read(self.SERIAL_PORT_RX_SIZE_BYTES)
+                if len(bytes) > 0:
+                    self._rx_queue.extend(list(bytes))
                     self._bytes_received.set()
                     if self._monitor_rx_queue and not self._queue_monitor_timer.is_alive():
                         self.resume_queue_monitor()
@@ -84,7 +84,7 @@ class SerialPort():
             return
 
         self._port = serial.Serial(portName, baud, rtscts=rtsCts)
-        self._port.timeout = None
+        self._port.timeout = self.SERIAL_PORT_RX_TIMEOUT_SECS
         self._port.reset_input_buffer()
         self._port.reset_output_buffer()
         self.clear_rx_queue()
