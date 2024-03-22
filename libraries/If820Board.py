@@ -249,3 +249,13 @@ class If820Board(DvkProbe):
         res = self.p_uart.wait_event(cmd)
         If820Board.check_if820_response(cmd, res)
         return res[1]
+
+    def reconfig_puart(self, baud: int):
+        """Reconfigure the PUART baud rate.
+
+        Args:
+            baud (int): Baud rate to set
+        """
+        self.p_uart.close()
+        self.p_uart.open(
+            self.puart_port_name, baud)
