@@ -4,6 +4,7 @@ from dvk_probe import DvkProbe
 from HciSerialPort import HciSerialPort
 from HciProgrammer import HciProgrammer
 from EzSerialPort import EzSerialPort
+from SerialPort import SerialPort
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -190,6 +191,8 @@ class If820Board(DvkProbe):
                 logging.error(f"Board not found with port {port}")
                 return ERR_BOARD_NOT_FOUND
 
+        if self.hci_uart:
+            self.hci_uart.close()
         self._hci_uart = HciSerialPort()
         logging.debug(f"Opening HCI port {board.hci_port_name}")
         self.hci_uart.open(board.hci_port_name,
@@ -259,3 +262,15 @@ class If820Board(DvkProbe):
         self.p_uart.close()
         self.p_uart.open(
             self.puart_port_name, baud)
+
+    def open_hci_uart_raw(self, baud: int):
+        """Open the HCI UART as a raw serial port.
+
+        Args:
+            baud (int): Baud rate to set
+        """
+        if self.hci_uart:
+            self.hci_uart.close()
+        self._hci_uart = SerialPort()
+        self.hci_uart.open(
+            self.hci_port_name, baud)
