@@ -21,7 +21,8 @@ PROBE_BOOT_TIME = 5
 BOARD_ID_ADDRESS = 0
 MAX_READ_WRITE_LEN = 60
 MAX_SETTINGS_SIZE = 256
-PROBE_VENDOR_STRING = 'Laird Connectivity'
+PROBE_VENDOR_STRING_LC = 'Laird Connectivity'
+PROBE_VENDOR_STRING_EZ = 'Ezurio'
 PROBE_PRODUCT_STRING = 'DVK Probe CMSIS-DAP'
 
 
@@ -63,7 +64,8 @@ class DvkProbe(Probe):
         probes = []
         for dap_probe in DAPAccessCMSISDAP.get_connected_devices():
             # Is this the probe we are looking for?
-            if dap_probe.vendor_name == PROBE_VENDOR_STRING and \
+            if (dap_probe.vendor_name == PROBE_VENDOR_STRING_LC or \
+                dap_probe.vendor_name == PROBE_VENDOR_STRING_EZ)  and \
                     dap_probe.product_name == PROBE_PRODUCT_STRING:
                 id = dap_probe._unique_id
                 logger.debug(f'Found probe {id}')
