@@ -24,6 +24,7 @@ ${SCAN_DATA}=                       [0x77, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0
 ${SCAN_BYTES}=                      \\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07
 ${SCAN_TIMOUT_SECONDS}=             ${20}
 
+
 *** Tasks ***
 # **********************************************************************
 # *
@@ -37,7 +38,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     Set Tags    PROD-2459
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -47,7 +48,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -55,7 +56,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${19}
+    Check Scan result    ${settings_board[1]}    ${19}
 
 BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible scannable advert using the 1M PHY
@@ -64,7 +65,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     Set Tags    PROD-2458
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -74,7 +75,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -82,7 +83,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${18}
+    Check Scan result    ${settings_board[1]}    ${18}
 
 BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible non scannable advert using the 1M PHY
@@ -91,7 +92,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     Set Tags    PROD-2464
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -101,7 +102,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -109,7 +110,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${16}
+    Check Scan result    ${settings_board[1]}    ${16}
 
 BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     [Documentation]    DUT1 Advertises a legacy connectible non scannable advert using the 1M PHY
@@ -118,7 +119,7 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     Set Tags    PROD-2463
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -128,7 +129,7 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -136,7 +137,7 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -151,7 +152,7 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     Set Tags    PROD-2462
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_125K
     ...    ble.PHY_125K
@@ -161,7 +162,7 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -169,7 +170,7 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${32}
+    Check Scan result    ${settings_board[1]}    ${32}
 
 BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 1M PHY
@@ -178,7 +179,7 @@ BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     Set Tags    PROD-6133
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -188,7 +189,7 @@ BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -198,7 +199,6 @@ BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     ...    0
     ...    ${False}
 
-
 BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
     [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 125k PHY
     ...    DUT2 Scans using the 1M PHY passively. The scanner should not find the advert.
@@ -206,7 +206,7 @@ BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
     Set Tags    PROD-6134
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_125K
     ...    ble.PHY_125K
@@ -216,7 +216,7 @@ BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -233,7 +233,7 @@ BLE Ad 500k Non Connectable Non Scannable 1M Passive Scan
     Set Tags    PROD-6135
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_500K
     ...    ble.PHY_500K
@@ -243,7 +243,7 @@ BLE Ad 500k Non Connectable Non Scannable 1M Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -260,7 +260,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     Set Tags    PROD-2461
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_125K
     ...    ble.PHY_125K
@@ -270,7 +270,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -278,7 +278,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 125K PHY
@@ -287,7 +287,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     Set Tags    PROD-2442
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_125K
     ...    ble.PHY_125K
@@ -297,7 +297,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -305,7 +305,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -320,7 +320,7 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     Set Tags    PROD-2440
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_500K
     ...    ble.PHY_500K
@@ -330,7 +330,7 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -338,7 +338,7 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${32}
+    Check Scan result    ${settings_board[1]}    ${32}
 
 BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
@@ -347,7 +347,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     Set Tags    PROD-2437
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_500K
     ...    ble.PHY_500K
@@ -357,7 +357,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -365,7 +365,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
@@ -374,7 +374,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     Set Tags    PROD-2436
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_500K
     ...    ble.PHY_500K
@@ -384,7 +384,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
@@ -392,7 +392,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -407,7 +407,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
     Set Tags    PROD-2434
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_2M
@@ -417,7 +417,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -425,7 +425,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${32}
+    Check Scan result    ${settings_board[1]}    ${32}
 
 BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 1M & 2M PHYs
@@ -434,7 +434,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     Set Tags    PROD-2433
 
     Start Advertising
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_2M
@@ -444,7 +444,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     ...    240
     ...    250
     Scan With Filter
-    ...    ${settings_board2}
+    ...    ${settings_board[1]}
     ...    ${board1_adv_name}
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
@@ -452,7 +452,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board2}    ${33}
+    Check Scan result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -467,7 +467,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     Set Tags    PROD-2439
 
     Start Scannable Advert
-    ...    ${settings_board1}
+    ...    ${settings_board[0]}
     ...    ${board1_adv_name}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
@@ -476,7 +476,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ...    False
     ...    240
     ...    250
-    Scan For Scan Data    ${settings_board2}    ${board1_adv_name}
+    Scan For Scan Data    ${settings_board[1]}    ${board1_adv_name}
 
     # Lyra 24 does not include some type information in type field
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
@@ -484,7 +484,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ELSE
         ${expected_type}=    Set Variable    ${27}
     END
-    Check Scan Data result    ${settings_board2}    ${expected_type}
+    Check Scan Data result    ${settings_board[1]}    ${expected_type}
 
 
 *** Keywords ***
@@ -495,31 +495,31 @@ Setup
     Init Board    ${settings_board[0]}
     Init Board    ${settings_board[1]}
 
-    ${tmp}=    Get Board Addr    ${settings_board1}
+    ${tmp}=    Get Board Addr    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_addr}    ${tmp}
     Set Global Variable    ${board1_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 
-    ${tmp}=    Get Board Addr    ${settings_board2}
+    ${tmp}=    Get Board Addr    ${settings_board[1]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_addr}    ${tmp}
     Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 
-    ${tmp}=    Get Board Type    ${settings_board1}
+    ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
-    ${tmp}=    Get Board Type    ${settings_board2}
+    ${tmp}=    Get Board Type    ${settings_board[1]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_type}    ${tmp}
 
 Teardown
-    De-Init Board    ${settings_board1}
-    De-Init Board    ${settings_board2}
+    De-Init Board    ${settings_board[0]}
+    De-Init Board    ${settings_board[1]}
 
 Advert and Scan Test Teardown
-    Board Soft Reboot    ${settings_board1}
-    Board Soft Reboot    ${settings_board2}
+    Board Soft Reboot    ${settings_board[0]}
+    Board Soft Reboot    ${settings_board[1]}
 
 Start Advertising
     [Arguments]
