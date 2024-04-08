@@ -1,14 +1,7 @@
 from lc_util import logger_setup, logger_get
-import typing
 import serial.tools.list_ports as list_ports
 
 logger = logger_get(__name__)
-
-
-class ProbePorts(typing.TypedDict):
-    python: str
-    zephyr_shell: typing.NotRequired[str]
-
 
 class Probe:
     """
@@ -17,11 +10,10 @@ class Probe:
     It contains methods that are common to all probes and
     stubs for those that must be implemented by subclasses.
     """
-
     def __init__(self,
                  id=None | int | str,
                  description: str = "",
-                 ports: ProbePorts = {"python": "", "zephyr_shell": ""}):
+                 ports=dict()):
 
         self.__id = id
         self.__description = description
@@ -45,7 +37,7 @@ class Probe:
         return self.__id
 
     @property
-    def ports(self) -> ProbePorts:
+    def ports(self) -> dict:
         return self.__ports
 
     @property
@@ -63,13 +55,16 @@ class Probe:
         return self.__description
 
     @classmethod
-    def get_connected_probes(cls) -> list:
+    def get_connected_probes(cls, with_comports: bool = True) -> list:
         """
         Look for all probes that are defined in the current scope.
+        
+        Args:
+            with_comports (bool, optional): If True, only return probes with comports. Defaults to True.
         """
         probes = list()
         for subclass in cls.__subclasses__():
-            probes.extend(subclass.get_connected_probes())
+            probes.extend(subclass.get_connected_probes(with_comports=with_comports))
 
         return probes
 

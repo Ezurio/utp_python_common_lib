@@ -1,4 +1,4 @@
-from probe import Probe, ProbePorts
+from probe import Probe
 from lc_util import logger_setup, logger_get
 from pylink.jlink import JLink
 import serial.tools.list_ports as list_ports
@@ -14,9 +14,9 @@ class JLinkProbe(Probe):
 
     def __init__(self,
                  id: int,
-                 family: str,
-                 description: str,
-                 ports: ProbePorts):
+                 family: str = "",
+                 description: str = "",
+                 ports=dict()):
 
         super().__init__(id, description, ports)
         self.__family = family
@@ -45,12 +45,21 @@ class JLinkProbe(Probe):
         return jlink_comport_info
 
     @staticmethod
-    def get_connected_probes(family: str = "Cortex-M33", uart_interface_type: str = "python") -> list['JLinkProbe']:
+    def get_connected_probes(family: str = "Cortex-M33", uart_interface_type: str = "python", 
+                             with_comports: bool = True) -> list['JLinkProbe']:
         """
         Look for JLink probes.
 
         Args:
-            family (str, optional): The family of the JLink probe. Defaults to "Cortex-M33".
+            family (str, optional): The family of the JLink probe. Defaults to "Cortex-M33" if 
+            with_comports is True. In order to discover com ports connected to a probe, 
+            the family must be known.
+            
+            uart_interface_type (str, optional): The type of UART interface. Defaults to "python" if 
+            with comports is True.
+            
+            with_comports (bool, optional): If True, only return probe with at least one comport. 
+            Defaults to True.
 
         Returns:
             list['JLinkProbe']: List of JLink probes
@@ -64,7 +73,7 @@ class JLinkProbe(Probe):
         except:
             pass
 
-        if len(ports) == 0:
+        if with_comports and len(ports) == 0:
             logger.info("Zero JLink probes with comports found")
             return probes
 
@@ -75,26 +84,33 @@ class JLinkProbe(Probe):
 
         for emu in j_link.connected_emulators():
             logger.debug(emu)
+            # If a probe can't be opened, then don't consider it valid.
             try:
                 j_link.open(emu.SerialNumber)
+                j_link.close()
             except:
                 logger.error(
                     f"Could not open JLink Probe: {emu.SerialNumber}")
                 continue
 
-            for i, (device, hwid) in enumerate(ports):
-                logger.debug(
-                    f"{i}, {device}, {hwid}, {str(emu.SerialNumber)}")
-                # The value of the probe's serial number returned by get ports
-                # may have leading zeros.
-                if str(emu.SerialNumber) in hwid:
-                    p = JLinkProbe(emu.SerialNumber,
-                                   family,
-                                   emu.acProduct.decode(),
-                                   {uart_interface_type: device})
-                    probes.append(p)
-
-            j_link.close()
+            if with_comports:
+                for i, (device, hwid) in enumerate(ports):
+                    logger.debug(
+                        f"{i}, {device}, {hwid}, {str(emu.SerialNumber)}")
+                    # The value of the probe's serial number returned by get ports
+                    # may have leading zeros.
+                    if str(emu.SerialNumber) in hwid:
+                        p = JLinkProbe(emu.SerialNumber,
+                                       family,
+                                       emu.acProduct.decode(),
+                                       {uart_interface_type: device})
+                        probes.append(p)
+                        # For simplicity, only use the first port found.
+                        # Can't differentiate port types at this time.
+                        break
+            else:
+                p = JLinkProbe(emu.SerialNumber)
+                probes.append(p)
 
         return probes
 
@@ -162,5 +178,11 @@ if __name__ == "__main__":
 
     probes = JLinkProbe.get_connected_probes()
     logger.info(f"Number of J-Link probes with comports found: {len(probes)}")
+    for b in probes:
+        logger.info(b)
+
+    with_comports = False
+    probes = JLinkProbe.get_connected_probes(with_comports=False)
+    logger.info(f"Number of J-Link probes WITHOUT comports found: {len(probes)}")
     for b in probes:
         logger.info(b)

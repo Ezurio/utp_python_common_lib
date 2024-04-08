@@ -1,4 +1,4 @@
-from probe import Probe, ProbePorts
+from probe import Probe
 import ctypes as c
 import logging
 import operator
@@ -60,13 +60,17 @@ class DvkProbe(Probe):
     GPIO_27 = 27
     GPIO_28 = 28
 
-    def __init__(self, id, description, ports: ProbePorts):
+    def __init__(self, id, description, ports=dict()):
         super().__init__(id, description, ports)
         self.__probe_handle = None
 
     @staticmethod
-    def get_connected_probes() -> list['DvkProbe']:
+    def get_connected_probes(with_comports: bool = True) -> list['DvkProbe']:
         """Get a list of all connected probes.
+
+        Args:
+            with_comports (bool, optional): If True, only return probes with comports. 
+            Defaults to True.
 
         Returns:
             List: List of DVK probes
@@ -80,29 +84,34 @@ class DvkProbe(Probe):
                 id = dap_probe._unique_id
                 logger.debug(f'Found probe {id}')
 
-                # Create list of comports that correspond to emulator
-                com_ports = list()
-                for comport in list_ports.comports():
-                    if id == comport.serial_number:
-                        logger.debug(
-                            f'Found probe COM port {comport.device} [{comport.serial_number}]')
-                        com_ports.append(comport)
-                    else:
-                        logger.debug(
-                            f'COM port {comport.device} [{comport.serial_number}]')
+                if with_comports:
+                    # Create list of comports that correspond to emulator
+                    com_ports = list()
+                    for comport in list_ports.comports():
+                        if id == comport.serial_number:
+                            logger.debug(
+                                f'Found probe COM port {comport.device} [{comport.serial_number}]')
+                            com_ports.append(comport)
+                        else:
+                            logger.debug(
+                                f'COM port {comport.device} [{comport.serial_number}]')
 
-                # Sort the com ports so that the Zephyr port is first
-                com_ports.sort(key=operator.attrgetter('location', 'device'))
-                if len(com_ports) < 2:
-                    logger.warning(
-                        f'No COM ports found for probe {id}, skipping this probe')
-                    continue
+                    # Sort the com ports so that the Zephyr port is first
+                    com_ports.sort(key=operator.attrgetter(
+                        'location', 'device'))
+                    if len(com_ports) < 2:
+                        logger.warning(
+                            f'No COM ports found for probe {id}, skipping this probe')
+                        continue
 
+                    probes.append(
+                        DvkProbe(dap_probe._unique_id,
+                                 PROBE_PRODUCT_STRING,
+                                 {"zephyr_shell": com_ports[0].device,
+                                  "python": com_ports[1].device}))
+            else:
                 probes.append(
-                    DvkProbe(dap_probe._unique_id,
-                             PROBE_PRODUCT_STRING,
-                             {"zephyr_shell": com_ports[0].device,
-                              "python": com_ports[1].device}))
+                    DvkProbe(dap_probe._unique_id, PROBE_PRODUCT_STRING))
 
         return probes
 

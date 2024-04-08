@@ -2,8 +2,9 @@
 # This contains the base class for MicroPython boards and its subclasses.
 #
 from board import Board, ComPort, GenericBoard, ComPortType, ComPortSource, DebugProbeType
-from dvk_probe import DvkProbe, ProbePorts
+from dvk_probe import DvkProbe
 from jlink_probe import JLinkProbe
+from probe import Probe
 from python_uart import PythonUart
 from lc_util import logger_setup, logger_get
 from zephyr_uart import ZephyrUart
@@ -114,14 +115,7 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                     bprobe = board.probe
                     if "sn" not in bprobe:
                         continue
-                    if "type" not in bprobe:
-                        continue
-                    probes = list()
-                    if bprobe.type.casefold() == DebugProbeType.DVKPROBE.name.casefold():
-                        probes = DvkProbe.get_connected_probes()
-                    elif bprobe.type.casefold() == DebugProbeType.JLINK.name.casefold():
-                        # TODO: Some assumptions are made in this call that will not get all connected J-Link probes.
-                        probes = JLinkProbe.get_connected_probes()
+                    probes = Probe.get_connected_probes(with_comports=False)
                     for p in probes:
                         if p.id == bprobe.sn:
                             probe = p
@@ -134,7 +128,7 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
     def __init__(self, repl: ComPort,
                  board_name: str = "",
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None,
+                 probe: Probe | None = None,
                  id: str = ''):
         super().__init__(id=id)
         self._repl = repl
@@ -204,12 +198,12 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         return resp
 
     @property
-    def ports(self) -> ProbePorts:
+    def ports(self) -> dict:
         """Get the repl and zephyr shell serial port devices.
         This property is for compatibility with :func:`Board.get_by_com_port`.
 
         Returns:
-            ProbePorts: dictionary of port names and devices
+            Dictionary of port names and devices
         """
         return self.__ports
 
@@ -226,7 +220,7 @@ class Pinnacle100Dvk(MicroPythonBoard):
     def __init__(self, repl: ComPort,
                  board_name: str = "",
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None):
+                 probe: Probe | None = None):
         super().__init__(repl, board_name, zephyr, probe)
 
 
@@ -238,7 +232,7 @@ class MG100(MicroPythonBoard):
     def __init__(self, repl: ComPort,
                  board_name: str = "",
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None):
+                 probe: Probe | None = None):
         super().__init__(repl, board_name, zephyr, probe)
 
 
@@ -250,7 +244,7 @@ class BL5340Dvk(MicroPythonBoard):
     def __init__(self, repl: ComPort,
                  board_name: str = "",
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None):
+                 probe: Probe | None = None):
         super().__init__(repl, board_name, zephyr, probe)
 
 
@@ -265,7 +259,7 @@ class BL654UsbDongle(MicroPythonBoard, Board):
     def __init__(self, repl: ComPort,
                  board_name: str = '',
                  zephyr: ComPort | None = None,
-                 probe: DvkProbe | JLinkProbe | None = None,
+                 probe: Probe | None = None,
                  id: str = ''):
         super().__init__(repl, board_name, zephyr, probe, id)
 
