@@ -17,16 +17,16 @@ ENV_XRAY_CLIENT_SECRET = 'XRAY_CLIENT_SECRET'
 
 
 def upload_robot_to_xray(project, test_plan, result_file):
-    if project == None or test_plan == None:
+    if not project or not test_plan:
         raise Exception("Please provide project and test plan keys")
-    if result_file == None:
+    if not result_file:
         raise Exception("Please provide result file")
 
     client_id = os.environ.get(ENV_XRAY_CLIENT_ID)
     client_secret = os.environ.get(ENV_XRAY_CLIENT_SECRET)
-    if client_id == None:
+    if not client_id:
         raise Exception(f"{ENV_XRAY_CLIENT_ID} environment variable not set")
-    if client_secret == None:
+    if not client_secret:
         raise Exception(
             f"{ENV_XRAY_CLIENT_SECRET} environment variable not set")
 

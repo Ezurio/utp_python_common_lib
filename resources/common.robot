@@ -15,6 +15,7 @@ ${ZEPHYR_BOARD_TYPE}=       'zephyr'
 ${BLE_ADDR_SCRIPT}=         common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
 ${BLE_ADDR_FAIL_RESP}=      Error
 ${JIRA_PROJECT}=            PROD
+${allow_xray_upload}=       True
 
 
 *** Keywords ***
@@ -22,6 +23,10 @@ Is List Empty
     [Arguments]    ${value}
     ${is_empty}=    Run Keyword And Return Status    Should Be Empty    ${value}    strip=${TRUE}
     RETURN    ${is_empty}
+
+Delay for USB Enumeration
+    [Arguments]    ${delay}=2s
+    Sleep    ${delay}    reason=USB enumeration delay
 
 Get Boards
     [Documentation]
@@ -36,8 +41,7 @@ Get Boards
     ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
     ${boards_config_empty}=    Is List Empty    ${boards_conf}
 
-    # Delay in case boards are re-enumerating over USB
-    Sleep    ${2}
+    Delay for USB Enumeration
 
     IF    ${boards_config_empty}
         @{boards}=    Discovery.Get Connected Boards    ${allow_list}
@@ -60,7 +64,7 @@ Get Boards
 
     Set Global Variable    ${settings_board}    ${boards}
 
-Init Board
+Init Board without Xray
     [Arguments]    ${board}
 
     IF    ${board.is_initialized} == ${False}
@@ -74,8 +78,18 @@ Init Board
     ${resp}=    Call Method    ${board.python_uart}    send    import os
     ${resp}=    Call Method    ${board.python_uart}    send    import sys
 
+Init Board
+    [Arguments]    ${board}
+
+    Init Board without Xray    ${board}
+
     # Setup the XRay uploader to use the test plan associated with DUT1
-    IF    $board==$settings_board[0]    Setup Xray Upload
+    # (This reads the machine name from the board.)
+    IF    ${board.is_initialized} == ${True}
+        IF    ${allow_xray_upload} == ${True}
+            IF    $board==$settings_board[0]    Setup Xray Upload
+        END
+    END
 
 De-Init Board
     [Arguments]    ${board}
