@@ -81,16 +81,13 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
         return s
 
     @classmethod
-    def get_connected(cls, allow_list=list(), boards_conf: list[GenericBoard] = list()) -> list['LyraBoard']:
+    def get_connected(cls, allow_list=list()) -> list['LyraBoard']:
         """
         Get a list of all connected boards.
 
         Args:
             allow_list (list[str]): List of board names to allow.
             If empty, all boards with a J-Link probe are allowed.
-
-            boards_conf (list[GenericBoard]): List of board configs to search for and create.
-            This is not used for this board type.
 
         Returns:
             list['LyraBoard']: List of connected boards

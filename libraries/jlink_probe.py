@@ -59,7 +59,7 @@ class JLinkProbe(Probe):
             with comports is True.
             
             with_comports (bool, optional): If True, only return probe with at least one comport. 
-            Defaults to True.
+            When false, ignore comports. Defaults to True.
 
         Returns:
             list['JLinkProbe']: List of JLink probes
@@ -183,6 +183,6 @@ if __name__ == "__main__":
 
     with_comports = False
     probes = JLinkProbe.get_connected_probes(with_comports=False)
-    logger.info(f"Number of J-Link probes WITHOUT comports found: {len(probes)}")
+    logger.info(f"Number of J-Link probes IGNORING comports found: {len(probes)}")
     for b in probes:
         logger.info(b)

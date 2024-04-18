@@ -109,9 +109,9 @@ class DvkProbe(Probe):
                                  PROBE_PRODUCT_STRING,
                                  {"zephyr_shell": com_ports[0].device,
                                   "python": com_ports[1].device}))
-            else:
-                probes.append(
-                    DvkProbe(dap_probe._unique_id, PROBE_PRODUCT_STRING))
+                else:
+                    probes.append(
+                        DvkProbe(dap_probe._unique_id, PROBE_PRODUCT_STRING))
 
         return probes
 

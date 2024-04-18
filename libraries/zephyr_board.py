@@ -21,15 +21,12 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
     BOOT_TIME_SECONDS = 3
 
     @classmethod
-    def get_connected(cls, allow_list=list(), boards_conf: list[GenericBoard] = list()) -> list['ZephyrBoard']:
+    def get_connected(cls, allow_list=list()) -> list['ZephyrBoard']:
         """ Get a list of all connected boards.
 
         Args:
             allow_list (list[str]): List of board names to allow.
             If empty, all boards with a DVK probe are allowed.
-
-            boards_conf (list[GenericBoard]): List of board configs to search for and create.
-            This is not used for this board type.
 
         Returns:
             list['ZephyrBoard']: List of connected boards
@@ -51,7 +48,7 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
                         if any(subclass.__name__ in x for x in allow_list):
                             # The object names must match the board name
                             # (case insensitive and spaces removed) that is read from the settings
-                            if subclass.__name__.upper() == board_name:
+                            if subclass.matches_name(board_name):
                                 boards.append(ZephyrBoard(probe))
                                 break
                 except:

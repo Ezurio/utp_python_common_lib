@@ -32,31 +32,25 @@ class AtBoard(Board, JLinkProbe, AtUart):
 
 
     @classmethod
-    def get_connected(cls, allow_list=list(), boards_conf: list[GenericBoard] = list()) -> list['AtBoard']:
+    def get_specified(cls, boards_conf: list[GenericBoard]) -> list['AtBoard']:
         """
         Get a list of all connected AT boards.
 
         Args:
-            allow_list (list[str]): List of board names to allow.
-            If empty, all boards with a J-Link probes are considered.
-
             boards_conf (list[GenericBoard]): List of board configs to search for and create.
 
         Returns:
             list['AtBoard']: List of connected AT boards
         """
-        if type(allow_list) == str:
-            raise ValueError("Allow list must be list not str")
-
         boards = list()
         # Only return boards with a J-Link probe if they are in the board config list
         for boards_conf in boards_conf:
-            # AT interfaces only have a single port
-            if len(boards_conf.ports) == 1:
-                # Indicate to the JLinkProbe class that we are looking for AT boards probes
-                for p in JLinkProbe.get_connected_probes(boards_conf.probe.family, "at"):
-                    # Ensure that this single port is of AT type and it serial number matches the probe
-                    if p.id == boards_conf.probe.sn and boards_conf.ports[0].type == 'at':
+            # Ensure that this single port is of AT type and it serial number matches the probe                   
+            if len(boards_conf.ports) == 1 and boards_conf.ports[0].type == 'at':
+                probes = JLinkProbe.get_connected_probes(
+                    family=boards_conf.probe.family, uart_interface_type="at")
+                for p in probes:
+                    if p.id == boards_conf.probe.sn:
                         boards.append(AtBoard(p))
                         break
         return boards

@@ -1,5 +1,6 @@
 from lc_util import logger_get
 from enum import Enum
+import inspect
 
 logger = logger_get(__name__)
 
@@ -101,16 +102,13 @@ class Board(object):
         self.__initialized = v
 
     @classmethod
-    def get_connected(cls, allow_list: list[str] = list(), boards_conf: list[GenericBoard] = list()) -> list:
+    def get_connected(cls, allow_list: list[str] = list()) -> list:
         """Look for all boards in the current scope.
 
         Args:
             allow_list (list[str], optional): A list of class names that can be
             used to filter results. Any empty list allows all subclasses.
             Defaults to list().
-
-            boards_conf (list[GenericBoard], optional): List of board configs to
-            search for and create. Defaults to list().
 
         Returns:
             list: List of connected boards
@@ -121,7 +119,30 @@ class Board(object):
         boards = list()
         for subclass in cls.__subclasses__():
             logger.debug(subclass.__name__)
-            boards.extend(subclass.get_connected(allow_list, boards_conf))
+            if inspect.getsource(subclass).find("get_connected") != -1:
+                boards.extend(subclass.get_connected(allow_list))
+
+        return boards
+
+    @classmethod
+    def get_specified(cls, boards_conf: list[BoardConfig]) -> list:
+        """Look for all boards in the current scope that match the specified configuration.
+
+        Args:
+            boards_conf (list[GenericBoard]): List of board configs to
+            search for and create.
+        """
+        boards = list()
+        if len(boards_conf) < 0:
+            logger.warning("No board configurations provided")
+            return boards
+
+        for subclass in cls.__subclasses__():
+            if inspect.getsource(subclass).find("get_specified") != -1:
+                logger.info(subclass.__name__)
+                b = subclass.get_specified(boards_conf)
+                logger.info(f"Boards found: {len(b)}")
+                boards.extend(b)
 
         return boards
 
@@ -137,8 +158,11 @@ class Board(object):
         Returns:
             board: the connected board
         """
-        board = None
-        boards = Board.get_connected(boards_conf=boards_conf)
+        if len(boards_conf) > 0:
+            boards.extend(Board.get_specified(boards_conf))
+        else:
+            boards = Board.get_connected()
+
         if len(boards) == 0:
             raise Exception(f"Error!  No Boards found.")
 
@@ -154,18 +178,16 @@ class Board(object):
         return boards[choice]
 
     @staticmethod
-    def get_by_com_port(com_port: str, boards_conf: list[GenericBoard] = list()):
+    def get_by_com_port(com_port: str):
         """Get a board that uses the specified COM port.
 
         Args:
             com_port (str): COM port device name
-            boards_conf (list[GenericBoard], optional): List of board configs to
-            search for and create. Defaults to list().
 
         Returns:
             board: The connected board or None if not found
         """
-        for board in Board.get_connected(boards_conf=boards_conf):
+        for board in Board.get_connected():
             for _, port in board.ports.items():
                 logger.debug(f"{_} {port}")
                 try:
@@ -175,6 +197,14 @@ class Board(object):
                     pass
 
         return None
+
+    @classmethod
+    def matches_name(cls, name: str):
+        return cls.__name__.casefold() == name.casefold().replace(" ", "").replace("_", "")
+
+    @classmethod
+    def in_name(cls, name: str):
+        return cls.__name__.casefold() in name.casefold().replace(" ", "").replace("_", "")
 
     @property
     def unique_id(self):
@@ -203,7 +233,6 @@ class Board(object):
         Args:
             reset_probe (bool, optional): reset the debug probe. Defaults to True.
         """
-
         raise NotImplementedError
 
     def reset_module(self):
