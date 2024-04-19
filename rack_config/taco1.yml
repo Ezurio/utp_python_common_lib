@@ -1,0 +1,60 @@
+---
+name: Configuration for rack taco1. This is a development system.
+
+boards:
+  - name: sera_nx040_dvk_spi_i2c
+    ports:
+      - sn: E6620CD64F9E7139
+        index: 0
+        source: board
+        type: zephyr
+      - sn: E6620CD64F9E7139
+        index: 1
+        source: board
+        type: repl
+    probe:
+      sn: E6620CD64F9E7139
+      type: dvkprobe
+      family: nrf52833
+    properties:
+      - uwb
+      - ble
+      - gatt_server
+      - zephyr_shell
+      - spi_click
+      - i2c_click
+      - dut
+  - name: sera_nx040_dvk_gpio
+    ports:
+      - sn: E6620CD64F6A9F34
+        index: 0
+        source: board
+        type: zephyr
+      - sn: E6620CD64F6A9F34
+        index: 1
+        source: board
+        type: repl
+    probe:
+      sn: E6620CD64F6A9F34
+      type: dvkprobe
+      family: nrf52833
+    properties:
+      - uwb
+      - ble
+      - gatt_server
+      - zephyr_shell
+      - gpio_click
+      - dut
+  - name: Lyra24P_10dBm
+    ports:
+      - sn: 449008448
+        index: 0
+        source: board
+        type: repl
+    probe:
+      sn: 449008448
+      type: jlink
+      family: Cortex-M33
+    properties:
+      - ble
+      - gatt_client

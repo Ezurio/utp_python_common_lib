@@ -1,0 +1,36 @@
+boards:
+  - name: bl5340_dvk
+    ports:
+      - sn: A6962FE196CA32E4
+        index: 0
+        type: repl
+        source: device
+      - sn: A6962FE196CA32E4
+        index: 1
+        type: zephyr
+        source: device
+    probe:
+      sn: 483128820
+      type: jlink
+      family: nRF5340_xxAA
+    properties:
+      - ble
+      - gatt_server
+      - gatt_client
+      - zephyr_shell
+      - dut
+  - name: pinnacle_100_dvk
+    ports:
+      - sn: AL05DR8P
+        index: 0
+        type: repl
+        source: board
+    probe:
+      sn: 483067500
+      type: jlink
+      family: nRF52840_xxAA
+    properties:
+      - ble
+      - gatt_server
+      - gatt_client
+      - zephyr_shell
