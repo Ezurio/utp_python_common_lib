@@ -41,7 +41,8 @@ Test SPI1 EEPROM
 
 *** Keywords ***
 Setup
-    Get Boards
+    ${desired_properties} =    Create List    DUT    SPI_CLICK
+    Get Boards    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
 
     # Prerequisites for I2C control

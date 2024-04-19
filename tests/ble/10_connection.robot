@@ -262,7 +262,9 @@ Disconnect
     IF    ${result} == False    Fail    Failed to disconnect
 
 Setup
-    Get Boards
+    ${list}=    Create List    DUT    BLE
+    ${desired_properties}=    Create List    ${list}    ${list}
+    Get Boards    minimum_boards=2    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
     Init Board    ${settings_board[1]}
 

@@ -36,7 +36,10 @@ UWB Two-Way-Range
 
 *** Keywords ***
 Setup
-    Get Boards    allow_list=['SeraNX040Dvk']    minimum_boards=2
+    # Both devices must support UWB and BLE
+    ${list}=    Create List    DUT    UWB    BLE
+    ${desired_properties}=    Create List    ${list}    ${list}
+    Get Boards    allow_list=['SeraNX040Dvk']    minimum_boards=2    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
     Init Board    ${settings_board[1]}
 

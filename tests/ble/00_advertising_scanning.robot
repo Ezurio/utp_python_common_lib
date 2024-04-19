@@ -489,9 +489,11 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
 
 *** Keywords ***
 Setup
-    Get Boards    minimum_boards=2
-    Init Board    ${settings_board1}
-    Init Board    ${settings_board2}
+    ${list}=    Create List    DUT    BLE
+    ${desired_properties}=    Create List    ${list}    ${list}
+    Get Boards    minimum_boards=2    desired_properties=${desired_properties}
+    Init Board    ${settings_board[0]}
+    Init Board    ${settings_board[1]}
 
     ${tmp}=    Get Board Addr    ${settings_board1}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}

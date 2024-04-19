@@ -152,7 +152,11 @@ Gatt Database Indicate
 
 *** Keywords ***
 Setup
-    Get Boards
+    # TODO: PROD-7432 Add support for only one board being a client
+    ${list1}=    Create List    DUT    BLE    GATT_SERVER
+    ${list2}=    Create List    BLE    GATT_CLIENT
+    ${desired_properties}=    Create List    ${list1}    ${list2}
+    Get Boards    minimum_boards=2    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
     Init Board    ${settings_board[1]}
 

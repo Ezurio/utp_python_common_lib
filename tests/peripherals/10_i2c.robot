@@ -91,7 +91,8 @@ Test I2C EEPROM Page Write
 
 *** Keywords ***
 Setup
-    Get Boards
+    ${desired_properties} =    Create List    DUT    I2C_CLICK
+    Get Boards    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
 
     # Prerequisites for I2C control

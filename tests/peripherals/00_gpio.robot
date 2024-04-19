@@ -311,7 +311,8 @@ GPIO B To A Pull Down
 
 *** Keywords ***
 Setup
-    Get Boards
+    ${desired_properties} =    Create List    DUT    GPIO_CLICK
+    Get Boards    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
 
     ${resp}=    Run Script on Board    ${settings_board[0]}    ${GPIO_SCRIPT}

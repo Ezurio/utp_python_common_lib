@@ -20,7 +20,8 @@ Python in Thread
 
 *** Keywords ***
 Setup
-    Get Boards    allow_list=['SeraNX040Dvk']
+    ${desired_properties}=    Create List    DUT    ZEPHYR_SHELL
+    Get Boards    allow_list=['SeraNX040Dvk']    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
 
 Teardown

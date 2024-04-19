@@ -171,7 +171,8 @@ REPL Control Characters
 
 *** Keywords ***
 Setup
-    Get Boards
+    ${desired_properties}=    Create List    DUT
+    Get Boards    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
     ${tmp}=    DUT1 User REPL Send    os.uname().sysname
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
