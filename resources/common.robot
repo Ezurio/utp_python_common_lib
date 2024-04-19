@@ -1,13 +1,14 @@
 *** Settings ***
+Library     Collections
 Library     ./common_lib/libraries/discovery.py    WITH NAME    Discovery
 Library     String
-Library     Collections
 Library     ./common_lib/libraries/upload_robot_xray.py    WITH NAME    Upload
 Library     ./common_lib/libraries/xray_listener.py    WITH NAME    XListen
 Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardConfig
 
 
 *** Variables ***
+${rack_config}              ${EMPTY}
 ${settings_board}           @{EMPTY}
 ${LYRA_BOARD_TYPE}=         'Lyra'
 ${ZEPHYR_BOARD_TYPE}=       'zephyr'
@@ -17,15 +18,33 @@ ${JIRA_PROJECT}=            PROD
 
 
 *** Keywords ***
-Get Boards
-    [Arguments]    ${allow_many}=${True}    ${allow_list}=[]    ${minimum_boards}=1
+Is List Empty
+    [Arguments]    ${value}
+    ${is_empty}=    Run Keyword And Return Status    Should Be Empty    ${value}    strip=${TRUE}
+    RETURN    ${is_empty}
 
-    ${boards_conf}=    BoardConfig.Read Board Config
+Get Boards
+    [Documentation]
+    ...    Get the boards connected to the system.
+    ...    If a board configuration file is specified, then it wil override the allow list.
+    [Arguments]
+    ...    ${allow_many}=${True}
+    ...    ${allow_list}=@{EMPTY}
+    ...    ${minimum_boards}=1
+    ...    ${desired_properties}=@{EMPTY}
+
+    ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
+    ${boards_config_empty}=    Is List Empty    ${boards_conf}
 
     # Delay in case boards are re-enumerating over USB
     Sleep    ${2}
 
-    @{boards}=    Discovery.Get Connected Boards    ${allow_list}    ${boards_conf}
+    IF    ${boards_config_empty}
+        @{boards}=    Discovery.Get Connected Boards    ${allow_list}
+    ELSE
+        @{boards}=    Discovery.Get Specified Boards    ${boards_conf}
+    END
+
     ${num_boards}=    Get Length    ${boards}
     Log    ${num_boards} boards found!
 

@@ -40,6 +40,29 @@ class ComPortSource(Enum):
     BOARD = 0x01
 
 
+class Properties(Enum):
+    """
+    Only the names of the properties are used.
+    """
+    DUT = -1
+    BLE = 0
+    UWB = 1
+    # The board's click interface is configured for the GPIO test
+    GPIO_CLICK = 2
+    # The board's click interface is configured for the I2C test
+    I2C_CLICK = 3
+    # The board's click interface is configured for the SPI test
+    SPI_CLICK = 4
+    # The board is a USB dongle
+    USB_DONGLE = 5
+    # The board supports the Zephyr shell
+    ZEPHYR_SHELL = 6
+    # The board supports the MicroPython Bluetooth GATT client
+    GATT_CLIENT = 7
+    # The board supports the MicroPython Bluetooth GATT server
+    GATT_SERVER = 8
+
+
 class ComPort(dotdict):
     sn: str
     index: int
@@ -59,6 +82,7 @@ class GenericBoard(dotdict):
     name: str | None
     ports: list[ComPort]
     probe: DebugProbe | None
+    properties: list | None
 
 
 class Board(object):
