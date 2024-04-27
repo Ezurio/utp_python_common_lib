@@ -1,6 +1,7 @@
 import serial
 import threading
 import logging
+import time
 
 
 class SerialPort():
@@ -12,7 +13,7 @@ class SerialPort():
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
     CLEAR_QUEUE_TIMEOUT_DEFAULT = 5
     SERIAL_PORT_RX_TIMEOUT_SECS = 0.000003 # Based on 1 byte at 3000000 baud
-    SERIAL_PORT_RX_SIZE_BYTES = 1024
+    SERIAL_PORT_RX_SIZE_BYTES = 1024 * 1024
 
     def __init__(self):
         self._port = None
@@ -92,11 +93,13 @@ class SerialPort():
         self._stop_threads = False
         self.resume_queue_monitor()
         # The serial port RX thread reads all bytes received and places them in a queue
-        threading.Thread(target=self.__serial_port_rx_thread,
-                         daemon=True).start()
+        self._rx_thread = threading.Thread(target=self.__serial_port_rx_thread,
+                         daemon=True)
+        self._rx_thread.start()
         # The queue monitor thread clears stray RX bytes if they are not processed for
         # clear_queue_timeout_sec amount of time
-        threading.Thread(target=self.__queue_monitor, daemon=True).start()
+        self._q_mon_thread = threading.Thread(target=self.__queue_monitor, daemon=True)
+        self._q_mon_thread.start()
 
     def clear_rx_queue(self):
         """Clear all received bytes from the queue
@@ -131,6 +134,8 @@ class SerialPort():
             self._port.close()
             logging.debug(f'closed {self._port.name}')
         self.clear_rx_queue()
+        while self._rx_thread.is_alive() or self._q_mon_thread.is_alive():
+            time.sleep(0.1)
 
     def get_rx_queue(self):
         return self._rx_queue
