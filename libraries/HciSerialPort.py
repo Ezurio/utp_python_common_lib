@@ -29,6 +29,9 @@ class HciSerialPort():
     FLASH_PAD = 0xFF
     RAM_PAD = 0x00
 
+    SERIAL_PORT_RX_TIMEOUT_SECS = 0.000003 # Based on 1 byte at 3000000 baud
+    SERIAL_PORT_RX_SIZE_BYTES = 1024
+
     def __init__(self):
         self.port = None
         self.rx_queue = None
@@ -79,9 +82,7 @@ class HciSerialPort():
             if self.stop_threads:
                 break
             try:
-                bytes = self.port.read(1)
-                for byte in bytes:
-                    rx_bytes.append(byte)
+                rx_bytes.extend(self.port.read(self.SERIAL_PORT_RX_SIZE_BYTES))
                 packets, unprocessed = hci.from_binary(bytearray(rx_bytes))
                 if len(packets) > 0 and len(unprocessed) > 0:
                     rx_bytes.clear()
@@ -163,7 +164,7 @@ class HciSerialPort():
             return
 
         self.port = serial.Serial(portName, baud, rtscts=flow_control)
-        self.port.timeout = None
+        self.port.timeout = self.SERIAL_PORT_RX_TIMEOUT_SECS
         self.port.reset_input_buffer()
         self.port.reset_output_buffer()
         self.rx_queue = queue.Queue()
