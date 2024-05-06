@@ -6,6 +6,7 @@ from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
 import serial.tools.list_ports as list_ports
 import time
 from lc_util import logger_setup
+from warnings import warn
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +36,20 @@ class ProbeSettings(c.Structure):
         ('target_device_name', c.c_char * 32),
         ('target_board_vendor', c.c_char * 32),
         ('target_board_name', c.c_char * 32),
+        ('usb_vid', c.c_char * 2),  # Added in settings version 2
+        ('usb_pid', c.c_char * 2),  # Added in settings version 2
+        ('reserved', c.c_char * 122),
     ]
 
     def __str__(self):
         return f"""
         Version: {self.version}
-        Board Vendor:         {self.target_board_vendor.decode('UTF-8')}
-        Board Name:           {self.target_board_name.decode('UTF-8')}
-        Target Device Vendor: {self.target_device_vendor.decode('UTF-8')}
-        Target Device Name:   {self.target_device_name.decode('UTF-8')}"""
+        Board Vendor:         {self.target_board_vendor.decode('UTF-8', 'ignore')}
+        Board Name:           {self.target_board_name.decode('UTF-8', 'ignore')}
+        Target Device Vendor: {self.target_device_vendor.decode('UTF-8', 'ignore')}
+        Target Device Name:   {self.target_device_name.decode('UTF-8', 'ignore')}
+        USB VID:              {int.from_bytes(self.usb_vid, 'little'):04x}
+        USB PID:              {int.from_bytes(self.usb_pid, 'little'):04x}"""
 
 
 class DvkProbe(Probe):
@@ -69,7 +75,7 @@ class DvkProbe(Probe):
         """Get a list of all connected probes.
 
         Args:
-            with_comports (bool, optional): If True, only return probes with comports. 
+            with_comports (bool, optional): If True, only return probes with comports.
             Defaults to True.
 
         Returns:
@@ -78,8 +84,8 @@ class DvkProbe(Probe):
         probes = []
         for dap_probe in DAPAccessCMSISDAP.get_connected_devices():
             # Is this the probe we are looking for?
-            if (dap_probe.vendor_name == PROBE_VENDOR_STRING_LC or \
-                dap_probe.vendor_name == PROBE_VENDOR_STRING_EZ)  and \
+            if (dap_probe.vendor_name == PROBE_VENDOR_STRING_LC or
+                dap_probe.vendor_name == PROBE_VENDOR_STRING_EZ) and \
                     dap_probe.product_name == PROBE_PRODUCT_STRING:
                 id = dap_probe._unique_id
                 logger.debug(f'Found probe {id}')
@@ -127,6 +133,8 @@ class DvkProbe(Probe):
 
     @property
     def is_open(self):
+        if self.__probe_handle is None:
+            return False
         return self.__probe_handle.is_open
 
     @property
@@ -134,7 +142,8 @@ class DvkProbe(Probe):
         return self.__probe_handle.firmware_version
 
     def close(self):
-        self.__probe_handle.close()
+        if self.__probe_handle is not None:
+            self.__probe_handle.close()
 
     def gpio_read(self, gpio: int):
         res = self.__probe_handle.vendor(READ_IO_CMD, [gpio])
@@ -175,7 +184,7 @@ class DvkProbe(Probe):
         time.sleep(0.050)
 
     def write_settings(self, settings: ProbeSettings):
-        """Write the probe settings to the EEPROM
+        """DEPRECATED Write the probe settings to the EEPROM
 
         Args:
             settings (ProbeSettings): Probe settings to write
@@ -183,6 +192,8 @@ class DvkProbe(Probe):
         Raises:
             Exception: If the settings size is too large
         """
+        warn('write_settings is deprecated, use write_internal_settings instead',
+             DeprecationWarning)
         bytes_left = c.sizeof(settings)
         if bytes_left > MAX_SETTINGS_SIZE:
             raise Exception(f'Settings size is too large: {bytes_left}')
@@ -207,11 +218,13 @@ class DvkProbe(Probe):
             address += res[0]
 
     def read_settings(self) -> ProbeSettings:
-        """Read the probe settings from the EEPROM
+        """DEPRECATED Read the probe settings from the EEPROM
 
         Returns:
             ProbeSettings: All the probe settings
         """
+        warn('read_settings is deprecated, use read_internal_settings instead',
+             DeprecationWarning)
         bytes_left = MAX_SETTINGS_SIZE
         address = BOARD_ID_ADDRESS
         read_len = MAX_READ_WRITE_LEN
@@ -240,10 +253,13 @@ class DvkProbe(Probe):
             res) == MAX_SETTINGS_SIZE, f'Read settings failed, response ({len(res)}): {res}'
         return ProbeSettings.from_buffer(bytearray(res))
 
-    def write_internal_settings(self, settings: ProbeSettings):
+    def write_internal_settings(self, settings: ProbeSettings) -> int:
         """Write the probe settings to internal flash
         Args:
             settings (ProbeSettings): Probe settings to write
+
+        Returns:
+            int: Number of bytes written
 
         Raises:
             Exception: If the settings size is too large
@@ -252,9 +268,13 @@ class DvkProbe(Probe):
         if settings_len > MAX_SETTINGS_SIZE:
             raise Exception(f'Settings size is too large: {settings_len}')
 
+        data = list()
+        data.append(settings_len)
+        data.extend(bytearray(settings))
         res = self.__probe_handle.vendor(
-            WRITE_INTERNAL_SETTINGS_CMD, list(bytearray(settings)))
+            WRITE_INTERNAL_SETTINGS_CMD, data)
         assert res[0] == 0, 'Error writing settings to internal flash'
+        return settings_len
 
     def reboot(self, bootloader: bool = False) -> int:
         """Reboot the debug probe
@@ -266,14 +286,34 @@ class DvkProbe(Probe):
             int: 0 on success
         """
         res = self.__probe_handle.vendor(REBOOT_CMD, [bootloader])
+        self.close()
+        self.__probe_handle = None
         return res[0]
+
+    def __write_and_verify_internal_settings(self, settings: ProbeSettings, reboot: bool):
+        write_len = self.write_internal_settings(settings)
+        settings_read = self.read_internal_settings()
+        assert bytearray(settings)[:write_len] == bytearray(
+            settings_read)[:write_len], f'Verify board settings failed. Write: {settings}\nRead: {settings_read}'
+
+        if reboot:
+            # Reboot the probe and verify settings
+            logger.debug('Rebooting the probe...')
+            res = self.reboot()
+            assert res == 0, 'Failed to reboot!'
+            time.sleep(PROBE_BOOT_TIME)
+            logger.debug('probe booted')
+            self.open()
+            settings_read = self.read_internal_settings()
+            assert bytearray(settings)[:write_len] == bytearray(settings_read)[:write_len], \
+                f'After reboot, verify board settings failed. Write: {settings}\nRead: {settings_read}'
 
     def program_v1_settings(self, board_vendor: str,
                             board_name: str,
                             target_device_vendor: str,
                             target_device_name: str,
                             reboot: bool = True):
-        """Program settings to internal flash of the DVK Probe
+        """DEPRECATED Program V1 settings (v1.x firmware) to internal flash of the DVK Probe
 
         Args:
             board_vendor (str): e.g. Ezurio
@@ -282,7 +322,8 @@ class DvkProbe(Probe):
             target_device_name (str): e.g. cortex_m
             reboot (bool, optional): Reboot the probe after programming settings. Defaults to True.
         """
-
+        warn('program_v1_settings is deprecated, use program_v2_settings instead',
+             DeprecationWarning)
         settings = ProbeSettings(version=1,
                                  target_device_vendor=bytes(
                                      target_device_vendor, 'UTF-8'),
@@ -291,24 +332,42 @@ class DvkProbe(Probe):
                                  target_board_vendor=bytes(
                                      board_vendor, 'UTF-8'),
                                  target_board_name=bytes(board_name, 'UTF-8'))
+        self.__write_and_verify_internal_settings(settings, reboot)
 
-        self.write_internal_settings(settings)
-        settings_read = self.read_internal_settings()
-        assert bytearray(settings) == bytearray(
-            settings_read), f'Verify board settings failed. Write: {settings} Read: {settings_read}'
+    def program_v2_settings(self, board_vendor: str,
+                            board_name: str,
+                            target_device_vendor: str,
+                            target_device_name: str,
+                            usb_vid: int,
+                            usb_pid: int,
+                            reboot: bool = True):
+        """Program V2 settings to internal flash of the DVK Probe
 
+        Args:
+            board_vendor (str): e.g. Ezurio
+            board_name (str): e.g. Vela IF820 DVK
+            target_device_vendor (str): e.g. Arm
+            target_device_name (str): e.g. cortex_m
+            usb_vid (int): USB Vendor ID
+            usb_pid (int): USB Product ID
+            reboot (bool, optional): Reboot the probe after programming settings. Defaults to True.
+        """
+
+        settings = ProbeSettings(version=2,
+                                 target_device_vendor=bytes(
+                                     target_device_vendor, 'UTF-8'),
+                                 target_device_name=bytes(
+                                     target_device_name, 'UTF-8'),
+                                 target_board_vendor=bytes(
+                                     board_vendor, 'UTF-8'),
+                                 target_board_name=bytes(board_name, 'UTF-8'),
+                                 usb_vid=usb_vid.to_bytes(2, 'little'),
+                                 usb_pid=usb_pid.to_bytes(2, 'little'))
+        self.__write_and_verify_internal_settings(settings, reboot)
         if reboot:
-            # Reboot the probe and verify settings
-            logger.debug('Rebooting the probe...')
-            res = self.reboot()
-            assert res == 0, 'Failed to reboot!'
-            self.close()
-            time.sleep(PROBE_BOOT_TIME)
-            logger.debug('probe booted')
-            self.__probe_handle.open()
-            settings_read = self.read_internal_settings()
-            assert bytearray(settings) == bytearray(settings_read), \
-                f'After reboot, verify board settings failed. Write: {settings} Read: {settings_read}'
+            (vid, pid) = self.__probe_handle.vidpid
+            assert vid == usb_vid, f'USB VID mismatch: {vid} != {usb_vid}'
+            assert pid == usb_pid, f'USB PID mismatch: {pid} != {usb_pid}'
 
 
 if __name__ == "__main__":
