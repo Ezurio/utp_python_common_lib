@@ -74,6 +74,8 @@ Init Board
     # For all automated testing, upload an empty boot.py to the board to
     # prevent the default script from running.
     Upload Script to Board    ${board}    common_lib/scripts/empty_boot.py    boot.py
+    # Remove main.py (if it exists) to prevent it from running.
+    Board Delete Script    ${board}    main.py
     Board Reset Module    ${board}
     ${resp}=    Call Method    ${board.python_uart}    send    import os
     ${resp}=    Call Method    ${board.python_uart}    send    import sys
