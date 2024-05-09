@@ -1,19 +1,19 @@
 ---
-name: Configuration for Sera NX040 DVK test rack. This is a development system.
+name: Configuration for Sera NX040 DVK test rack in Cedarburg.
 
 boards:
   - name: sera_nx040_dvk_spi_i2c
     ports:
-      - sn: E6620CD64F947D37
+      - sn: E6620CD64F169937
         index: 0
         source: board
         type: zephyr
-      - sn: E6620CD64F947D37
+      - sn: E6620CD64F169937
         index: 1
         source: board
         type: repl
     probe:
-      sn: E6620CD64F947D37
+      sn: E6620CD64F169937
       type: dvkprobe
       family: nrf52833
     properties:
@@ -26,16 +26,16 @@ boards:
       - dut
   - name: sera_nx040_dvk_gpio
     ports:
-      - sn: E6620CD64F8C6736
+      - sn: E6620CD64F335437
         index: 0
         source: board
         type: zephyr
-      - sn: E6620CD64F8C6736
+      - sn: E6620CD64F335437
         index: 1
         source: board
         type: repl
     probe:
-      sn: E6620CD64F8C6736
+      sn: E6620CD64F335437
       type: dvkprobe
       family: nrf52833
     properties:
@@ -47,12 +47,12 @@ boards:
       - dut
   - name: Lyra24P_10dBm
     ports:
-      - sn: 449008461
+      - sn: 449008463
         index: 0
         source: board
         type: repl
     probe:
-      sn: 449008461
+      sn: 449008463
       type: jlink
       family: Cortex-M33
     properties:
