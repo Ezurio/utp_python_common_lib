@@ -3,7 +3,10 @@ import ctypes as c
 import logging
 import operator
 from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
+from pyocd.core.helpers import ConnectHelper
+from pyocd.flash.file_programmer import FileProgrammer
 import serial.tools.list_ports as list_ports
+import subprocess
 import time
 from lc_util import logger_setup
 from warnings import warn
@@ -66,8 +69,13 @@ class DvkProbe(Probe):
     GPIO_27 = 27
     GPIO_28 = 28
 
-    def __init__(self, id, description, ports=dict()):
-        super().__init__(id, description, ports)
+    def __init__(self,
+                 id,
+                 description: str = "",
+                 ports=dict(),
+                 family: str = ""):
+
+        super().__init__(id, description, ports, family)
         self.__probe_handle = None
 
     @staticmethod
@@ -368,6 +376,26 @@ class DvkProbe(Probe):
             (vid, pid) = self.__probe_handle.vidpid
             assert vid == usb_vid, f'USB VID mismatch: {vid} != {usb_vid}'
             assert pid == usb_pid, f'USB PID mismatch: {pid} != {usb_pid}'
+
+    def program_target(self, file_path: str, addr: any = 0):
+        """Program the target with a file.
+
+        Args:
+            file_path (str): The file to program
+            addr (any, optional): The address to program. Defaults to 0.
+        """
+        # Probe is going to be used by another module, so close it
+        self.close()
+
+        with ConnectHelper.session_with_chosen_probe(unique_id=self.id,
+                                                     options={"target_override": self.family}) as session:
+            FileProgrammer(session).program(
+                file_or_path=file_path, base_address=addr)
+
+        # Restore the state of the probe. Upper layer must handle comports.
+        # (If a robot script is running, any commands must be
+        # resent because the board has been reprogrammed/reset.)
+        self.open()
 
 
 if __name__ == "__main__":

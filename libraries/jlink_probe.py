@@ -1,6 +1,7 @@
 from probe import Probe
 from lc_util import logger_setup, logger_get
 from pylink.jlink import JLink
+from pylink import JLinkInterfaces
 import serial.tools.list_ports as list_ports
 
 logger = logger_get(__name__)
@@ -14,20 +15,12 @@ class JLinkProbe(Probe):
 
     def __init__(self,
                  id: int,
-                 family: str = "",
                  description: str = "",
-                 ports=dict()):
+                 ports=dict(),
+                 family: str = ""):
 
-        super().__init__(id, description, ports)
-        self.__family = family
+        super().__init__(id, description, ports, family)
         self.__probe_handle = None
-
-    @property
-    def family(self) -> str:
-        return self.__family
-
-    def __str__(self):
-        return super().__str__() + f", {self.family}"
 
     @staticmethod
     def __list_ports(comport_description="JLink CDC UART Port") -> list:
@@ -45,7 +38,7 @@ class JLinkProbe(Probe):
         return jlink_comport_info
 
     @staticmethod
-    def get_connected_probes(family: str = "Cortex-M33", uart_interface_type: str = "python", 
+    def get_connected_probes(family: str = "Cortex-M33", uart_interface_type: str = "python",
                              with_comports: bool = True) -> list['JLinkProbe']:
         """
         Look for JLink probes.
@@ -54,10 +47,10 @@ class JLinkProbe(Probe):
             family (str, optional): The family of the JLink probe. Defaults to "Cortex-M33" if 
             with_comports is True. In order to discover com ports connected to a probe, 
             the family must be known.
-            
+
             uart_interface_type (str, optional): The type of UART interface. Defaults to "python" if 
             with comports is True.
-            
+
             with_comports (bool, optional): If True, only return probe with at least one comport. 
             When false, ignore comports. Defaults to True.
 
@@ -101,9 +94,9 @@ class JLinkProbe(Probe):
                     # may have leading zeros.
                     if str(emu.SerialNumber) in hwid:
                         p = JLinkProbe(emu.SerialNumber,
-                                       family,
                                        emu.acProduct.decode(),
-                                       {uart_interface_type: device})
+                                       {uart_interface_type: device},
+                                       family)
                         probes.append(p)
                         # For simplicity, only use the first port found.
                         # Can't differentiate port types at this time.
@@ -127,6 +120,11 @@ class JLinkProbe(Probe):
             self.__probe_handle.open(self.id)
         if not self.__probe_handle.target_connected():
             self.__probe_handle.connect(chip_name=self.family)
+            # Try SWD if JTAG fails
+            if not self.__is_open():
+                self.__probe_handle.set_tif(JLinkInterfaces.SWD)
+                self.__probe_handle.connect(chip_name=self.family)
+
         if not self.__is_open():
             raise Exception(
                 f"Unable to connect to target with probe {self.id}")
@@ -135,6 +133,8 @@ class JLinkProbe(Probe):
         """
         Read state of JLink probe
         """
+        logger.info(
+            f"{self.id} {self.family} connected: {self.__probe_handle.connected()} target: {self.__probe_handle.target_connected()}")
         return self.__probe_handle.connected() and self.__probe_handle.target_connected()
 
     def close(self):
@@ -142,6 +142,12 @@ class JLinkProbe(Probe):
 
     def reset_target(self):
         self.__probe_handle.reset(halt=False)
+
+    def reboot(self):
+        """
+        Reboot the probe itself. Not supported for JLink.
+        """
+        pass
 
     def memory_read(self, address=0, length=0, close_after_read=True):
         """
@@ -172,6 +178,15 @@ class JLinkProbe(Probe):
                 s += chr(c)
         return s
 
+    def program_target(self, file_path: str, addr: any = 0):
+        """Program the target with a file.
+
+        Args:
+            file_path (str): The file to program
+            addr (any, optional): The address to program. Defaults to 0.
+        """
+        self.__probe_handle.reset()
+        self.__probe_handle.flash_file(path=file_path, addr=addr)
 
 if __name__ == "__main__":
     logger = logger_setup(__file__, True)
@@ -183,6 +198,7 @@ if __name__ == "__main__":
 
     with_comports = False
     probes = JLinkProbe.get_connected_probes(with_comports=False)
-    logger.info(f"Number of J-Link probes IGNORING comports found: {len(probes)}")
+    logger.info(
+        f"Number of J-Link probes IGNORING comports found: {len(probes)}")
     for b in probes:
         logger.info(b)

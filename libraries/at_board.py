@@ -20,16 +20,14 @@ class AtBoard(Board, JLinkProbe, AtUart):
     def __init__(self, probe: JLinkProbe):
         super().__init__()
         print(f"debug probe ports ID: {probe.ports}")
-        JLinkProbe.__init__(self, probe.id, probe.family,
-                            probe.description, probe.ports)
-
+        JLinkProbe.__init__(self, probe.id, probe.description,
+                            probe.ports, probe.family)
 
     def open_and_init_board(self):
         self.open()
         AtUart.__init__(self, self.ports['at'])
         self._initialized = True
         self.at_uart.consume_echo(False)
-
 
     @classmethod
     def get_specified(cls, boards_conf: list[BoardConfig]) -> list['AtBoard']:
@@ -58,6 +56,7 @@ class AtBoard(Board, JLinkProbe, AtUart):
     def close_ports(self):
         self.at_uart.close()
 
+
 if __name__ == "__main__":
     logger = logger_setup(__file__)
 
@@ -68,5 +67,3 @@ if __name__ == "__main__":
         logger.info(b)
         b.open_and_init_board()
         logger.debug(dir(b))
-
-

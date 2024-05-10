@@ -68,8 +68,14 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         boards = []
 
         detected_ports = list_ports.comports()
+        # Remove ports without a serial number because they are required for matching.
+        # This allows membership test below to work correctly.
+        # Membership test allows leading zeros in the serial number.
+        for x in detected_ports:
+            if x.serial_number is None:
+                detected_ports.remove(x)
         if len(detected_ports) < 0:
-            logger.info("No serial ports detected")
+            logger.info("No valid serial ports detected")
             return boards
 
         if len(boards_conf) > 0:
@@ -94,7 +100,7 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                     # Serial number is the most reliable way to match ports because the device name
                     # can change depending on the order the devices are plugged in.
                     matching_ports = [
-                        x for x in detected_ports if x.serial_number == port.sn]
+                        x for x in detected_ports if str(port.sn) in x.serial_number]
                     # Sort by location and device to make sure the ports are in
                     # order by lowest USB port index to largest.
                     # This is important because the REPL port is the first port enumerated.
@@ -119,6 +125,8 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                         if p.id == bprobe.sn:
                             probe = p
                             probes.remove(p)
+                            if "family" in bprobe:
+                                probe.family = bprobe.family
                             break
                 if repl:
                     boards.append(MicroPythonBoard(repl, name, zephyr, probe))
@@ -146,10 +154,20 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         if self._zephyr:
             s += f", [{self._zephyr.name}]: {self._zephyr.device}"
         return s
-
-    def open_and_init_board(self):
+    
+    @property
+    def user_board_name(self) -> str:
+        """
+        Name provided in the board configuration file (optional).
+        """
+        return self._user_board_name
+    
+    def open_probe(self):
         if self._probe:
             self._probe.open()
+
+    def open_and_init_board(self):
+        self.open_probe()
         self.open_ports()
         self.reset_module()
         self._initialized = True
@@ -170,6 +188,7 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
             if reset_probe:
                 self._probe.reboot()
             self._probe.close()
+        self._initialized = False
 
     def reset_module(self):
         """Hard reset the module with the debug probe if available, otherwise soft reset.
@@ -206,6 +225,44 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
             Dictionary of port names and devices
         """
         return self.__ports
+
+    def program_mcu(self, file_path: str, board_name: str, addr: any = 0):
+        """Program the target with a file.
+
+        Args:
+            file_path (str): The file to program
+            board_name (str): A name that matches the class name (after conversion).
+            addr (any): The address to program the file to.
+        """
+        if not file_path:
+            raise ValueError("File path invalid")
+        if not board_name:
+            raise ValueError("Board name invalid")
+        if not self._probe:
+            raise RuntimeError("No probe to program with")
+
+        # open_and_init_board may not have been called.
+        self.open_probe()
+        if not self._probe.id:
+            raise ValueError("Probe ID invalid")
+
+        match = False
+        if board_name.casefold() in self._user_board_name.casefold():
+            match = True
+        elif self.__class__.in_name(board_name):
+            match = True
+
+        if not match:
+            logger.debug("Not programming board because name doesn't match")
+            return
+
+        if self._initialized:
+            self.close_ports()
+        
+        self._probe.program_target(file_path, addr)
+        
+        if self._initialized:
+            self.open_ports()
 
 
 # TODO: How do we differentiate between the different boards?

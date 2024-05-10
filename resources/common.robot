@@ -64,7 +64,7 @@ Get Boards
 
     Set Global Variable    ${settings_board}    ${boards}
 
-Init Board without Xray
+Init Board
     [Arguments]    ${board}
 
     IF    ${board.is_initialized} == ${False}
@@ -77,11 +77,6 @@ Init Board without Xray
     Board Reset Module    ${board}
     ${resp}=    Call Method    ${board.python_uart}    send    import os
     ${resp}=    Call Method    ${board.python_uart}    send    import sys
-
-Init Board
-    [Arguments]    ${board}
-
-    Init Board without Xray    ${board}
 
     # Setup the XRay uploader to use the test plan associated with DUT1
     # (This reads the machine name from the board.)

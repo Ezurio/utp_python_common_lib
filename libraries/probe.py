@@ -3,6 +3,7 @@ import serial.tools.list_ports as list_ports
 
 logger = logger_get(__name__)
 
+
 class Probe:
     """
     Base class for debug/programming probe.
@@ -10,12 +11,15 @@ class Probe:
     It contains methods that are common to all probes and
     stubs for those that must be implemented by subclasses.
     """
+
     def __init__(self,
                  id=None | int | str,
                  description: str = "",
-                 ports=dict()):
+                 ports=dict(),
+                 family: str = ""):
 
         self.__id = id
+        self.__family = family
         self.__description = description
         self.__ports = ports
 
@@ -35,6 +39,14 @@ class Probe:
     @property
     def id(self):
         return self.__id
+
+    @property
+    def family(self):
+        return self.__family
+
+    @family.setter
+    def family(self, family: str):
+        self.__family = family
 
     @property
     def ports(self) -> dict:
@@ -58,13 +70,14 @@ class Probe:
     def get_connected_probes(cls, with_comports: bool = True) -> list:
         """
         Look for all probes that are defined in the current scope.
-        
+
         Args:
             with_comports (bool, optional): If True, only return probes with comports. Defaults to True.
         """
         probes = list()
         for subclass in cls.__subclasses__():
-            probes.extend(subclass.get_connected_probes(with_comports=with_comports))
+            probes.extend(subclass.get_connected_probes(
+                with_comports=with_comports))
 
         return probes
 
@@ -83,6 +96,14 @@ class Probe:
     def reset_target(self):
         """
         Reset the target device with the reset line.
+        """
+        raise NotImplementedError
+
+    def program_target(self, file_path: str, addr: any = 0):
+        """Program the target with a file.
+
+        Args:
+            file_path (str): The file to program
         """
         raise NotImplementedError
 

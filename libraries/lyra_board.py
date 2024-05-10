@@ -35,8 +35,8 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
 
     def __init__(self, probe: JLinkProbe):
         super().__init__()
-        JLinkProbe.__init__(self, probe.id, probe.family,
-                            probe.description, probe.ports)
+        JLinkProbe.__init__(self, probe.id, probe.description,
+                            probe.ports, probe.family)
 
         if self.MODULE_PART_NUMBER == "":
             raise NotImplementedError("Subclass must define part number")
@@ -128,7 +128,7 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
         self.close_ports()
         self.reset_module()
         self.close()
-
+        self._initialized = False
 #
 # Subclasses are a Python compatible name of the board
 #

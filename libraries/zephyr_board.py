@@ -49,7 +49,7 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
                             # The object names must match the board name
                             # (case insensitive and spaces removed) that is read from the settings
                             if subclass.matches_name(board_name):
-                                boards.append(ZephyrBoard(probe))
+                                boards.append(subclass(probe))
                                 break
                 except:
                     pass
@@ -58,7 +58,7 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
 
     def __init__(self, probe: DvkProbe):
         super().__init__()
-        DvkProbe.__init__(self, probe.id, probe.description, probe.ports)
+        DvkProbe.__init__(self, probe.id, probe.description, probe.ports, probe.family)
 
     def open_and_init_board(self):
         self.open()
@@ -84,7 +84,7 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
         if reset_probe:
             self.reboot()
         self.close()
-
+        self._initialized = False
 
 class SeraNX040Dvk(ZephyrBoard):
     """
@@ -95,6 +95,7 @@ class SeraNX040Dvk(ZephyrBoard):
     """
 
     def __init__(self, probe):
+        probe.family = "nrf52833"
         super().__init__(probe)
 
 

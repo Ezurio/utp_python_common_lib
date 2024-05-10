@@ -270,3 +270,12 @@ class Board(object):
         Send end-of-transmission character to the board using Python UART
         """
         raise NotImplementedError
+
+    def program_mcu(self, file_path: str, board_name: str):
+        """Program the microprocessor with a file.
+
+        Args:
+            file_path (str): The file to program
+            board_name (str): A name that matches the class name (after conversion).
+        """
+        raise NotImplementedError
