@@ -1,0 +1,38 @@
+name: collate
+description: |
+  Collate the XML results from the tests into a single xml file and generate a log file.
+  Running tests individually and then running rebot creates a nicer output file.
+  Find was used because /**/*.xml didn't work properly.
+  If any test fails, the output file will still be created and rebot will return a non-zero exit code.
+inputs:
+  test_dir:
+    description: The working directory that contains the tests
+    required: false
+    default: "tests"
+  robot_env:
+    description: The conda environment
+    required: false
+    default: "~/miniforge3/envs/conda_env_v1.0"
+  input_folder:
+    description: |
+      The folder that XML results were placed into (under the test_dir) and
+      will be read from.
+    required: false
+    default: "output"
+  file_name:
+    description: The file name that the combined XML results will be written to
+    required: false
+    default: "combined.xml"
+runs:
+  using: composite
+  steps:
+    - run: |
+        files=$(find ${{ inputs.input_folder }} -name "*.xml")
+        echo $files
+        $BASE_CMD -N "$GITHUB_WORKFLOW" $files
+      env:
+        BASE_CMD: >
+          conda run -p ${{ inputs.robot_env }} python -m robot.rebot 
+          -d ${{ inputs.input_folder }} -o ${{ inputs.file_name }}
+      shell: bash -euo pipefail {0}
+      working-directory: ${{ inputs.test_dir }}

@@ -6,7 +6,6 @@ from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
 from pyocd.core.helpers import ConnectHelper
 from pyocd.flash.file_programmer import FileProgrammer
 import serial.tools.list_ports as list_ports
-import subprocess
 import time
 from lc_util import logger_setup
 from warnings import warn
