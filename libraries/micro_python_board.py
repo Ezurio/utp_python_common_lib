@@ -19,7 +19,7 @@ logger = logger_get(__name__)
 class MicroPythonBoard(Board, PythonUart, ZephyrUart):
     """
     A class to represent a generic MicroPython Board.
-    A user can use board config files to find any board that supports MircoPython.
+    A user can use board config files to find any board that supports MicroPython.
     """
     #: :meta hide-value:
     #:
@@ -104,8 +104,13 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                     # Sort by location and device to make sure the ports are in
                     # order by lowest USB port index to largest.
                     # This is important because the REPL port is the first port enumerated.
-                    matching_ports.sort(
-                        key=operator.attrgetter('location', 'device'))
+                    # On Windows, the location may not be available.
+                    try:
+                        matching_ports.sort(
+                            key=operator.attrgetter('location', 'device'))
+                    except:
+                        logger.info(
+                            "Unable to sort ports by location and device")
                     if len(matching_ports) >= (port.index + 1):
                         # Assign the device name to the port
                         port.device = matching_ports[port.index].device
@@ -343,8 +348,11 @@ class BL654UsbDongle(MicroPythonBoard, Board):
         # Sort by location and device to make sure the ports are in
         # order by lowest USB port index to largest.
         # This is important because the REPL port is the first port enumerated.
-        matching_ports.sort(
-            key=operator.attrgetter('location', 'device'))
+        try:
+            matching_ports.sort(
+                key=operator.attrgetter('location', 'device'))
+        except:
+            logger.info("Unable to sort BL6554 USB ports")
 
         # Group the matching ports by serial number and create a board for each group.
         for k, g in itertools.groupby(matching_ports, key=lambda x: x.serial_number):
