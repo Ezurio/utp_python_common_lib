@@ -122,17 +122,25 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                             if "name" not in port:
                                 port.name = "Zephyr shell"
                             zephyr = port
+                    else:
+                        logger.error(
+                            "Could not find any matching communcation ports")
+
+                # If the board configuration specifies a probe with a serial number,
+                # try to find it in the list of connected probes.
                 if "probe" in board:
                     bprobe = board.probe
-                    if "sn" not in bprobe:
-                        continue
-                    for p in probes:
-                        if p.id == bprobe.sn:
-                            probe = p
-                            probes.remove(p)
-                            if "family" in bprobe:
-                                probe.family = bprobe.family
-                            break
+                    if "sn" in bprobe:
+                        for p in probes:
+                            if p.id == bprobe.sn:
+                                probe = p
+                                probes.remove(p)
+                                if "family" in bprobe:
+                                    probe.family = bprobe.family
+                                break
+                        if probe is None:
+                            logger.error(
+                                f"Matching probe not found for board {name} with serial number {bprobe.sn}")
                 if repl:
                     boards.append(MicroPythonBoard(repl, name, zephyr, probe))
 
@@ -159,14 +167,14 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         if self._zephyr:
             s += f", [{self._zephyr.name}]: {self._zephyr.device}"
         return s
-    
+
     @property
     def user_board_name(self) -> str:
         """
         Name provided in the board configuration file (optional).
         """
         return self._user_board_name
-    
+
     def open_probe(self):
         if self._probe:
             self._probe.open()
@@ -263,9 +271,9 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
 
         if self._initialized:
             self.close_ports()
-        
+
         self._probe.program_target(file_path, addr)
-        
+
         if self._initialized:
             self.open_ports()
 
