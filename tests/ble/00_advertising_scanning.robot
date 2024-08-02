@@ -400,7 +400,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
 # *
 # **********************************************************************
 
-BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
+BLE AdScan 1M 2M Phy Extended Non Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended Non connectible non scannable advert using the 1M & 2M PHYs
     ...    DUT2 Scans using the 1M PHY passively
 
@@ -427,7 +427,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scanable Passive Scan
     ...    0
     Check Scan result    ${settings_board[1]}    ${32}
 
-BLE AdScan 1M 2M Phy Extended Connectible Non Scanable Passive Scan
+BLE AdScan 1M 2M Phy Extended Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 1M & 2M PHYs
     ...    DUT2 Scans using the 1M PHY passively
 
@@ -528,7 +528,7 @@ Start Advertising
     ...    ${phy1}
     ...    ${phy2}
     ...    ${connectible}
-    ...    ${scanable}
+    ...    ${scannable}
     ...    ${extended}
     ...    ${min_interval}
     ...    ${max_interval}
@@ -537,7 +537,7 @@ Start Advertising
     Switch Board to Raw REPL    ${board}
     ${resp}=    Raw REPL Exec    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
     ${resp}=    Raw REPL Exec    ${board}    advert.set_phys(${phy1}, ${phy2})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scanable}, ${extended})
+    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
     ${resp}=    Raw REPL Exec    ${board}    advert.set_interval(${min_interval}, ${max_interval})
     ${resp}=    Raw REPL Exec    ${board}    advert.start()
     Switch Board to User REPL    ${board}
@@ -549,7 +549,7 @@ Start Scannable Advert
     ...    ${phy1}
     ...    ${phy2}
     ...    ${connectible}
-    ...    ${scanable}
+    ...    ${scannable}
     ...    ${extended}
     ...    ${min_interval}
     ...    ${max_interval}
@@ -559,7 +559,7 @@ Start Scannable Advert
     ${resp}=    Raw REPL Exec    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
     ${resp}=    Raw REPL Exec    ${board}    advert.add_ltv(255, bytes(${SCAN_DATA}), True)
     ${resp}=    Raw REPL Exec    ${board}    advert.set_phys(${phy1}, ${phy2})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scanable}, ${extended})
+    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
     ${resp}=    Raw REPL Exec    ${board}    advert.set_interval(${min_interval}, ${max_interval})
     ${resp}=    Raw REPL Exec    ${board}    advert.start()
     Switch Board to User REPL    ${board}
