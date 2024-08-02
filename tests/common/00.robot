@@ -191,9 +191,8 @@ Write Read Rename Delete File
     ${resp}=    DUT1 User REPL Send    ${file}.write(${file_contents})
     ${write_len}=    Convert To Integer    ${resp}
     DUT1 User REPL Send    ${file}.close()
-    ${resp}=    DUT1 User REPL Send    os.stat('${file_name}')
-    ${file_stat}=    Evaluate    eval('${resp}')
-    Should Be Equal As Integers    ${write_len}    ${file_stat[5]}
+    ${file_size}=    DUT1 User REPL Send    os.stat('${file_name}')[6]
+    Should Be Equal As Integers    ${write_len}    ${file_size}
     DUT1 User REPL Send    ${file}\=open('${file_name}','${read_mode}')
     ${resp}=    DUT1 User REPL Send    ${file}.read()
     Should Contain    ${resp}    ${file_contents}
