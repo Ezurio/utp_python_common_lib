@@ -11,17 +11,16 @@ Test Timeout        10 minutes
 
 
 *** Variables ***
-${PERIPHERAL_SCRIPT}=                       common_lib${/}scripts${/}BLE_scripts${/}peripheral.py
-${PERIPHERAL_SCRIPT_START_RESP}=            advert started
+${PERIPHERAL_SCRIPT}=               common_lib${/}scripts${/}BLE_scripts${/}peripheral.py
+${CENTRAL_SCRIPT}=                  common_lib${/}scripts${/}BLE_scripts${/}central.py
 
-${CENTRAL_SCAN_SCRIPT}=                     common_lib${/}scripts${/}BLE_scripts${/}central_scan.py
-${CENTRAL_SCAN_SCRIPT_START_RESP}=          central scan started
-${CENTRAL_CONNECT_SCRIPT}=                  common_lib${/}scripts${/}BLE_scripts${/}central_connect.py
-${CENTRAL_CONNECT_SCRIPT_START_RESP}=       connection started
+${BLE_ADVERT_NAME}=                 C
+${RSSI_ERROR}=                      -127
+${RSSI_DIFF_THRESHOLD}=             20
 
-${BLE_ADVERT_NAME}=                         C
-${RSSI_ERROR}=                              -127
-${RSSI_DIFF_THRESHOLD}=                     20
+${SCAN_TIMOUT_SECONDS}=             ${20}
+${SCAN_CMD_TIMOUT_SECONDS}=         ${21}
+${CONNECTION_TIMOUT_SECONDS}=       ${20}
 
 
 *** Tasks ***
@@ -165,55 +164,29 @@ BLE Single Connection Legacy 1M PHY Stress
 Start Peripheral
     [Arguments]    ${primary_board}    ${board_adv_name}    ${phy}
 
-    ${resp}=    User REPL Send    ${primary_board}    required_name = "${board_adv_name}"
-    ${resp}=    User REPL Send    ${primary_board}    required_phy = ${phy}
-    ${resp}=    Run Script on Board    ${primary_board}    ${PERIPHERAL_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${PERIPHERAL_SCRIPT_START_RESP}
+    Run Script on Board Expect Response    ${primary_board}    ${PERIPHERAL_SCRIPT}
+    User REPL Send Expect True    ${primary_board}    init_and_start_advert("${board_adv_name}", ${phy})
 
 Connect Central
     [Arguments]    ${primary_board}    ${board_adv_name}    ${phy}
 
-    ${resp}=    User REPL Send    ${primary_board}    required_filter_name = "${board_adv_name}"
-    ${resp}=    User REPL Send    ${primary_board}    required_phy = ${phy}
-    ${resp}=    Run Script on Board    ${primary_board}    ${CENTRAL_SCAN_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${CENTRAL_SCAN_SCRIPT_START_RESP}
-
-    ${total_time}=    Set Variable    ${20}
-    ${result}=    Set Variable    ${False}
-    WHILE    $total_time > ${0}
-        ${resp1}=    User REPL Send    ${primary_board}    print(found)
-        ${resp1}=    Convert To String    ${resp1}
-        ${resp1}=    Replace String    ${resp1}    \r\n    ${EMPTY}
-        IF    ${resp1} == True
-            ${result}=    Set Variable    ${True}
-            BREAK
-        ELSE
-            Sleep    1s
-            ${total_time}=    Evaluate    ${total_time} - 1
-        END
-    END
-    IF    ${result} == False    Fail    Failed to connect
-
-    ${resp}=    Run Script on Board    ${primary_board}    ${CENTRAL_CONNECT_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${CENTRAL_CONNECT_SCRIPT_START_RESP}
+    Run Script on Board Expect Response    ${primary_board}    ${CENTRAL_SCRIPT}
+    User REPL Send Expect True
+    ...    ${primary_board}
+    ...    scan_for_dut("${board_adv_name}", ${phy}, ${SCAN_TIMOUT_SECONDS})
+    ...    ${SCAN_CMD_TIMOUT_SECONDS}
+    User REPL Send Expect True    ${primary_board}    request_connection()
 
 Check Connection
     [Arguments]    ${primary_board}    ${secondary_board}
 
-    ${total_time}=    Set Variable    ${20}
+    ${total_time}=    Set Variable    ${CONNECTION_TIMOUT_SECONDS}
     ${result}=    Set Variable    ${False}
 
     WHILE    $total_time > ${0}
-        ${resp1}=    User REPL Send    ${primary_board}    print(current_state)
-        ${resp2}=    User REPL Send    ${secondary_board}    print(current_state)
-        ${resp1}=    Convert To String    ${resp1}
-        ${resp2}=    Convert To String    ${resp2}
-        ${resp1}=    Replace String    ${resp1}    \r\n    ${EMPTY}
-        ${resp2}=    Replace String    ${resp2}    \r\n    ${EMPTY}
-        IF    ${resp1} == 1 and ${resp2} == 1
+        ${connected1}=    User REPL Send Error Not Expected    ${primary_board}    connected()
+        ${connected2}=    User REPL Send Error Not Expected    ${secondary_board}    connected()
+        IF    ${connected1} == ${True} and ${connected2} == ${True}
             ${result}=    Set Variable    ${True}
             BREAK
         ELSE
@@ -224,8 +197,8 @@ Check Connection
 
     IF    ${result} == False    Fail    Failed to connect
 
-    ${resp1}=    User REPL Send    ${primary_board}    print(connection.get_rssi())
-    ${resp2}=    User REPL Send    ${secondary_board}    print(connection.get_rssi())
+    ${resp1}=    User REPL Send Error Not Expected    ${primary_board}    print(connection.get_rssi())
+    ${resp2}=    User REPL Send Error Not Expected    ${secondary_board}    print(connection.get_rssi())
 
     IF    ${resp1} == ${RSSI_ERROR}    Fail    RSSI 1 not read correctly
 
@@ -238,19 +211,15 @@ Check Connection
 
 Disconnect
     [Arguments]    ${primary_board}    ${secondary_board}
-    ${resp1}=    User REPL Send    ${primary_board}    connection.disconnect()
+    ${resp1}=    User REPL Send Error Not Expected    ${primary_board}    connection.disconnect()
 
-    ${total_time}=    Set Variable    ${20}
+    ${total_time}=    Set Variable    ${CONNECTION_TIMOUT_SECONDS}
     ${result}=    Set Variable    ${False}
 
     WHILE    $total_time > ${0}
-        ${resp1}=    User REPL Send    ${primary_board}    print(current_state)
-        ${resp2}=    User REPL Send    ${secondary_board}    print(current_state)
-        ${resp1}=    Convert To String    ${resp1}
-        ${resp2}=    Convert To String    ${resp2}
-        ${resp1}=    Replace String    ${resp1}    \r\n    ${EMPTY}
-        ${resp2}=    Replace String    ${resp2}    \r\n    ${EMPTY}
-        IF    ${resp1} == 2 and ${resp2} == 2
+        ${connected1}=    User REPL Send Error Not Expected    ${primary_board}    connected()
+        ${connected2}=    User REPL Send Error Not Expected    ${secondary_board}    connected()
+        IF    ${connected1} == ${False} and ${connected2} == ${False}
             ${result}=    Set Variable    ${True}
             BREAK
         ELSE
@@ -276,7 +245,7 @@ Setup
     ${tmp}=    Get Board Addr    ${settings_board[1]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_addr}    ${tmp}
-    Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
+    Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board2_addr}
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
@@ -291,8 +260,8 @@ Teardown
     De-Init Board    ${settings_board[1]}
 
 Test Setup
-    ${resp}=    Board Soft Reboot    ${settings_board[0]}
-    ${resp}=    Board Soft Reboot    ${settings_board[1]}
+    Board Soft Reboot    ${settings_board[0]}
+    Board Soft Reboot    ${settings_board[1]}
 
-    ${resp}=    User REPL Send    ${settings_board[0]}    import canvas_ble as ble
-    ${resp}=    User REPL Send    ${settings_board[1]}    import canvas_ble as ble
+    User REPL Send Error Not Expected    ${settings_board[0]}    import canvas_ble as ble
+    User REPL Send Error Not Expected    ${settings_board[1]}    import canvas_ble as ble
