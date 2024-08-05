@@ -10,9 +10,8 @@ Test Timeout        1 minute
 
 
 *** Variables ***
-${TWO_WAY_RANGE_SCRIPT}                 canvas_python_samples/apps/sera_nx040_dvk/uwb_ranging_demo/uwb_ranging_demo.py
-${TWO_WAY_RANGE_SCRIPT_START_RESP}      My device ID is
-${INVALID_RANGE}                        ${65535}
+${TWO_WAY_RANGE_SCRIPT}     canvas_python_samples/apps/sera_nx040_dvk/uwb_ranging_demo/uwb_ranging_demo.py
+${INVALID_RANGE}            ${65535}
 
 
 *** Tasks ***
@@ -50,21 +49,21 @@ Teardown
 Run Ranging Script on Board
     [Arguments]    ${board}
 
-    ${resp}=    Run Script on Board    ${board}    ${TWO_WAY_RANGE_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${TWO_WAY_RANGE_SCRIPT_START_RESP}
+    # The variable robot_test_rack is used to prevent the script from
+    # starting because callbacks don't occur in the raw REPL.
+    User REPL Send NoRet    ${board}    robot_test_rack = True
+    Run Script on Board Expect Response    ${board}    ${TWO_WAY_RANGE_SCRIPT}
+    User REPL Send Error Not Expected    ${board}    start_demo()
 
 Setup Board for Ranging
     [Arguments]    ${board}
 
     Run Ranging Script on Board    ${board}
-    Switch Board to Raw REPL    ${board}
-    ${resp}=    Raw REPL Exec    ${board}    config['anchor_mode']\=1
-    ${resp}=    Raw REPL Exec    ${board}    config_save()
-    Switch Board to User REPL    ${board}
+    User REPL Send NoRet    ${board}    config['anchor_mode']\=1
+    User REPL Send NoRet    ${board}    config_save()
     ${resp}=    User REPL Send    ${board}    os.listdir()
     Should Contain    ${resp}    config.cb
-    ${resp}=    Board Reset Module    ${board}
+    Board Reset Module    ${board}
 
 Verify Board Range
     [Arguments]    ${board}    ${peer_board_id}
@@ -72,11 +71,11 @@ Verify Board Range
     ${total_time}=    Set Variable    ${5}
     ${range}=    Set Variable    ${INVALID_RANGE}
 
-    Switch Board to Raw REPL    ${board}
     WHILE    $total_time > ${0}
-        ${resp}=    Raw REPL Exec    ${board}    print(devices)
+        # This print is for debugging/logging purposes only.
+        User REPL Send    ${board}    print(devices)
         TRY
-            ${resp}=    Raw REPL Exec    ${board}
+            ${resp}=    User REPL Send    ${board}
             ...    print(devices['${peer_board_id}']['range'])
             ${range}=    Convert To Integer    ${resp}
         EXCEPT
@@ -85,5 +84,4 @@ Verify Board Range
         IF    ${range} == ${INVALID_RANGE}    Sleep    1s    ELSE    BREAK
         ${total_time}=    Evaluate    ${total_time} - 1
     END
-    Switch Board to User REPL    ${board}
     IF    ${range} == ${INVALID_RANGE}    Fail    Failed to get range
