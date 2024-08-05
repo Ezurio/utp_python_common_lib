@@ -315,9 +315,7 @@ Setup
     Get Boards    desired_properties=${desired_properties}
     Init Board    ${settings_board[0]}
 
-    ${resp}=    Run Script on Board    ${settings_board[0]}    ${GPIO_SCRIPT}
-    ${resp_string}=    Convert To String    ${resp}
-    Should Contain    ${resp_string}    ${GPIO_SCRIPT_START_RESP}
+    Run Script on Board Expect Response    ${settings_board[0]}    ${GPIO_SCRIPT}    ${GPIO_SCRIPT_START_RESP}
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
     ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
