@@ -6,6 +6,14 @@ current_state = 0
 do_notify = None
 do_indicate = None
 indicate_ack = None
+gatt_server = None
+verbose = False
+
+
+def wrapped_print(*args, **kwargs):
+    if verbose:
+        print(*args, **kwargs)
+
 
 def cb_con(conn):
     global current_state, connection
@@ -48,75 +56,80 @@ def cb_indicate(event_object):
 
 # Start the gatt server
 db = {
-    "Service 1":{
+    "Service 1": {
         "Name": "TestService",
-        "UUID":"b8d00000-6329-ef96-8a4d-55b376d8b25a",
-        "Characteristic 1":{
+        "UUID": "b8d00000-6329-ef96-8a4d-55b376d8b25a",
+        "Characteristic 1": {
             "Name": "WriteChar",
-            "UUID" :"b8d00001-6329-ef96-8a4d-55b376d8b25a",
-            "Length" : 20,
-            "Read Encryption" : "None",
-            "Write Encryption" : "None",
-            "Capability" : "Write",
-            "Callback" : write_cb
+            "UUID": "b8d00001-6329-ef96-8a4d-55b376d8b25a",
+            "Length": 20,
+            "Read Encryption": "None",
+            "Write Encryption": "None",
+            "Capability": "Write",
+            "Callback": write_cb
         },
-        "Characteristic 2":{
+        "Characteristic 2": {
             "Name": "ReadChar",
-            "UUID" :"b8d00002-6329-ef96-8a4d-55b376d8b25a",
-            "Length" : 20,
-            "Read Encryption" : "None",
-            "Write Encryption" : "None",
-            "Capability" : "Read"
+            "UUID": "b8d00002-6329-ef96-8a4d-55b376d8b25a",
+            "Length": 20,
+            "Read Encryption": "None",
+            "Write Encryption": "None",
+            "Capability": "Read"
         },
-        "Characteristic 3":{
+        "Characteristic 3": {
             "Name": "IndicateChar",
-            "UUID" :"b8d00003-6329-ef96-8a4d-55b376d8b25a",
-            "Length" : 20,
-            "Read Encryption" : "None",
-            "Write Encryption" : "None",
-            "Capability" : "Indicate",
-            "Callback" : cb_indicate
+            "UUID": "b8d00003-6329-ef96-8a4d-55b376d8b25a",
+            "Length": 20,
+            "Read Encryption": "None",
+            "Write Encryption": "None",
+            "Capability": "Indicate",
+            "Callback": cb_indicate
         },
-        "Characteristic 4":{
+        "Characteristic 4": {
             "Name": "NotifyChar",
-            "UUID" :"b8d00004-6329-ef96-8a4d-55b376d8b25a",
-            "Length" : 20,
-            "Read Encryption" : "None",
-            "Write Encryption" : "None",
-            "Capability" : "Notify",
-            "Callback" : cb_notify
+            "UUID": "b8d00004-6329-ef96-8a4d-55b376d8b25a",
+            "Length": 20,
+            "Read Encryption": "None",
+            "Write Encryption": "None",
+            "Capability": "Notify",
+            "Callback": cb_notify
         }
     }
 }
 
 
-try:
-    ble.init()
-except:
-    pass
-
-# Initialise the basic advert
-# 'required_' values must be set by the robot test before calling this script.
-try:
-    ble.set_periph_callbacks(cb_con, cb_discon)
-    advert = ble.Advertiser()
-    advert.stop()
-    advert.clear_buffer(False)
-    advert.add_ltv(1, bytes([6]), False)
-    advert.add_tag_string(9, required_name, False)
-    advert.set_phys(required_phy1, required_phy2)
-    advert.set_properties(True, False, required_extended)
-    advert.set_interval(240, 250)
-    advert.start()
-except Exception as e:
-    print("advert NOT started: ", e)
-
-try:
+def init_server() -> bool:
+    """ Initialise the basic advert and the Gatt Server.
+    'required_' values must be set by the robot test before calling this script.
+    """
     global gatt_server
-    gatt_server = ble.GattServer()
-    gatt_server.build_from_dict(db)
-    gatt_server.start()
-    print("server ready")
-except Exception as e:
-    print("Gatt Server failed: ", e)
 
+    try:
+        ble.init()
+        ble.set_periph_callbacks(cb_con, cb_discon)
+        advert = ble.Advertiser()
+        advert.stop()
+        advert.clear_buffer(False)
+        advert.add_ltv(1, bytes([6]), False)
+        advert.add_tag_string(9, required_name, False)
+        advert.set_phys(required_phy1, required_phy2)
+        advert.set_properties(True, False, required_extended)
+        advert.set_interval(240, 250)
+        advert.start()
+    except Exception as e:
+        wrapped_print("advert NOT started: ", e)
+        return False
+
+    try:
+        gatt_server = ble.GattServer()
+        gatt_server.build_from_dict(db)
+        gatt_server.start()
+        wrapped_print("server ready")
+    except Exception as e:
+        wrapped_print("Gatt Server failed: ", e)
+        return False
+
+    return True
+
+
+print('Script Completed Successfully')

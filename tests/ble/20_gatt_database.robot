@@ -11,15 +11,13 @@ Test Timeout        5 minute
 
 
 *** Variables ***
-${SERVER_SCRIPT}=               common_lib${/}scripts${/}BLE_scripts${/}init_server.py
-${SERVER_SCRIPT_START_RESP}=    server ready
+${SERVER_SCRIPT}=           common_lib${/}scripts${/}BLE_scripts${/}init_server.py
+${CLIENT_SCRIPT}=           common_lib${/}scripts${/}BLE_scripts${/}init_client.py
 
-${CLIENT_SCRIPT}=               common_lib${/}scripts${/}BLE_scripts${/}init_client.py
-${CLIENT_SCRIPT_START_RESP}=    client ready
-
-${BLE_ADVERT_NAME}=             C
-${RSSI_ERROR}=                  -127
-${RSSI_DIFF_THRESHOLD}=         10
+${BLE_ADVERT_NAME}=         C
+${RSSI_ERROR}=              -127
+${RSSI_DIFF_THRESHOLD}=     10
+${CMD_TIMEOUT}=             ${15.0}
 
 
 *** Tasks ***
@@ -28,7 +26,7 @@ Gatt Database Initialise
 
     Set Tags    PROD-5400
 
-    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_dict = gatt_client.get_dict()    ${5.0}
+    User REPL Send Error Not Expected    ${settings_board[1]}    gatt_dict = gatt_client.get_dict()    ${5.0}
     # In order to limit the size of the print, only the test service is requested.
     ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict['Service 1'])
     ${resp}=    Convert To String    ${resp}
@@ -64,7 +62,9 @@ Gatt Database Write
     [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
 
     Set Tags    PROD-5402
-    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.write("WriteChar", bytes("Hello Server", "utf-8"))
+    ${resp}=    User REPL Send
+    ...    ${settings_board[1]}
+    ...    gatt_client.write("WriteChar", bytes("Hello Server", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
@@ -180,7 +180,7 @@ Teardown
 Wait for data
     [Documentation]    Delay to allow previous command to execute and callback to fire.
     ...    If this is not present we can sometimes miss the callback.
-    ...    
+    ...
     ...    This latency is dependent on the BLE connection parameters.
     ...    To make testing more robust, this value should be calculated based on
     ...    the connection parameters.
@@ -191,21 +191,19 @@ Wait for data
 Init Server
     [Arguments]    ${board}    ${adv_name}
 
-    ${resp}=    User REPL Send    ${board}    import canvas_ble as ble
-    ${resp}=    User REPL Send    ${board}    required_name = "${adv_name}"
-    ${resp}=    User REPL Send    ${board}    required_phy1 = ble.PHY_1M
-    ${resp}=    User REPL Send    ${board}    required_phy2 = ble.PHY_1M
-    ${resp}=    User REPL Send    ${board}    required_extended = False
-    ${resp}=    Run Script on Board    ${board}    ${SERVER_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${SERVER_SCRIPT_START_RESP}
+    User REPL Send Error Not Expected    ${board}    import canvas_ble as ble
+    User REPL Send Error Not Expected    ${board}    required_name = "${adv_name}"
+    User REPL Send Error Not Expected    ${board}    required_phy1 = ble.PHY_1M
+    User REPL Send Error Not Expected    ${board}    required_phy2 = ble.PHY_1M
+    User REPL Send Error Not Expected    ${board}    required_extended = False
+    Run Script on Board Expect Response    ${board}    ${SERVER_SCRIPT}
+    User REPL Send Expect True    ${board}    init_server()    ${CMD_TIMEOUT}
 
 Init Client
     [Arguments]    ${board}    ${adv_addr}
 
-    ${resp}=    User REPL Send    ${board}    import canvas_ble as ble
-    ${resp}=    User REPL Send    ${board}    required_address = ble.str_to_addr("${adv_addr}")
-    ${resp}=    User REPL Send    ${board}    required_phy = ble.PHY_1M
-    ${resp}=    Run Script on Board    ${board}    ${CLIENT_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${CLIENT_SCRIPT_START_RESP}
+    User REPL Send Error Not Expected    ${board}    import canvas_ble as ble
+    User REPL Send Error Not Expected    ${board}    required_address = ble.str_to_addr("${adv_addr}")
+    User REPL Send Error Not Expected    ${board}    required_phy = ble.PHY_1M
+    Run Script on Board Expect Response    ${board}    ${CLIENT_SCRIPT}
+    User REPL Send Expect True    ${board}    init_client()    ${CMD_TIMEOUT}
