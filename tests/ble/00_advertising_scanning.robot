@@ -14,7 +14,6 @@ Test Timeout        1 minute
 ${ADVERTISER_SCRIPT}=               common_lib${/}scripts${/}BLE_scripts${/}advertiser.py
 ${ADVERTISER_SCRIPT_START_RESP}=    advert object available
 ${SCAN_SCRIPT}=                     common_lib${/}scripts${/}BLE_scripts${/}scan.py
-${SCAN_DATA_SCRIPT}=                common_lib${/}scripts${/}BLE_scripts${/}scan_for_scan_data.py
 ${SCAN_SCRIPT_START_RESP}=          scan object available
 ${BLE_ADVERT_NAME}=                 C
 ${NAME_FILTER}=                     0
@@ -23,6 +22,7 @@ ${RSSI_THRESHOLD}=                  -70
 ${SCAN_DATA}=                       [0x77, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
 ${SCAN_BYTES}=                      \\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07
 ${SCAN_TIMOUT_SECONDS}=             ${20}
+${SCAN_CMD_TIMOUT_SECONDS}=         ${21}
 
 
 *** Tasks ***
@@ -460,7 +460,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scannable Passive Scan
 # *
 # **********************************************************************
 
-BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
+BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Response Data
     [Documentation]    DUT1 Advertises a legacy connectible scannable advert using the 1M PHY Scannable data is available
     ...    DUT2 Scans using custom scanner to catch the scan data response
 
@@ -476,7 +476,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ...    False
     ...    240
     ...    250
-    Scan For Scan Data    ${settings_board[1]}    ${board1_adv_name}
+    Scan For Scan Response    ${settings_board[1]}    ${board1_adv_name}
 
     # Lyra 24 does not include some type information in type field
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
@@ -484,7 +484,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ELSE
         ${expected_type}=    Set Variable    ${27}
     END
-    Check Scan Data Result    ${settings_board[1]}    ${expected_type}
+    Check Scan Result     ${settings_board[1]}    ${expected_type}    ${True}
 
 
 *** Keywords ***
@@ -535,11 +535,11 @@ Start Advertising
 
     Run Advertising Script on Board    ${board}
     Switch Board to Raw REPL    ${board}
-    ${resp}=    Raw REPL Exec    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_phys(${phy1}, ${phy2})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_interval(${min_interval}, ${max_interval})
-    ${resp}=    Raw REPL Exec    ${board}    advert.start()
+    Raw REPL Exec NoRet    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
+    Raw REPL Exec NoRet    ${board}    advert.set_phys(${phy1}, ${phy2})
+    Raw REPL Exec NoRet    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
+    Raw REPL Exec NoRet    ${board}    advert.set_interval(${min_interval}, ${max_interval})
+    Raw REPL Exec NoRet    ${board}    advert.start()
     Switch Board to User REPL    ${board}
 
 Start Scannable Advert
@@ -556,12 +556,12 @@ Start Scannable Advert
 
     Run Advertising Script on Board    ${board}
     Switch Board to Raw REPL    ${board}
-    ${resp}=    Raw REPL Exec    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
-    ${resp}=    Raw REPL Exec    ${board}    advert.add_ltv(255, bytes(${SCAN_DATA}), True)
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_phys(${phy1}, ${phy2})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
-    ${resp}=    Raw REPL Exec    ${board}    advert.set_interval(${min_interval}, ${max_interval})
-    ${resp}=    Raw REPL Exec    ${board}    advert.start()
+    Raw REPL Exec NoRet    ${board}    advert.add_tag_string(9, "${board_adv_name}", False)
+    Raw REPL Exec NoRet    ${board}    advert.add_ltv(255, bytes(${SCAN_DATA}), True)
+    Raw REPL Exec NoRet    ${board}    advert.set_phys(${phy1}, ${phy2})
+    Raw REPL Exec NoRet    ${board}    advert.set_properties(${connectible}, ${scannable}, ${extended})
+    Raw REPL Exec NoRet    ${board}    advert.set_interval(${min_interval}, ${max_interval})
+    Raw REPL Exec NoRet    ${board}    advert.start()
     Switch Board to User REPL    ${board}
 
 Scan With Filter
@@ -575,120 +575,65 @@ Scan With Filter
     ...    ${window}
     ...    ${active}
     ...    ${expect_device}=True
-
+    
     Run Scan Script on Board    ${board}
 
     IF    ${filter_type} == ${NAME_FILTER}
-        ${resp}=    User REPL Send    ${board}    set_scan_filter_name("${filter}")
+        User REPL Send Error Not Expected    ${board}    set_scan_filter_name("${filter}")
+    ELSE IF    ${filter_type} == ${ADDRESS_FILTER}
+        User REPL Send Error Not Expected    ${board}    set_scan_filter_address("${filter}")
     ELSE
-        IF    ${filter_type} == ${ADDRESS_FILTER}
-            ${resp}=    User REPL Send    ${board}    set_scan_filter_address("${filter}")
-        ELSE
-            Fail    Unknown scan filter type requested: ${filter_type}
-        END
+        Fail    Unknown scan filter type requested: ${filter_type}
     END
 
-    Switch Board to Raw REPL    ${board}
-    ${resp}=    Raw REPL Exec    ${board}    scanner.set_phys(${phy1} | ${phy2})
-    ${resp}=    Raw REPL Exec    ${board}    scanner.set_timing(${interval}, ${window})
-    ${resp}=    Raw REPL Exec    ${board}    scanner.start(${active})
+    User REPL Send NoRet    ${board}    scanner.set_phys(${phy1} | ${phy2})
+    User REPL Send NoRet    ${board}    scanner.set_timing(${interval}, ${window})
+    ${found}=    User REPL Send    ${board}    do_scan(${SCAN_TIMOUT_SECONDS}, ${active})    ${SCAN_CMD_TIMOUT_SECONDS}
 
-    ${total_time}=    Set Variable    ${SCAN_TIMOUT_SECONDS}
-
-    WHILE    $total_time > ${0}
-        ${resp}=    Raw REPL Exec    ${board}    print(found)
-        ${resp}=    Convert To String    ${resp}
-        ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
-        IF    ${resp} == True    BREAK    ELSE    Sleep    1s
-        ${total_time}=    Evaluate    ${total_time} - 1
-    END
-    ${result}=    Set Variable    ${resp}
-    Switch Board to User REPL    ${board}
     IF    ${expect_device}
-        IF    ${result} == False    Fail    Failed to find Advert
+        IF    ${found} == False    Fail    Failed to find Advert
     ELSE
-        IF    ${result} == True    Fail    Should not have found Advert
+        IF    ${found} == True    Fail    Should not have found Advert
     END
 
-Scan For Scan Data
+Scan For Scan Response
     [Arguments]    ${board}    ${filter}
 
-    ${resp}=    User REPL Send    ${board}    filter_name = "${filter}"
+    Run Scan Script on Board    ${board}
 
-    Run Scan Data Script on Board    ${board}
+    ${found}=    User REPL Send    ${board}    do_scan_reponse_test(${SCAN_TIMOUT_SECONDS}, "${filter}")    ${SCAN_CMD_TIMOUT_SECONDS}
 
-    Switch Board to Raw REPL    ${board}
+    IF    ${found} == False    Fail    Failed to find Advert
 
-    ${total_time}=    Set Variable    ${SCAN_TIMOUT_SECONDS}
-
-    WHILE    $total_time > ${0}
-        ${resp}=    Raw REPL Exec    ${board}    print(found)
-        ${resp}=    Convert To String    ${resp}
-        ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
-        IF    ${resp} == True    BREAK    ELSE    Sleep    1s
-        ${total_time}=    Evaluate    ${total_time} - 1
-    END
-    ${result}=    Set Variable    ${resp}
-    Switch Board to User REPL    ${board}
-    IF    ${result} == False    Fail    Failed to find Advert
-
-Get Scan Result
-    [Arguments]    ${board}
+Check Scan Result
+    [Arguments]    ${board}    ${type_expected}    ${check_scan_response}=False
 
     Switch Board to Raw REPL    ${board}
     ${resp}=    Raw REPL Exec    ${board}    print(result_obj.rssi)
     ${rssi}=    Convert To Integer    ${resp}
     ${resp}=    Raw REPL Exec    ${board}    print(result_obj.type)
     ${type}=    Convert To Integer    ${resp}
-    ${resp}=    Raw REPL Exec    ${board}    print(result_obj.data)
-    ${data}=    Convert To Bytes    ${resp}
-    ${resp}=    Raw REPL Exec    ${board}    print(result_obj.addr)
-    ${addr}=    Convert To Bytes    ${resp}
+    ${data}=    Raw REPL Exec    ${board}    print(result_obj.data)
     Switch Board to User REPL    ${board}
-    RETURN    ${rssi}    ${type}    ${data}    ${addr}
 
-Check Scan Result
-    [Arguments]    ${board}    ${type_expected}
-
-    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan Result    ${board}
-
-    IF    ${type} != ${type_expected}
+    IF    ${type} != ${type_expected}    
         Fail    Advert type did not match expected value.
     END
 
     IF    ${rssi} < ${RSSI_THRESHOLD}    Fail    Poor RSSI found
-
-Check Scan Data Result
-    [Arguments]    ${board}    ${type_expected}
-
-    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan Result    ${board}
-
-    IF    ${type} != ${type_expected}
-        Fail    Advert type did not match expected value.
+    
+    IF    ${check_scan_response}
+        ${data}    Convert To Bytes    ${data}
+        ${SCAN_BYTES}    Convert To Bytes    ${SCAN_BYTES}
+        Should Contain    ${data}    ${SCAN_BYTES}
     END
-
-    IF    ${rssi} < ${RSSI_THRESHOLD}    Fail    Poor RSSI found
-
-    ${scan_bytes}=    Convert To Bytes    ${SCAN_BYTES}
-    Should Contain    ${data}    ${scan_bytes}
 
 Run Advertising Script on Board
     [Arguments]    ${board}
 
-    ${resp}=    Run Script on Board    ${board}    ${ADVERTISER_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${ADVERTISER_SCRIPT_START_RESP}
+    Run Script on Board Expect Response    ${board}    ${ADVERTISER_SCRIPT}    ${ADVERTISER_SCRIPT_START_RESP}
 
 Run Scan Script on Board
     [Arguments]    ${board}
 
-    ${resp}=    Run Script on Board    ${board}    ${SCAN_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${SCAN_SCRIPT_START_RESP}
-
-Run Scan Data Script on Board
-    [Arguments]    ${board}
-
-    ${resp}=    Run Script on Board    ${board}    ${SCAN_DATA_SCRIPT}
-    ${resp}=    Convert To String    ${resp}
-    Should Contain    ${resp}    ${SCAN_SCRIPT_START_RESP}
+    Run Script on Board Expect Response    ${board}    ${SCAN_SCRIPT}    ${SCAN_SCRIPT_START_RESP}
