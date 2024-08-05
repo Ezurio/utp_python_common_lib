@@ -97,14 +97,14 @@ De-Init Board
 
 Switch Board to Raw REPL
     [Arguments]    ${board}
-    ${resp}=    Call Method    ${board}    close_repl_uart
-    ${resp}=    Call Method    ${board}    open_raw_repl_uart
+    Call Method    ${board}    close_repl_uart
+    Call Method    ${board}    open_raw_repl_uart
 
 Switch Board to User REPL
     [Arguments]    ${board}
 
-    ${resp}=    Call Method    ${board}    close_raw_repl_uart
-    ${resp}=    Call Method    ${board}    open_repl_uart
+    Call Method    ${board}    close_raw_repl_uart
+    Call Method    ${board}    open_repl_uart
 
 Run Script on Board
     [Documentation]    Run a script on the board and return the output. This uses raw REPL.
@@ -155,6 +155,28 @@ User REPL Send
 
     RETURN    ${resp}
 
+User REPL Send NoRet
+    [Documentation]    Send a command using the board's user REPL interface.
+    [Arguments]    ${board}    ${cmd}    ${timeout}=${1.0}
+
+    Call Method    ${board.python_uart}    send    ${cmd}    ${timeout}
+
+User REPL Send Error Not Expected
+    [Documentation]    Send a command using REPL and check for error string.
+    [Arguments]    ${board}    ${cmd}    ${timeout}=${1.0}
+
+    ${check}=    Call Method    ${board.python_uart}    send    ${cmd}    ${timeout}
+    Should Not Contain    ${check}    error    ignore_case=True
+
+    RETURN    ${check}
+
+User REPL Send Expect True
+    [Documentation]    Send a command using REPL and check for True
+    [Arguments]    ${board}    ${cmd}    ${timeout}=${1.0}
+
+    ${check}=    Call Method    ${board.python_uart}    send    ${cmd}    ${timeout}
+    Should Be True    ${check}
+
 Raw REPL Exec
     [Documentation]    Execute a command using the board's raw REPL interface.
     [Arguments]    ${board}    ${cmd}
@@ -162,6 +184,12 @@ Raw REPL Exec
     ${resp}=    Call Method    ${board.python_raw_repl_uart}    exec    ${cmd}
 
     RETURN    ${resp}
+
+Raw REPL Exec NoRet
+    [Documentation]    Execute a command using the board's raw REPL interface.
+    [Arguments]    ${board}    ${cmd}
+
+    Call Method    ${board.python_raw_repl_uart}    exec    ${cmd}
 
 Zephyr Shell Send
     [Documentation]    Send a command using the board's Zephyr shell interface.
@@ -192,8 +220,9 @@ Board Terminate Script
 Board Delete Script
     [Arguments]    ${board}    ${script}
 
-    ${resp}=    User REPL Send    ${board}    import os
-    ${resp}=    User REPL Send    ${board}    os.unlink('${script}')
+    User REPL Send Error Not Expected    ${board}    import os
+    # If the file doesn't exist, then any error can be ignored.
+    User REPL Send NoRet    ${board}    os.unlink('${script}')
 
 Board Soft Reboot
     [Arguments]    ${board}
