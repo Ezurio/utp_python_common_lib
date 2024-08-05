@@ -8,14 +8,15 @@ Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardCon
 
 
 *** Variables ***
-${rack_config}              ${EMPTY}
-${settings_board}           @{EMPTY}
-${LYRA_BOARD_TYPE}=         'Lyra'
-${ZEPHYR_BOARD_TYPE}=       'zephyr'
-${BLE_ADDR_SCRIPT}=         common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
-${BLE_ADDR_FAIL_RESP}=      Error
-${JIRA_PROJECT}=            PROD
-${allow_xray_upload}=       True
+${rack_config}                  ${EMPTY}
+${settings_board}               @{EMPTY}
+${LYRA_BOARD_TYPE}              'Lyra'
+${ZEPHYR_BOARD_TYPE}            'zephyr'
+${BLE_ADDR_SCRIPT}              common_lib${/}scripts${/}BLE_scripts${/}get_ble_addr.py
+${BLE_ADDR_FAIL_RESP}           Error
+${JIRA_PROJECT}                 PROD
+${allow_xray_upload}            True
+${DEFAULT_RUN_SCRIPT_RESP}      Script Completed Successfully
 
 
 *** Keywords ***
@@ -107,12 +108,27 @@ Switch Board to User REPL
 
 Run Script on Board
     [Documentation]    Run a script on the board and return the output. This uses raw REPL.
+    ...    Callbacks don't run in Raw REPL mode.
     [Arguments]    ${board}    ${script}
 
     Switch Board to Raw REPL    ${board}
     ${resp}=    Call Method    ${board.python_raw_repl_uart}    execfile    ${script}
     Switch Board to User REPL    ${board}
+
     RETURN    ${resp}
+
+Run Script on Board Expect Response
+    [Documentation]    Like Run Script on Board but checks for a specific response string.
+    [Arguments]    ${board}    ${script}    ${expected_response}=${DEFAULT_RUN_SCRIPT_RESP}
+
+    Switch Board to Raw REPL    ${board}
+    ${resp}=    Call Method    ${board.python_raw_repl_uart}    execfile    ${script}
+    Switch Board to User REPL    ${board}
+
+    # Convert byte string into text before comparison 
+    # (Should be Equals As Strings doesn't do this)
+    ${resp_str}=    Convert To String    ${resp}
+    Should Contain    ${resp_str}    ${expected_response}    ignore_case=True
 
 Get Board Device ID
     [Documentation]    Get the device ID of the board.
