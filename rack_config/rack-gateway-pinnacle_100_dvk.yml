@@ -13,7 +13,6 @@ boards:
       - ble
       - gatt_server
       - gatt_client
-      - zephyr_shell
       - dut
   - name: mg100
     ports:

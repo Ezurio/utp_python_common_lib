@@ -28,4 +28,3 @@ boards:
       - ble
       - gatt_server
       - gatt_client
-      - zephyr_shell

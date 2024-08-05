@@ -7,7 +7,7 @@ boards:
       - sn: E6620CD64F9E7139
         index: 0
         source: board
-        type: zephyr
+        type: zephyr_disabled
       - sn: E6620CD64F9E7139
         index: 1
         source: board
@@ -20,7 +20,6 @@ boards:
       - uwb
       - ble
       - gatt_server
-      - zephyr_shell
       - spi_click
       - i2c_click
       - dut
@@ -29,7 +28,7 @@ boards:
       - sn: E6620CD64F6A9F34
         index: 0
         source: board
-        type: zephyr
+        type: zephyr_disabled
       - sn: E6620CD64F6A9F34
         index: 1
         source: board
@@ -42,7 +41,6 @@ boards:
       - uwb
       - ble
       - gatt_server
-      - zephyr_shell
       - gpio_click
       - dut
   - name: Lyra24P_10dBm

@@ -7,7 +7,7 @@ boards:
         source: device
       - sn: A6962FE196CA32E4
         index: 1
-        type: zephyr
+        type: zephyr_disabled
         source: device
     probe:
       sn: 483128820
@@ -17,7 +17,6 @@ boards:
       - ble
       - gatt_server
       - gatt_client
-      - zephyr_shell
       - dut
   - name: pinnacle_100_dvk
     ports:
@@ -33,4 +32,3 @@ boards:
       - ble
       - gatt_server
       - gatt_client
-      - zephyr_shell
