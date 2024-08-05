@@ -56,7 +56,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${19}
+    Check Scan Result    ${settings_board[1]}    ${19}
 
 BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible scannable advert using the 1M PHY
@@ -83,7 +83,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${18}
+    Check Scan Result    ${settings_board[1]}    ${18}
 
 BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises a legacy non connectible non scannable advert using the 1M PHY
@@ -110,7 +110,7 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${16}
+    Check Scan Result    ${settings_board[1]}    ${16}
 
 BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     [Documentation]    DUT1 Advertises a legacy connectible non scannable advert using the 1M PHY
@@ -137,7 +137,7 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -170,7 +170,7 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${32}
+    Check Scan Result    ${settings_board[1]}    ${32}
 
 BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     [Documentation]    DUT1 Advertises an Extended non connectible non scannable advert using the 1M PHY
@@ -278,7 +278,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 125K PHY
@@ -305,7 +305,7 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -338,7 +338,7 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${32}
+    Check Scan Result    ${settings_board[1]}    ${32}
 
 BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
@@ -365,7 +365,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 500K PHY
@@ -392,7 +392,7 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    250
     ...    60
     ...    1
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -425,7 +425,7 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${32}
+    Check Scan Result    ${settings_board[1]}    ${32}
 
 BLE AdScan 1M 2M Phy Extended Connectible Non Scannable Passive Scan
     [Documentation]    DUT1 Advertises an Extended connectible non scannable advert using the 1M & 2M PHYs
@@ -452,7 +452,7 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scannable Passive Scan
     ...    250
     ...    60
     ...    0
-    Check Scan result    ${settings_board[1]}    ${33}
+    Check Scan Result    ${settings_board[1]}    ${33}
 
 # **********************************************************************
 # *
@@ -484,7 +484,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Data
     ELSE
         ${expected_type}=    Set Variable    ${27}
     END
-    Check Scan Data result    ${settings_board[1]}    ${expected_type}
+    Check Scan Data Result    ${settings_board[1]}    ${expected_type}
 
 
 *** Keywords ***
@@ -632,7 +632,7 @@ Scan For Scan Data
     Switch Board to User REPL    ${board}
     IF    ${result} == False    Fail    Failed to find Advert
 
-Get Scan result
+Get Scan Result
     [Arguments]    ${board}
 
     Switch Board to Raw REPL    ${board}
@@ -647,10 +647,10 @@ Get Scan result
     Switch Board to User REPL    ${board}
     RETURN    ${rssi}    ${type}    ${data}    ${addr}
 
-Check Scan result
+Check Scan Result
     [Arguments]    ${board}    ${type_expected}
 
-    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan result    ${board}
+    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan Result    ${board}
 
     IF    ${type} != ${type_expected}
         Fail    Advert type did not match expected value.
@@ -658,10 +658,10 @@ Check Scan result
 
     IF    ${rssi} < ${RSSI_THRESHOLD}    Fail    Poor RSSI found
 
-Check Scan Data result
+Check Scan Data Result
     [Arguments]    ${board}    ${type_expected}
 
-    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan result    ${board}
+    ${rssi}    ${type}    ${data}    ${addr}=    Get Scan Result    ${board}
 
     IF    ${type} != ${type_expected}
         Fail    Advert type did not match expected value.
