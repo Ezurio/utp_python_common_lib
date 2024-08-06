@@ -246,6 +246,7 @@ Get Board Type
     [Arguments]    ${board}
 
     ${resp}=    User REPL Send    ${board}    os.uname().sysname
+    ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
 
     RETURN    ${resp}
 

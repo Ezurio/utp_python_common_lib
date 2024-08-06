@@ -52,7 +52,6 @@ Setup
     DUT1 User REPL Send    from machine import SPI
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
-    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
     # Set active low Hold and Write Protect to 1

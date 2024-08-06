@@ -165,7 +165,6 @@ Setup
     Set Global Variable    ${board1_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 
     ${tmp}=    Get Board Addr    ${settings_board[1]}
-    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board2_addr}    ${tmp}
     Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
 

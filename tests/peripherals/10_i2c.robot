@@ -101,7 +101,7 @@ Setup
     DUT1 User REPL Send    from machine import I2C
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
-    ${board1_type}=    Replace String    ${tmp}    \r\n    ${EMPTY}
+    Set Global Variable    ${board1_type}    ${tmp}
 
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
         ${resp}=    DUT1 User REPL Send    i2c_description = (${I2C_BUS_LYRA})

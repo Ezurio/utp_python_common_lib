@@ -318,7 +318,6 @@ Setup
     Run Script on Board Expect Response    ${settings_board[0]}    ${GPIO_SCRIPT}    ${GPIO_SCRIPT_START_RESP}
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
-    ${tmp}=    Replace String    ${tmp}    \r\n    ${EMPTY}
     Set Global Variable    ${board1_type}    ${tmp}
 
     ${a_size}=    Get Length    ${GPIO_PAIR_A_LIST}
