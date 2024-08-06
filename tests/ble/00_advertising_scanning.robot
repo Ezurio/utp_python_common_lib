@@ -53,8 +53,8 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${19}
 
@@ -80,8 +80,8 @@ BLE AdScan 1M Phy Legacy Non Connectible Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${18}
 
@@ -107,8 +107,8 @@ BLE AdScan 1M Phy Legacy Non Connectible Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${16}
 
@@ -134,8 +134,8 @@ BLE AdScan 1M Phy Extended Connectible Non Scannable Active Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    1
     Check Scan Result    ${settings_board[1]}    ${33}
 
@@ -167,8 +167,8 @@ BLE AdScan 125k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${32}
 
@@ -194,8 +194,8 @@ BLE Ad 1M Non Connectable Non Scannable Coded Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     ...    ${False}
 
@@ -221,8 +221,8 @@ BLE Ad 125k Non Connectable Non Scannable 1M Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     ...    ${False}
 
@@ -248,8 +248,8 @@ BLE Ad 500k Non Connectable Non Scannable 1M Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     ...    ${False}
 
@@ -275,8 +275,8 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${33}
 
@@ -302,8 +302,8 @@ BLE AdScan 125k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    1
     Check Scan Result    ${settings_board[1]}    ${33}
 
@@ -335,8 +335,8 @@ BLE AdScan 500k Coded Phy Extended Non Connectable Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${32}
 
@@ -362,8 +362,8 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${33}
 
@@ -389,8 +389,8 @@ BLE AdScan 500k Coded Phy Extended Connectable Non Scannable Active Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_CODED
     ...    ble.PHY_CODED
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    1
     Check Scan Result    ${settings_board[1]}    ${33}
 
@@ -422,8 +422,8 @@ BLE AdScan 1M 2M Phy Extended Non Connectible Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_1M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${32}
 
@@ -449,8 +449,8 @@ BLE AdScan 1M 2M Phy Extended Connectible Non Scannable Passive Scan
     ...    ${NAME_FILTER}
     ...    ble.PHY_1M
     ...    ble.PHY_2M
-    ...    250
-    ...    60
+    ...    260
+    ...    260
     ...    0
     Check Scan Result    ${settings_board[1]}    ${33}
 
