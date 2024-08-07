@@ -4,7 +4,7 @@ inputs:
   test_dir:
     description: The working directory that contains the tests
     required: false
-    default: "tests"
+    default: "canvas_mp_tests"
   robot_env:
     description: The conda environment
     required: false
@@ -17,30 +17,72 @@ inputs:
     description: Upload test results to Xray. This is a string value of True or False.
     required: false
     default: "True"
+  board_list:
+    description: |
+      Optional list of boards to run the tests on (delimited by a space or comma).
+      This DOES NOT limit a test to a specific board.
+      If a board list is provided, the rack configuration file name is appended 
+      with a hyphen and the board name. If it exists, it will be used.
+    required: false
+    default: ""
   rack_config:
-    description: The rack configuration file name with the entire path.
+    description: |
+      The rack configuration file name with the entire path.
+      This is the base name if a board list is provided.
     required: true
   test_list:
     description: |
       Test file or folder to run in common_lib/tests.
       This can be a single test or a list of tests delimited by a space or comma.
+      The test name is appended to the rack config file name and used if it exists.
     required: true
 runs:
   using: composite
   steps:
     - run: |
-        IFS=', ' read -ra TEST <<< "${{ inputs.test_list }}"
-        for i in "${TEST[@]}"; do
-          $BASE_CMD -o $i.xml common_lib/tests/$i
-        done
+        IFS=', ' read -ra TEST <<< "${{inputs.test_list}}"
+        IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
+
+        # Strip .yml extension from rack_config
+        rack_config_base="${{inputs.rack_config}}"
+        rack_config_base="${rack_config_base%.yml}"
+
+        # If board list is provided, run tests on each board.
+        # Different rack_config files are used to specify what board is the DUT.
+        if [ -n "${BOARDS[*]}" ]; then
+          for board in "${BOARDS[@]}"; do
+            for i in "${TEST[@]}"; do
+              output_folder="${{inputs.output_folder}}/${board}"
+
+              # Check for test specific rack_config files
+              # This is part of what controls which boards are used for a test.
+              # The other part, board properties, occurs in the Robot test framework.
+              #
+              if test -f "${rack_config_base}-${board}.yml"; then
+                rack_cfg="${rack_config_base}-${board}.yml"
+              elif test -f "${rack_config_base}-${i}.yml"; then
+                rack_cfg="${rack_config_base}-${i}.yml"
+              elif test -f "${rack_config_base}-${board}-${i}.yml"; then
+                rack_cfg="${rack_config_base}-${board}-${i}.yml"
+              else
+                rack_cfg="${{inputs.rack_config}}"
+              fi
+
+              ${BASE_CMD} -v rack_config:${rack_cfg} -d ${output_folder} -o $i.xml common_lib/tests/$i
+            done
+          done
+        else
+          for i in "${TEST[@]}"; do
+            ${BASE_CMD} -v rack_config:${{inputs.rack_config}} -d ${{inputs.output_folder}} -o $i.xml common_lib/tests/$i
+          done
+        fi
       env:
         BASE_CMD: >
-          conda run -p ${{ inputs.robot_env }} python -m robot 
-          -v rack_config:${{ inputs.rack_config }}
-          -v allow_xray_upload:${{ inputs.xray }}
+          conda run -p ${{inputs.robot_env}} python -m robot 
+          -v allow_xray_upload:${{inputs.xray}}
           -L DEBUG:DEBUG
           --nostatusrc --exitonerror --settag=robot:continue-on-failure
           --listener common_lib/libraries/xray_listener.py
-          -r NONE -l NONE -d ${{ inputs.output_folder }}
+          -r NONE -l NONE
       shell: bash -euo pipefail {0}
-      working-directory: ${{ inputs.test_dir }}
+      working-directory: ${{inputs.test_dir}}
