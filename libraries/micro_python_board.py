@@ -12,6 +12,7 @@ import time
 import serial.tools.list_ports as list_ports
 import operator
 import itertools
+from program_using_commander_cli import program_lyra24
 
 logger = logger_get(__name__)
 
@@ -266,17 +267,23 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
             match = True
 
         if not match:
-            logger.debug("Not programming board because name doesn't match")
+            logger.info("Not programming board because name doesn't match")
             return
 
         if self._initialized:
             self.close_ports()
 
-        self._probe.program_target(file_path, addr)
+        # Python J-link programming doesn't work for Lyra24
+        if "lyra24".casefold() in board_name.casefold():
+            self._probe.close()
+            program_lyra24(file_path, str(self._probe.id))
+        else:
+            self._probe.program_target(file_path, addr)
 
         if self._initialized:
             self.open_ports()
 
+        logger.info(f"Read version to confirm programming for {self._user_board_name}")
 
 # TODO: How do we differentiate between the different boards?
 # The USB PID/VID can be used for devices that have a USB interface (Pinnacle 100 DVK and BL5340).

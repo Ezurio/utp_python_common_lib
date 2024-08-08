@@ -122,6 +122,7 @@ class JLinkProbe(Probe):
             self.__probe_handle.connect(chip_name=self.family)
             # Try SWD if JTAG fails
             if not self.__is_open():
+                logger.info(f"Trying SWD connection")
                 self.__probe_handle.set_tif(JLinkInterfaces.SWD)
                 self.__probe_handle.connect(chip_name=self.family)
 
