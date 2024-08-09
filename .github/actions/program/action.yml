@@ -4,7 +4,7 @@ inputs:
   test_dir:
     description: The working directory that contains the tests
     required: false
-    default: "tests"
+    default: "canvas_mp_tests"
   robot_env:
     description: The conda environment
     required: false
@@ -38,14 +38,15 @@ runs:
   using: composite
   steps:
     - run: >
-        conda run -p ${{ inputs.robot_env }} python -m robot
-        -v rack_config:${{ inputs.rack_config }}
-        -v file_name:${{ inputs.file_name }}
-        -v release_version:${{ inputs.release_version }}
-        -v board_name:${{ inputs.board_name }}
+        conda run -p ${{inputs.robot_env}} python -m robot
+        -v rack_config:${{inputs.rack_config}}
+        -v file_name:${{inputs.file_name}}
+        -v release_version:${{inputs.release_version}}
+        -v board_name:${{inputs.board_name}}
+        -v allow_xray_upload:${{inputs.xray}}
         -L DEBUG:DEBUG
         --listener common_lib/libraries/xray_listener.py
-        -r NONE -l NONE -d ${{ inputs.output_folder }} -o program.xml
+        -r NONE -l NONE -d ${{inputs.output_folder}} -o program.xml
         common_lib/tests/firmware_update/00_program.robot
       shell: bash -euo pipefail {0}
-      working-directory: ${{ inputs.test_dir }}
+      working-directory: ${{inputs.test_dir}}

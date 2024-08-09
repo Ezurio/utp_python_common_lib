@@ -1,0 +1,121 @@
+name: program using command line and then run verify version Robot test
+description: Program boards with matching names
+inputs:
+  test_dir:
+    description: The working directory that contains the tests
+    required: false
+    default: "canvas_mp_tests"
+  robot_env:
+    description: The conda environment
+    required: false
+    default: "~/miniforge3/envs/conda_env_v1.0"
+  output_folder:
+    description: The folder to place XML results into (under the test_dir).
+    required: false
+    default: "output"
+  xray:
+    description: |
+      Upload test results to Xray. 
+      This is a string value of True or False.
+      Set to False when programming non-DUT boards.
+    required: false
+    default: "True"
+  rack_config:
+    description: |
+      The rack configuration file name with the entire path.
+      This is the base name if a board list is provided.
+    required: true
+  board_list:
+    description: |
+      The [partial but unique] name of the board to program.
+      This can also be a list of boards delimited by a space or comma.
+      If a board list is provided, the rack configuration file name is appended 
+      with a hyphen and the board name.
+    required: true
+  binary_base:
+    description: |
+      The full path to the top level folder of binary/hex files to search.
+    required: true
+  suffix:
+    description: |
+      Appended to board name when looking for folders. For example, "_mcuboot"
+    required: false
+    default: ""
+outputs:
+  non_timestamped_version:
+    description: The short version of the firmware
+    value: ${{steps.program_boards.outputs.non_timestamped_version}}
+
+runs:
+  using: composite
+  steps:
+    - name: Program boards
+      id: program_boards
+      run: |
+        # Look for hex files with board names that are in the input list.
+
+        # Strip .yml extension from rack_config
+        rack_config_base="${{inputs.rack_config}}"
+        rack_config_base="${rack_config_base%.yml}"
+
+        IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
+
+        iteration=0
+        for board in "${BOARDS[@]}"; do
+          iteration=$((iteration + 1))
+
+          path_and_versions=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/get_hex_path_and_versions.py -o "${{inputs.binary_base}}" -b "${board}" -s "${{inputs.suffix}}")
+
+          echo "path_and_versions: $path_and_versions"
+
+          IFS=',' read -r hex_path short_version long_version <<< "$path_and_versions"
+
+          # Check for a rack_config file with the board name appended or use default
+          if test -f "${rack_config_base}-${board}.yml"; then
+            rack_cfg="${rack_config_base}-${board}.yml"
+          else
+            rack_cfg="${{inputs.rack_config}}"
+          fi
+
+          if [ -z "$hex_path" ]; then
+            echo "Error: hex_path is empty for board ${board}"
+            exit 1
+          fi
+
+          if [ -z "$short_version" ]; then
+            echo "Error: short_version is empty for board ${board}"
+            exit 1
+          fi
+          
+          # Short version shouldn't change between boards
+          if [ $iteration -eq 1 ]; then
+            echo "non_timestamped_version=${short_version}" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -z "$long_version" ]; then
+            echo "Error: long_version is empty for board ${board}"
+            exit 1
+          fi
+
+          output_folder="${{inputs.output_folder}}/${board}"
+          status=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/program_board.py -c ${rack_cfg} -b ${board} -f "${hex_path}")
+          if [[ $status == *"Success"* ]]; then
+            echo "Programming board ${board} successful"
+            ${BASE_CMD} -v rack_config:${rack_cfg} -v release_version:${long_version} -v board_name:${board} -d ${output_folder} \
+              common_lib/tests/firmware_update/10_verify_version.robot
+          else
+            echo "Error: Programming board ${board} failed"
+            exit 1
+          fi
+
+        done
+      env:
+        BASE_CMD: >
+          conda run -p ${{inputs.robot_env}} python -m robot
+          -v allow_xray_upload:${{inputs.xray}}
+          -L DEBUG:DEBUG
+          --listener common_lib/libraries/xray_listener.py
+          -r NONE -l NONE
+          -o verify_version.xml
+      shell: bash -euo pipefail {0}
+      working-directory: ${{inputs.test_dir}}
