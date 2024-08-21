@@ -1,0 +1,30 @@
+name: get a list of boards from a rack configuration file
+description: Extract board names using characters up to second underscore in rack config names (third if dvk in name).
+inputs:
+  test_dir:
+    description: The working directory that contains the tests
+    required: false
+    default: "canvas_mp_tests"
+  robot_env:
+    description: The conda environment
+    required: false
+    default: "~/miniforge3/envs/conda_env_v1.0"
+  rack_config:
+    description: The rack configuration file name with the entire path.
+    required: true
+outputs:
+  boards:
+    description: List of boards delimited by a space
+    value: ${{steps.parse_rack_config.outputs.boards}}
+
+runs:
+  using: composite
+  steps:
+    - id: parse_rack_config
+      run: |
+        board_list=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/get_boards.py -c ${{inputs.rack_config}})
+
+        echo "boards: ${board_list}"
+        echo "boards=${board_list}" >> $GITHUB_OUTPUT
+      shell: bash -euo pipefail {0}
+      working-directory: ${{inputs.test_dir}}
