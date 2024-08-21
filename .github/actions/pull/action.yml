@@ -1,0 +1,25 @@
+name: pull
+description: |
+  Pull the test repository using conda and west.
+  Generate frozen_manifest.yml and frozen_commit_hash.txt
+inputs:
+  robot_env:
+    description: The conda environment
+    required: false
+    default: "~/miniforge3/envs/conda_env_v1.0"
+  test_dir:
+    description: The repository that contains the tests
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Pull Source Code using west
+      run: |
+        gh auth setup-git
+        conda run -p ${{inputs.robot_env}} west init -l ${{inputs.test_dir}}
+        conda run -p ${{inputs.robot_env}} west update -f always
+        conda run -p ${{inputs.robot_env}} west manifest --freeze -o "frozen_manifest.yml"
+        cd ${{inputs.test_dir}}
+        git rev-parse HEAD > ../frozen_commit_hash.txt
+      shell: bash -euo pipefail {0}
