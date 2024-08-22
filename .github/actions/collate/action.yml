@@ -8,31 +8,83 @@ inputs:
   test_dir:
     description: The working directory that contains the tests
     required: false
-    default: "tests"
+    default: "canvas_mp_tests"
   robot_env:
     description: The conda environment
     required: false
     default: "~/miniforge3/envs/conda_env_v1.0"
-  input_folder:
+  xml_results:
     description: |
       The folder that XML results were placed into (under the test_dir) and
-      will be read from.
+      will be read from and where the combined results will be written to.
+      If the board list isn't empty, then the collation looks for files in 
+      subfolders named with the board name.
     required: false
     default: "output"
-  file_name:
+  output_file_name:
     description: The file name that the combined XML results will be written to
     required: false
     default: "combined.xml"
+  board_list:
+    description: |
+      This is list of boards delimited by a space or comma.
+      If it is non-empty, the collation looks for files in board subfolders.
+    required: false
+    default: ""
+
 runs:
   using: composite
   steps:
     - run: |
-        files=$(find ${{ inputs.input_folder }} -name "*.xml")
-        echo $files
-        $BASE_CMD -N "$GITHUB_WORKFLOW" $files
+        IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
+
+        # If there is a board list, then collate the results for each board
+        # in its own folder.
+        if [ -n "${BOARDS[*]}" ]; then
+          for board in "${BOARDS[@]}"; do
+            io_folder="${{inputs.xml_results}}/${board}"
+            if [ -d "${io_folder}" ]; then
+              files=$(find ${io_folder} -name "*.xml")
+              if [ -n "${files}" ]; then
+                echo "In folder ${io_folder} found XML files:"
+                echo "${files}"
+                # Don't stop processing if a test has failed for a particular board
+                $BASE_CMD --nostatusrc --outputdir ${io_folder} -N "$GITHUB_WORKFLOW" ${files}
+              else
+                echo "No XML files found in folder ${io_folder}"
+              fi
+            else
+              echo "Folder ${io_folder} does not exist"
+            fi
+          done
+
+          # Combine all files to make sure an error occurs if any test has failed.
+          files=$(find ${{inputs.xml_results}} -name "*.xml" ! -name ${{inputs.output_file_name}})
+          if [ -n "${files}" ]; then
+            $BASE_CMD --outputdir ${{inputs.xml_results}}/aggregate_for_error_check -N "$GITHUB_WORKFLOW" ${files}
+          fi
+
+          # If this point is reached, then there weren't any failures (or there wasn't anything to collate).
+          files=$(find ${{inputs.xml_results}} -name "*.xml" -maxdepth 1)
+          if [ -n "${files}" ]; then
+            $BASE_CMD --outputdir ${{inputs.xml_results}} -N "$GITHUB_WORKFLOW" ${files}
+          fi
+
+        else
+          echo "Board list wasn't provide. Collating all files into a single file."
+
+          files=$(find ${{inputs.xml_results}} -name "*.xml")
+          if [ -n "${files}" ]; then
+            echo "Found XML files:"
+            echo "${files}"
+            $BASE_CMD --outputdir ${{inputs.xml_results}} -N "$GITHUB_WORKFLOW" ${files}
+          else
+            echo "No XML files found"
+          fi
+
+        fi
+
       env:
-        BASE_CMD: >
-          conda run -p ${{ inputs.robot_env }} python -m robot.rebot 
-          -d ${{ inputs.input_folder }} -o ${{ inputs.file_name }}
+        BASE_CMD: conda run -p ${{inputs.robot_env}} python -m robot.rebot --output ${{inputs.output_file_name}}
       shell: bash -euo pipefail {0}
-      working-directory: ${{ inputs.test_dir }}
+      working-directory: ${{inputs.test_dir}}
