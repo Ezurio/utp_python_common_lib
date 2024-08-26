@@ -1,6 +1,7 @@
 from lc_util import logger_setup, logger_get
 import argparse
 from program_using_commander_cli import program_lyra24
+from program_using_pyocd import program_with_dvk_probe
 import yaml
 
 logger = logger_get(__name__)
@@ -52,22 +53,23 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
             if board_to_program not in name:
                 continue
 
-            serial_number = str(board['probe']['sn'])
-            probe_type = board['probe']['type'].casefold()
+            probe = board['probe']
+            serial_number = str(probe['sn'])
+            probe_type = probe['type'].casefold()
 
             # Add optional parameters that may not be in config file
             params = {'file_path': hex_path, 'serial_number': serial_number}
-            if "device" in board:
-                params['device'] = board['device']
-            if "mass_erase" in board:
-                params['mass_erase'] = convert_to_bool(board['mass_erase'])
-            if "unlock" in board:
-                params['unlock'] = convert_to_bool(board['unlock'])
+            if "family" in probe:
+                params['device'] = probe['family']
+            if "mass_erase" in probe:
+                params['mass_erase'] = convert_to_bool(probe['mass_erase'])
+            if "unlock" in probe:
+                params['unlock'] = convert_to_bool(probe['unlock'])
 
             if "lyra24" in name:
                 ok = program_lyra24(**params)
             elif probe_type == "dvkprobe":
-                pass
+                ok = program_with_dvk_probe(**params)
             elif probe_type == "jlink":
                 pass
             else:
@@ -95,11 +97,11 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
 
 
 if __name__ == "__main__":
-    logger = logger_setup(__file__)
-
     parser = argparse.ArgumentParser(
         description='Program board(s) with a hex file')
 
+    parser.add_argument('--debug', action='store_true', default=True,
+                        help="Enable verbose debug messages")
     parser.add_argument('-c', '--config_file', required=True,
                         help="The configuration file that describes the boards")
     parser.add_argument('-b', '--board', required=True,
@@ -107,5 +109,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--hex_file', required=True,
                         help="The absolute path to the hex file")
     args = parser.parse_args()
+
+    logger = logger_setup(__file__, args.debug)
 
     program_board(args.config_file, args.board, args.hex_file)
