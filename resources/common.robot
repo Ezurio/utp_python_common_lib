@@ -20,7 +20,7 @@ ${DEFAULT_RUN_SCRIPT_RESP}      Script Completed Successfully
 
 
 *** Keywords ***
-Is List Empty
+Is Value Empty
     [Arguments]    ${value}
     ${is_empty}=    Run Keyword And Return Status    Should Be Empty    ${value}    strip=${TRUE}
     RETURN    ${is_empty}
@@ -35,10 +35,20 @@ Get Boards
     ...    ${minimum_boards}=1
     ...    ${desired_properties}=@{EMPTY}
 
-    ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
-    ${boards_config_empty}=    Is List Empty    ${boards_conf}
+    ${rack_config_empty}=    Is Value Empty    ${rack_config}
+    IF    ${rack_config_empty}
+        # If the test is running locally (on a pc), then use the default board configuration file.
+        # It isn't an error if there isn't a configuration file or if boards aren't found.
+        ${boards_conf}=    BoardConfig.Read Board Config
+    ELSE
+        # Boards must be found when running on a rack.
+        ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
+    END
 
+    ${boards_config_empty}=    Is Value Empty    ${boards_conf}
     IF    ${boards_config_empty}
+        # Use the first boards that are found.
+        # System will try to run tests even if the board does not support it.
         @{boards}=    Discovery.Get Connected Boards    ${allow_list}
     ELSE
         @{boards}=    Discovery.Get Specified Boards    ${boards_conf}

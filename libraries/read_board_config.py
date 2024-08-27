@@ -104,7 +104,6 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
             if not desired_properties:
                 return [BoardConfig(b) for b in board_configurations]
 
-            
             # Find a board with all desired properties, the order of the input list matters.
             for sublist in desired_properties:
                 for b in board_configurations:
@@ -120,10 +119,18 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
                             board_configurations.remove(b)
                             break
 
-    except FileNotFoundError:
-        logging.warn(f"No {board_config_file} file found")
+    except FileNotFoundError as e:
+        if desired_properties:
+            logging.error(f"No {board_config_file} file found")
+            raise e
+        else:
+            logging.info(f"No {board_config_file} file found")
+
     except Exception as e:
         print(e)
         raise e
+
+    if desired_properties and len(boards) == 0:
+        raise ValueError("No boards found with desired properties")
 
     return boards
