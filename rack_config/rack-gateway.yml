@@ -16,10 +16,8 @@ boards:
     probe:
       sn: 483067488
       type: jlink
-      family: nRF52840_xxAA
+      family: nRF52
     properties:
-      - ble
-      - gatt_client
       - dut
   - name: mg100
     ports:
@@ -30,8 +28,22 @@ boards:
     probe:
       sn: 600102567
       type: jlink
-      family: nRF52840_xxAA
+      family: nRF52
     properties:
-      - ble
-      - gatt_server
+      - dut
+  - name: bl5340_dvk
+    ports:
+      - sn: D2745A4316F36132
+        index: 0
+        type: repl
+        source: device
+      - sn: D2745A4316F36132
+        index: 1
+        type: zephyr_disabled
+        source: device
+    probe:
+      sn: 483128809
+      type: jlink
+      family: nRF53
+    properties:
       - dut

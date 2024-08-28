@@ -11,20 +11,23 @@ boards:
       family: nRF52840_xxAA
     properties:
       - ble
-      - gatt_server
       - gatt_client
       - dut
-  - name: pinnacle_100_dvk
+  - name: bl5340_dvk
     ports:
-      - sn: AL05DR8P
+      - sn: D2745A4316F36132
         index: 0
         type: repl
-        source: board
+        source: device
+      - sn: D2745A4316F36132
+        index: 1
+        type: zephyr_disabled
+        source: device
     probe:
-      sn: 483067500
+      sn: 483128809
       type: jlink
-      family: nRF52840_xxAA
+      family: nRF5340_xxAA
     properties:
       - ble
       - gatt_server
-      - gatt_client
+      - dut
