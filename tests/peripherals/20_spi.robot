@@ -41,36 +41,37 @@ Test SPI1 EEPROM
 
 *** Keywords ***
 Setup
-    ${desired_properties} =    Create List    DUT    SPI_CLICK
+    ${desired_properties}=    Create List    DUT    SPI_CLICK
     Get Boards    desired_properties=${desired_properties}
-    Init Board    ${settings_board[0]}
+    Set Global Variable    ${dut1}    ${settings_board[0]}
+    Init Board    ${dut1}
 
     # Prerequisites for I2C control
-    DUT1 User REPL Send    import canvas
-    DUT1 User REPL Send    import machine
-    DUT1 User REPL Send    from machine import Pin
-    DUT1 User REPL Send    from machine import SPI
+    User REPL Send Error Not Expected    ${dut1}    import canvas
+    User REPL Send Error Not Expected    ${dut1}    import machine
+    User REPL Send Error Not Expected    ${dut1}    from machine import Pin
+    User REPL Send Error Not Expected    ${dut1}    from machine import SPI
 
-    ${tmp}=    Get Board Type    ${settings_board[0]}
+    ${tmp}=    Get Board Type    ${dut1}
     Set Global Variable    ${board1_type}    ${tmp}
 
     # Set active low Hold and Write Protect to 1
     # Note: On the Sera NX040 DVK, there are other devices on this SPI bus.
-    ${resp}=    DUT1 User REPL Send    hold = Pin("MB_RST", Pin.OUT, Pin.PULL_NONE)
-    ${resp}=    DUT1 User REPL Send    hold.high()
-    ${resp}=    DUT1 User REPL Send    wp = Pin("MB_PWM", Pin.OUT, Pin.PULL_NONE)
-    ${resp}=    DUT1 User REPL Send    wp.high()
+    User REPL Send Error Not Expected    ${dut1}    hold = Pin("MB_RST", Pin.OUT, Pin.PULL_NONE)
+    User REPL Send Error Not Expected    ${dut1}    hold.high()
+    User REPL Send Error Not Expected    ${dut1}    wp = Pin("MB_PWM", Pin.OUT, Pin.PULL_NONE)
+    User REPL Send Error Not Expected    ${dut1}    wp.high()
 
     # Set up the SPI bus
-    ${resp}=    DUT1 User REPL Send    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
+    User REPL Send Error Not Expected    ${dut1}    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
-        ${resp}=    DUT1 User REPL Send    spi1 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs1)
+        User REPL Send Error Not Expected    ${dut1}    spi1 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs1)
     ELSE
-        ${resp}=    DUT1 User REPL Send    spi1 = SPI("spi@40023000", cs1)
+        User REPL Send Error Not Expected    ${dut1}    spi1 = SPI("spi@40023000", cs1)
     END
 
 Teardown
-    De-Init Board    ${settings_board[0]}
+    De-Init Board    ${dut1}
 
 SPI TEST BANK
     [Arguments]    ${spi}    ${eeprom_address}
@@ -88,7 +89,7 @@ SPI TEST BANK
     # Let the device know we want to access its write array. Do this by clocking in
     # a WREN instruction.
     # -------------------------------------------------------------------------------
-    ${resp}=    DUT1 User REPL Send    ${spi}.transceive(b"${WREN}")
+    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${WREN}")
     # -------------------------------------------------------------------------------
     # Now write it - the write command is 0x2.
     # -------------------------------------------------------------------------------
@@ -96,12 +97,12 @@ SPI TEST BANK
     ${write_cmd}=    STRING_LIB.Right    ${WRITE}    2
     ${hex_write_address_data}=    Set Variable    ${write_cmd}${hex_write_address}${write_string_data}
     ${byte_write_address_data}=    STRING_LIB.ConvertHexadecimalStringtoByteArray    ${hex_write_address_data}
-    ${resp}=    DUT1 User REPL Send    ${spi}.transceive(b"${byte_write_address_data}")
+    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${byte_write_address_data}")
     # -------------------------------------------------------------------------------
     # Verify the write enable latch is set by reading it back.
     # -------------------------------------------------------------------------------
-    ${resp}=    DUT1 User REPL Send    status = ${spi}.transceive(b"${RDSR}")
-    ${resp}=    DUT1 User REPL Send    status = ${spi}.transceive(b"${WRDI}")
+    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${RDSR}")
+    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${WRDI}")
     # -------------------------------------------------------------------------------
     # Write cycle delay.
     # -------------------------------------------------------------------------------
@@ -111,10 +112,10 @@ SPI TEST BANK
     # -------------------------------------------------------------------------------
     ${byte_write_address}=    STRING_LIB.ConvertHexadecimalStringtoByteArray    ${hex_write_address}
     ${read_cmd_address_dummy}=    Set Variable    ${READ}${byte_write_address}${dummy_data}
-    ${resp}=    DUT1 User REPL Send    rdata = ${spi}.transceive(b"${read_cmd_address_dummy}")
-    ${Read_result}=    DUT1 User REPL Send    print(rdata)
-    ${Read_string}=    Convert To String    ${Read_result}
-    ${HEX}=    STRING_LIB.ConvertASCIIToHexadecimalNoCRLF    ${Read_string}
+    User REPL Send Error Not Expected    ${dut1}    rdata = ${spi}.transceive(b"${read_cmd_address_dummy}")
+    ${read_result}=    User REPL Send Error Not Expected    ${dut1}    print(rdata)
+    ${read_string}=    Convert To String    ${read_result}
+    ${HEX}=    STRING_LIB.ConvertASCIIToHexadecimalNoCRLF    ${read_string}
     # remove the first 3 bytes that form the address and command
     ${HEX}=    STRING_LIB.Right    ${HEX}    ${hex_string_size}
     Should Be Equal    ${HEX}    ${write_string_data}
