@@ -248,7 +248,12 @@ Get Board Type
     ${resp}=    User REPL Send    ${board}    os.uname().sysname
     ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
 
-    RETURN    ${resp}
+    ${is_lyra}=    Run Keyword And Return Status    Should Contain    ${resp}    lyra    ignore_case=True
+    IF   ${is_lyra} == ${True}
+        RETURN    ${LYRA_BOARD_TYPE}
+    ELSE
+        RETURN    ${resp}
+    END
 
 Setup Xray Upload
     ${machine_name}=    DUT1 User REPL Send    os.uname().machine
