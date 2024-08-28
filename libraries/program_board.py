@@ -2,6 +2,7 @@ from lc_util import logger_setup, logger_get
 import argparse
 from program_using_commander_cli import program_lyra24
 from program_using_pyocd import program_with_dvk_probe
+from program_using_nrfjprog import program_nrf
 import yaml
 
 logger = logger_get(__name__)
@@ -71,7 +72,7 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
             elif probe_type == "dvkprobe":
                 ok = program_with_dvk_probe(**params)
             elif probe_type == "jlink":
-                pass
+                ok = program_nrf(**params)
             else:
                 logger.error(f"Unsupported probe type {probe_type}")
 
