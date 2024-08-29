@@ -256,8 +256,8 @@ Teardown
     De-Init Board    ${settings_board[1]}
 
 Test Setup
-    Board Soft Reboot    ${settings_board[0]}
-    Board Soft Reboot    ${settings_board[1]}
+    Board Reset Module    ${settings_board[0]}
+    Board Reset Module    ${settings_board[1]}
 
     User REPL Send Error Not Expected    ${settings_board[0]}    import canvas_ble as ble
     User REPL Send Error Not Expected    ${settings_board[1]}    import canvas_ble as ble

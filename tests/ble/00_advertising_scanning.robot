@@ -514,8 +514,8 @@ Teardown
     De-Init Board    ${settings_board[1]}
 
 Advert and Scan Test Teardown
-    Board Soft Reboot    ${settings_board[0]}
-    Board Soft Reboot    ${settings_board[1]}
+    Board Reset Module    ${settings_board[0]}
+    Board Reset Module    ${settings_board[1]}
 
 Start Advertising
     [Arguments]
