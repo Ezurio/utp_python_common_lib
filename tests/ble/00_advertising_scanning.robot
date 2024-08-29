@@ -476,7 +476,13 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Response Da
     ...    False
     ...    240
     ...    250
-    Scan For Scan Response    ${settings_board[1]}    ${board1_adv_name}
+    Scan For Scan Response
+    ...    ${settings_board[1]}
+    ...    ${board1_adv_name}
+    ...    {ble.PHY_1M}
+    ...    {ble.PHY_1M}
+    ...    260
+    ...    260
 
     # Lyra 24 does not include some type information in type field
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
@@ -484,7 +490,7 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Response Da
     ELSE
         ${expected_type}=    Set Variable    ${27}
     END
-    Check Scan Result     ${settings_board[1]}    ${expected_type}    ${True}
+    Check Scan Result    ${settings_board[1]}    ${expected_type}    ${True}
 
 
 *** Keywords ***
@@ -571,7 +577,7 @@ Scan With Filter
     ...    ${window}
     ...    ${active}
     ...    ${expect_device}=True
-    
+
     Run Scan Script on Board    ${board}
 
     IF    ${filter_type} == ${NAME_FILTER}
@@ -596,11 +602,24 @@ Scan With Filter
     END
 
 Scan For Scan Response
-    [Arguments]    ${board}    ${filter}
+    [Arguments]
+    ...    ${board}
+    ...    ${filter}
+    ...    ${phy1}
+    ...    ${phy2}
+    ...    ${interval}
+    ...    ${window}
 
     Run Scan Script on Board    ${board}
+    User REPL Send NoRet    ${board}    scanner.set_phys(${phy1} | ${phy2})
+    User REPL Send NoRet    ${board}    scanner.set_timing(${interval}, ${window})
 
-    ${found}=    User REPL Send    ${board}    do_scan_reponse_test(${SCAN_TIMEOUT_SECONDS}, "${filter}")    ${SCAN_CMD_TIMEOUT_SECONDS}
+    ${two_scan_cmd_timeouts}=    Evaluate    ${SCAN_CMD_TIMEOUT_SECONDS} * 2
+
+    ${found}=    User REPL Send
+    ...    ${board}
+    ...    do_scan_reponse_test(${SCAN_TIMEOUT_SECONDS}, "${filter}")
+    ...    ${two_scan_cmd_timeouts}
 
     IF    ${found} == False    Fail    Failed to find Advert
 
@@ -615,15 +634,15 @@ Check Scan Result
     ${data}=    Raw REPL Exec    ${board}    print(result_obj.data)
     Switch Board to User REPL    ${board}
 
-    IF    ${type} != ${type_expected}    
+    IF    ${type} != ${type_expected}
         Fail    Advert type did not match expected value.
     END
 
     IF    ${rssi} < ${RSSI_THRESHOLD}    Fail    Poor RSSI found
-    
+
     IF    ${check_scan_response}
-        ${data}    Convert To Bytes    ${data}
-        ${SCAN_BYTES}    Convert To Bytes    ${SCAN_BYTES}
+        ${data}=    Convert To Bytes    ${data}
+        ${SCAN_BYTES}=    Convert To Bytes    ${SCAN_BYTES}
         Should Contain    ${data}    ${SCAN_BYTES}
     END
 
