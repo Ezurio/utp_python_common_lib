@@ -18,9 +18,9 @@ ${BLE_ADVERT_NAME}=                 C
 ${RSSI_ERROR}=                      -127
 ${RSSI_DIFF_THRESHOLD}=             20
 
-${SCAN_TIMOUT_SECONDS}=             ${20}
-${SCAN_CMD_TIMOUT_SECONDS}=         ${21}
-${CONNECTION_TIMOUT_SECONDS}=       ${20}
+${SCAN_TIMEOUT_SECONDS}=            ${20}
+${SCAN_CMD_TIMEOUT_SECONDS}=        ${21}
+${CONNECTION_TIMEOUT_SECONDS}=      ${20}
 
 
 *** Tasks ***
@@ -173,14 +173,14 @@ Connect Central
     Run Script on Board Expect Response    ${primary_board}    ${CENTRAL_SCRIPT}
     User REPL Send Expect True
     ...    ${primary_board}
-    ...    scan_for_dut("${board_adv_name}", ${phy}, ${SCAN_TIMOUT_SECONDS})
-    ...    ${SCAN_CMD_TIMOUT_SECONDS}
+    ...    scan_for_dut("${board_adv_name}", ${phy}, ${SCAN_TIMEOUT_SECONDS})
+    ...    ${SCAN_CMD_TIMEOUT_SECONDS}
     User REPL Send Expect True    ${primary_board}    request_connection()
 
 Check Connection
     [Arguments]    ${primary_board}    ${secondary_board}
 
-    ${total_time}=    Set Variable    ${CONNECTION_TIMOUT_SECONDS}
+    ${total_time}=    Set Variable    ${CONNECTION_TIMEOUT_SECONDS}
     ${result}=    Set Variable    ${False}
 
     WHILE    $total_time > ${0}
@@ -213,7 +213,7 @@ Disconnect
     [Arguments]    ${primary_board}    ${secondary_board}
     ${resp1}=    User REPL Send Error Not Expected    ${primary_board}    connection.disconnect()
 
-    ${total_time}=    Set Variable    ${CONNECTION_TIMOUT_SECONDS}
+    ${total_time}=    Set Variable    ${CONNECTION_TIMEOUT_SECONDS}
     ${result}=    Set Variable    ${False}
 
     WHILE    $total_time > ${0}

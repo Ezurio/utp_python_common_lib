@@ -21,8 +21,8 @@ ${ADDRESS_FILTER}=                  2
 ${RSSI_THRESHOLD}=                  -70
 ${SCAN_DATA}=                       [0x77, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
 ${SCAN_BYTES}=                      \\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07
-${SCAN_TIMOUT_SECONDS}=             ${20}
-${SCAN_CMD_TIMOUT_SECONDS}=         ${21}
+${SCAN_TIMEOUT_SECONDS}=            ${20}
+${SCAN_CMD_TIMEOUT_SECONDS}=        ${21}
 
 
 *** Tasks ***
@@ -584,7 +584,10 @@ Scan With Filter
 
     User REPL Send NoRet    ${board}    scanner.set_phys(${phy1} | ${phy2})
     User REPL Send NoRet    ${board}    scanner.set_timing(${interval}, ${window})
-    ${found}=    User REPL Send    ${board}    do_scan(${SCAN_TIMOUT_SECONDS}, ${active})    ${SCAN_CMD_TIMOUT_SECONDS}
+    ${found}=    User REPL Send
+    ...    ${board}
+    ...    do_scan(${SCAN_TIMEOUT_SECONDS}, ${active})
+    ...    ${SCAN_CMD_TIMEOUT_SECONDS}
 
     IF    ${expect_device}
         IF    ${found} == False    Fail    Failed to find Advert
@@ -597,7 +600,7 @@ Scan For Scan Response
 
     Run Scan Script on Board    ${board}
 
-    ${found}=    User REPL Send    ${board}    do_scan_reponse_test(${SCAN_TIMOUT_SECONDS}, "${filter}")    ${SCAN_CMD_TIMOUT_SECONDS}
+    ${found}=    User REPL Send    ${board}    do_scan_reponse_test(${SCAN_TIMEOUT_SECONDS}, "${filter}")    ${SCAN_CMD_TIMEOUT_SECONDS}
 
     IF    ${found} == False    Fail    Failed to find Advert
 
