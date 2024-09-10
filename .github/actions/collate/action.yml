@@ -31,12 +31,27 @@ inputs:
       If it is non-empty, the collation looks for files in board subfolders.
     required: false
     default: ""
+  exclude_tags:
+    description: |
+      This is a list of tags to exclude from the combined results.
+      This is a string of tags delimited by a space or comma.
+      To simplify the script, the PROD-14685 (WIP test) is always excluded.
+    required: false
+    default: "PROD-14685"
 
 runs:
   using: composite
   steps:
     - run: |
+        IFS=', ' read -ra EXCLUDE_TAGS <<< "${{inputs.exclude_tags}}"
         IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
+
+        # If there are exlude tags, then create the exclude string.
+        # --exclude tag1 --exclude tag2 ...
+        exclude_string=""
+        for tag in "${EXCLUDE_TAGS[@]}"; do
+          exclude_string="${exclude_string} --exclude ${tag}"
+        done
 
         # If there is a board list, then collate the results for each board
         # in its own folder.
@@ -49,7 +64,7 @@ runs:
                 echo "In folder ${io_folder} found XML files:"
                 echo "${files}"
                 # Don't stop processing if a test has failed for a particular board
-                $BASE_CMD --nostatusrc --outputdir ${io_folder} -N "$GITHUB_WORKFLOW" ${files}
+                $BASE_CMD $exclude_string --nostatusrc --outputdir ${io_folder} -N "$GITHUB_WORKFLOW" ${files}
               else
                 echo "No XML files found in folder ${io_folder}"
               fi
@@ -61,13 +76,13 @@ runs:
           # Combine all files to make sure an error occurs if any test has failed.
           files=$(find ${{inputs.xml_results}} -name "*.xml" ! -name ${{inputs.output_file_name}})
           if [ -n "${files}" ]; then
-            $BASE_CMD --outputdir ${{inputs.xml_results}}/aggregate_for_error_check -N "$GITHUB_WORKFLOW" ${files}
+            $BASE_CMD $exclude_string --outputdir ${{inputs.xml_results}}/aggregate_for_error_check -N "$GITHUB_WORKFLOW" ${files}
           fi
 
           # If this point is reached, then there weren't any failures (or there wasn't anything to collate).
           files=$(find ${{inputs.xml_results}} -name "*.xml" -maxdepth 1)
           if [ -n "${files}" ]; then
-            $BASE_CMD --outputdir ${{inputs.xml_results}} -N "$GITHUB_WORKFLOW" ${files}
+            $BASE_CMD $exclude_string --outputdir ${{inputs.xml_results}} -N "$GITHUB_WORKFLOW" ${files}
           fi
 
         else
