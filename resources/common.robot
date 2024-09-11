@@ -25,10 +25,6 @@ Is List Empty
     ${is_empty}=    Run Keyword And Return Status    Should Be Empty    ${value}    strip=${TRUE}
     RETURN    ${is_empty}
 
-Delay for USB Enumeration
-    [Arguments]    ${delay}=2s
-    Sleep    ${delay}    reason=USB enumeration delay
-
 Get Boards
     [Documentation]
     ...    Get the boards connected to the system.
@@ -41,8 +37,6 @@ Get Boards
 
     ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
     ${boards_config_empty}=    Is List Empty    ${boards_conf}
-
-    Delay for USB Enumeration
 
     IF    ${boards_config_empty}
         @{boards}=    Discovery.Get Connected Boards    ${allow_list}
