@@ -11,7 +11,7 @@ import time
 logger = logger_get(__name__)
 
 
-class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
+class ZephyrBoard(Board):
     """
     A class to represent a generic Zephyr Board that has a DVK Probe.
     """
@@ -56,35 +56,50 @@ class ZephyrBoard(Board, DvkProbe, PythonUart, ZephyrUart):
 
         return boards
 
+    #
+    # These methods assume that the serial ports come from the probe.
+    #
+
     def __init__(self, probe: DvkProbe):
         super().__init__()
-        DvkProbe.__init__(self, probe.id, probe.description, probe.ports, probe.family)
+        self.python_uart = PythonUart(probe.ports['python'])
+        self.zephyr_uart = ZephyrUart(probe.ports['zephyr_shell'])
+        self.__probe = DvkProbe(
+            probe.id, probe.description, probe.ports, probe.family)
+
+    @property
+    def probe(self):
+        return self.__probe
 
     def open_and_init_board(self):
-        self.open()
-        ZephyrUart.__init__(self, self.ports['zephyr_shell'])
-        PythonUart.__init__(self, self.ports['python'])
+        self.probe.open()
         self.reset_module()
+        self.open_ports()
         self._initialized = True
+
+    def open_ports(self):
+        self.python_uart.wrapped_open()
+        self.zephyr_uart.wrapped_open()
 
     def close_ports(self):
         self.zephyr_uart.close()
         self.python_uart.close()
 
     def reset_module(self):
-        self.reset_target()
+        self.probe.reset_target()
         time.sleep(ZephyrBoard.BOOT_TIME_SECONDS)
 
     def soft_reset_module(self):
         """Soft reset the module by sending Ctrl-D to the Python REPL."""
-        return self.python_uart.send(b'\x04', ZephyrBoard.BOOT_TIME_SECONDS)
+        self.python_uart.send_raw(b'\x04')
 
     def close_ports_and_reset(self, reset_probe: bool = True):
         self.close_ports()
         if reset_probe:
-            self.reboot()
-        self.close()
+            self.probe.reboot()
+        self.probe.close()
         self._initialized = False
+
 
 class SeraNX040Dvk(ZephyrBoard):
     """

@@ -23,13 +23,14 @@ class JLinkProbe(Probe):
         self.__probe_handle = None
 
     @staticmethod
-    def __list_ports(comport_description="JLink CDC UART Port") -> list:
+    def __list_ports(comport_description="JLink CDC UART Port", verbose=False) -> list:
         """
         Return a list of JLink probes that have serial com ports.
         """
         jlink_comport_info = list()
         for comport in list_ports.comports():
-            logger.debug(comport)
+            if verbose:
+                logger.debug(comport)
             if comport_description in str(comport):
                 jlink_comport_info.append(
                     tuple([comport.device, comport.hwid]))
@@ -188,6 +189,7 @@ class JLinkProbe(Probe):
         """
         self.__probe_handle.reset()
         self.__probe_handle.flash_file(path=file_path, addr=addr)
+
 
 if __name__ == "__main__":
     logger = logger_setup(__file__, True)

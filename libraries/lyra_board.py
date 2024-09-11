@@ -10,7 +10,7 @@ import time
 logger = logger_get(__name__)
 
 
-class LyraBoard(Board, JLinkProbe, PythonUart):
+class LyraBoard(Board):
     """
     This is the base class for Lyra Boards.
     """
@@ -33,10 +33,15 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
     #: Amount of time to wait after resetting board.
     BOOT_TIME_SECONDS = 3
 
+    #
+    # These methods assume that the serial ports come from the probe.
+    #
+
     def __init__(self, probe: JLinkProbe):
         super().__init__()
-        JLinkProbe.__init__(self, probe.id, probe.description,
-                            probe.ports, probe.family)
+        self.python_uart = PythonUart(probe.ports['python'])
+        self.__probe = JLinkProbe(probe.id, probe.description,
+                                  probe.ports, probe.family)
 
         if self.MODULE_PART_NUMBER == "":
             raise NotImplementedError("Subclass must define part number")
@@ -52,9 +57,9 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
         return self.MODULE_PART_NUMBER
 
     def open_and_init_board(self):
-        self.open()
-        PythonUart.__init__(self, self.ports['python'])
+        self.__probe.open()
         self.reset_module()
+        self.open_ports()
         self._initialized = True
 
     @staticmethod
@@ -114,20 +119,23 @@ class LyraBoard(Board, JLinkProbe, PythonUart):
 
         return boards
 
+    def open_ports(self):
+        self.python_uart.wrapped_open()
+
     def close_ports(self):
         self.python_uart.close()
 
     def reset_module(self):
-        self.reset_target()
+        self.__probe.reset_target()
         time.sleep(LyraBoard.BOOT_TIME_SECONDS)
 
     def soft_reset_module(self):
-        return self.python_uart.send(b'\x04', LyraBoard.BOOT_TIME_SECONDS)
+        self.python_uart.send_raw(b'\x04')
 
     def close_ports_and_reset(self, reset_probe: bool = True):
         self.close_ports()
         self.reset_module()
-        self.close()
+        self.__probe.close()
         self._initialized = False
 #
 # Subclasses are a Python compatible name of the board

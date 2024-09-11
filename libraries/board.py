@@ -1,6 +1,9 @@
-from lc_util import logger_get
 from enum import Enum
 import inspect
+from lc_util import logger_get
+import platform
+import subprocess
+import time
 
 logger = logger_get(__name__)
 
@@ -92,6 +95,20 @@ class Board(object):
     It contains methods for common functions and stubs for those that must
     be implemented by subclasses.
     """
+    #: :meta hide-value:
+    #:
+    #: Amount of time to wait after board reset before trying to open com port
+    DEFAULT_COM_PORT_DELAY_SECONDS = 0.1
+    #: :meta hide-value:
+    #:
+    #: Amount of time to wait after board reset before trying to open com port
+    #: when the com port is from the device.
+    DEFAULT_COM_PORT_FROM_DEVICE_DELAY_SECONDS = 6
+    USB_ENUMERATION_DELAY = DEFAULT_COM_PORT_FROM_DEVICE_DELAY_SECONDS
+    #: :meta hide-value:
+    #:
+    #: Amount of time to wait after board reset before trying to use/flush com port.
+    BOOT_TIME_SECONDS = 3.0
 
     def __init__(self, id: str = ''):
         self.__initialized = False
@@ -245,6 +262,12 @@ class Board(object):
         """
         raise NotImplementedError
 
+    def open_ports(self):
+        """
+        Open all UARTs. Boards may have different UARTs.
+        """
+        raise NotImplementedError
+
     def close_ports(self):
         """
         Close all UARTs. Boards may have different UARTs.
@@ -261,13 +284,13 @@ class Board(object):
 
     def reset_module(self):
         """
-        Reset the module using the debug probe.
+        Reset the module using the debug probe (hard) or Python UART (soft).
         """
         raise NotImplementedError
 
     def soft_reset_module(self):
         """
-        Send end-of-transmission character to the board using Python UART
+        Send end-of-transmission character to the board using Python UART.
         """
         raise NotImplementedError
 
@@ -279,3 +302,17 @@ class Board(object):
             board_name (str): A name that matches the class name (after conversion).
         """
         raise NotImplementedError
+
+    @staticmethod
+    def refresh_serial_ports():
+        """
+        On Linux, refresh the serial ports.
+        """
+        if platform.system() == 'Linux':
+            command = ["sudo", "udevadm", "trigger", "--action=change"]
+            process = subprocess.run(command, capture_output=True, text=True)
+            logger.info(f"command: {process.args}")
+            logger.info(f"status: {process.returncode}")
+            logger.debug(f"{process.stdout=}")
+            logger.debug(f"{process.stderr=}")
+            assert process.returncode == 0, f"failed: {process.stderr}"

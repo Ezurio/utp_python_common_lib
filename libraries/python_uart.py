@@ -1,11 +1,15 @@
 from CmdSerialPort import CmdSerialPort
+import platform
 import pyboard as pyboard
 from lc_util import logger_get
 import time
 
 logger = logger_get(__name__)
 
-class PythonUart(object):
+verbose_port_logging = False
+
+
+class PythonUart(CmdSerialPort):
     """
     A class to represent an embedded Python UART.
     """
@@ -15,74 +19,84 @@ class PythonUart(object):
         port_name: str,
         rx_delimiter=b"\n>>> ",
         baud_rate=115200,
-        wait_for_bytes_delay_seconds=0.005,
+        wait_for_bytes_delay_seconds=0.005
     ):
         """
         Create a CmdSerialPort instance and configure it for REPL use.
         """
         logger.debug(f"Init PythonUart {port_name}")
-        self.__python_uart = None
-        self.__python_raw_repl_uart = None
+        super().__init__()
+        self.__raw_repl = None
         self.__port_name = port_name
         self.__baud_rate = baud_rate
         self.__wait_for_bytes_delay_seconds = wait_for_bytes_delay_seconds
 
         try:
-            self.__python_uart = CmdSerialPort()
-            self.__python_uart.set_rx_delimiter(rx_delimiter)
-            self.__python_uart.open(self.__port_name, self.__baud_rate)
-            logger.info(f"Opened Python Uart {port_name}")
+            self.set_rx_delimiter(rx_delimiter)
         except:
-            self.__python_uart = None
             raise Exception("Unable to create and configure PythonUart")
 
     @property
-    def python_uart(self):
-        """Python Port Instance"""
-        return self.__python_uart
-
-    @property
-    def python__port_name(self):
+    def port_name(self):
         """Python Port Name (i.e. COM9)"""
         return self.__port_name
 
-    @property
-    def python_raw_repl_uart(self) -> pyboard.Pyboard:
-        """Python Raw REPL UART Instance"""
-        return self.__python_raw_repl_uart
-
-    def open_raw_repl_uart(self):
-        self.__python_raw_repl_uart = pyboard.Pyboard(
-            self.__port_name, self.__baud_rate
-        )
-        self.python_raw_repl_uart.enter_raw_repl(False)
-
-    def close_raw_repl_uart(self):
-        self.__python_raw_repl_uart.exit_raw_repl()
-        # Wait for bytes to go out UART before closing
-        time.sleep(self.__wait_for_bytes_delay_seconds)
-        self.__python_raw_repl_uart.close()
-
-    def open_repl_uart(self):
-        self.python_uart.open(self.__port_name, self.__baud_rate)
-
-    def close_repl_uart(self):
-        self.python_uart.close()
-
-    def upload_py_file(self, src: str, dst: str):
-        """
-        Upload a python file to the board file system using the raw REPL UART.
+    def wrapped_open(self, delay_after_open_seconds=0.1, flush_count=0, flush_delay=0.5):
+        """Wrap the CmdSerialPort open method for debugging and error handling.
 
         Args:
-            src (str): Path to file to upload
-            dst (str): Destination path on board
+            delay_after_open_seconds (float, optional): Delay after opening.
+            Can be used to allow device to finish booting.
+
+            flush_count (int, optional): Number of flushes (send '\r') to perform.
+            This is done to try and ensure that the first command sent to the device
+            is successful. Defaults to 0.
+
+            flush_delay (float, optional): Delay between each flush. Defaults to 0.5.
+
         """
-        self.python_raw_repl_uart.fs_put(src, dst)
+        try:
+            self.open(self.__port_name, self.__baud_rate)
+            if verbose_port_logging:
+                logger.info(self.port)
+            time.sleep(delay_after_open_seconds)
+            for i in range(flush_count):
+                self.send_raw(b'\r')
+                time.sleep(flush_delay)
+
+            logger.debug(f"Opened Python Uart {self.__port_name}")
+        except:
+            raise RuntimeError(
+                f"Unable to open Python Uart {self.__port_name}")
+
+    @property
+    def raw_repl(self) -> pyboard.Pyboard:
+        """Python Raw REPL UART Instance"""
+        return self.__raw_repl
+
+    def open_raw_repl_uart(self):
+        self.__raw_repl = pyboard.Pyboard(
+            self.__port_name, self.__baud_rate)
+
+        self.raw_repl.enter_raw_repl(False)
+
+    def close_raw_repl_uart(self):
+        if self.raw_repl:
+            if self.raw_repl.in_raw_repl:
+                self.raw_repl.exit_raw_repl()
+                # Wait for bytes to go out UART before closing
+                time.sleep(self.__wait_for_bytes_delay_seconds)
+            if self.raw_repl.serial and self.raw_repl.serial.is_open:
+                self.raw_repl.close()
+
+    def open_repl_uart(self):
+        self.wrapped_open()
+
+    def close_repl_uart(self):
+        self.close()
+        logger.debug(f"Closed Python Uart {self.port_name}")
 
     def quit_running_app(self):
-        """Quit the running app on the board."""
-        # ctrl-C twice: interrupt any running program
-        self.python_uart.port.write(b"\r\x03\x03")
+        """Send ctrl-c twice: interrupt any running program"""
+        self.send_raw(b"\r\x03\x03")
         time.sleep(self.__wait_for_bytes_delay_seconds)
-
-

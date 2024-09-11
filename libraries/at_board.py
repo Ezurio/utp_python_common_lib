@@ -10,7 +10,7 @@ import time
 logger = logger_get(__name__)
 
 
-class AtBoard(Board, JLinkProbe, AtUart):
+class AtBoard(Board):
     """
     This is the base class for AT Boards.
     """
@@ -20,12 +20,13 @@ class AtBoard(Board, JLinkProbe, AtUart):
     def __init__(self, probe: JLinkProbe):
         super().__init__()
         print(f"debug probe ports ID: {probe.ports}")
-        JLinkProbe.__init__(self, probe.id, probe.description,
-                            probe.ports, probe.family)
+        self.probe = JLinkProbe(probe.id, probe.description,
+                                probe.ports, probe.family)
+        self.at_uart = AtUart(probe.ports['at'])
 
     def open_and_init_board(self):
-        self.open()
-        AtUart.__init__(self, self.ports['at'])
+        self.probe.open()
+        self.at_uart.open()
         self._initialized = True
         self.at_uart.consume_echo(False)
 
@@ -43,7 +44,7 @@ class AtBoard(Board, JLinkProbe, AtUart):
         boards = list()
         # Only return boards with a J-Link probe if they are in the board config list
         for boards_conf in boards_conf:
-            # Ensure that this single port is of AT type and it serial number matches the probe                   
+            # Ensure that this single port is of AT type and it serial number matches the probe
             if len(boards_conf.ports) == 1 and boards_conf.ports[0].type == 'at':
                 probes = JLinkProbe.get_connected_probes(
                     family=boards_conf.probe.family, uart_interface_type="at")

@@ -3,7 +3,7 @@ from lc_util import logger_get
 
 logger = logger_get(__name__)
 
-class ZephyrUart(object):
+class ZephyrUart(CmdSerialPort):
     """
     A class to represent the Zephyr Shell UART.
     """
@@ -18,24 +18,24 @@ class ZephyrUart(object):
         Create a CmdSerialPort instance and configure it for Zephyr Shell use.
         """
         logger.debug(f"Init ZephyrUart {port_name}")
-        self.__zephyr_uart = None
+        super().__init__()
         self.__port_name = port_name
-
+        self.__baud_rate = baud_rate
+        
         try:
-            self.__zephyr_uart = CmdSerialPort()
-            self.__zephyr_uart.set_rx_delimiter(rx_delimiter)
-            self.__zephyr_uart.open(self.__port_name, baud_rate)
-            logger.info(f"Opened Zephyr Uart {port_name}")
+            self.set_rx_delimiter(rx_delimiter)
         except:
-            self.__zephyr_uart = None
             raise Exception("Unable to create and configure ZephyrUart")
 
     @property
-    def zephyr_uart(self):
-        """Zephyr UART Port Instance"""
-        return self.__zephyr_uart
-
-    @property
-    def zephyr_port_name(self):
+    def port_name(self):
         """Zephyr UART Port Name (i.e. COM10)"""
         return self.__port_name
+
+    def wrapped_open(self):
+        """Wrap the CmdSerialPort open method"""
+        try:
+            self.open(self.__port_name, self.__baud_rate)
+            logger.debug(f"Opened Zephyr Uart {self.__port_name}")
+        except:
+            raise RuntimeError(f"Unable to open Zephyr Uart {self.__port_name}")

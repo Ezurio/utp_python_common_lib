@@ -350,7 +350,7 @@ class Pyboard:
     def enter_raw_repl(self, soft_reset=True):
         self.serial.write(b"\r\x03\x03")  # ctrl-C twice: interrupt any running program
 
-        # flush input (without relying on serial.flushInput())
+        # flush input (without relying on serial.flushInput() that may not work for USB devices)
         n = self.serial.inWaiting()
         while n > 0:
             self.serial.read(n)

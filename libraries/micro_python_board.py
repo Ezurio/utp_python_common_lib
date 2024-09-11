@@ -9,7 +9,7 @@ from python_uart import PythonUart
 from lc_util import logger_setup, logger_get
 from zephyr_uart import ZephyrUart
 import time
-import serial.tools.list_ports as list_ports
+import port_helpers
 import operator
 import itertools
 from program_using_commander_cli import program_lyra24
@@ -17,15 +17,11 @@ from program_using_commander_cli import program_lyra24
 logger = logger_get(__name__)
 
 
-class MicroPythonBoard(Board, PythonUart, ZephyrUart):
+class MicroPythonBoard(Board):
     """
     A class to represent a generic MicroPython Board.
     A user can use board config files to find any board that supports MicroPython.
     """
-    #: :meta hide-value:
-    #:
-    #: Amount of time to wait after resetting board.
-    BOOT_TIME_SECONDS = 6
 
     @classmethod
     def get_specified(cls, boards_conf: list[BoardConfig]) -> list['MicroPythonBoard']:
@@ -68,13 +64,10 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
 
         boards = []
 
-        detected_ports = list_ports.comports()
         # Remove ports without a serial number because they are required for matching.
         # This allows membership test below to work correctly.
         # Membership test allows leading zeros in the serial number.
-        for x in detected_ports:
-            if x.serial_number is None:
-                detected_ports.remove(x)
+        detected_ports = port_helpers.get_ports()
         if len(detected_ports) < 0:
             logger.info("No valid serial ports detected")
             return boards
@@ -111,7 +104,12 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                             key=operator.attrgetter('location', 'device'))
                     except:
                         logger.info(
-                            "Unable to sort ports by location and device")
+                            "Unable to sort ports by location and device. If populated, using device field.")
+                        for y in matching_ports:
+                            if str(port.sn) in y.serial_number:
+                                if "device" in port:
+                                    y.device = port.device
+
                     if len(matching_ports) >= (port.index + 1):
                         # Assign the device name to the port
                         port.device = matching_ports[port.index].device
@@ -140,7 +138,7 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
                                     probe.family = bprobe.family
                                 break
                         if probe is None:
-                            logger.error(
+                            logger.warn(
                                 f"Matching probe not found for board {name} with serial number {bprobe.sn}")
                 if repl:
                     boards.append(MicroPythonBoard(repl, name, zephyr, probe))
@@ -155,13 +153,26 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         super().__init__(id=id)
         self._repl = repl
         self._zephyr = zephyr
-        self._probe = probe
+        self.__probe = probe
         self._user_board_name = board_name
-        py_repl = self._repl.device
-        zephyr_shell = ""
+        self.__ports = dict()
+        self.python_uart = PythonUart(self._repl.device)
+        self.__ports["python"] = self._repl.device
         if self._zephyr:
-            zephyr_shell = self._zephyr.device
-        self.__ports = {"python": py_repl, "zephyr_shell": zephyr_shell}
+            self.zephyr_uart = ZephyrUart(self._zephyr.device)
+            self.__ports["zephyr_shell"] = self._zephyr.device
+        else:
+            self.zephyr_uart = None
+            self.__ports["zephyr_shell"] = ""
+        self._handle_reset = True
+        # Amount of time to wait after resetting board before trying to open com port
+        if self.coms_from_device():
+            self.__com_port_delay_seconds = Board.DEFAULT_COM_PORT_FROM_DEVICE_DELAY_SECONDS
+        else:
+            self.__com_port_delay_seconds = Board.DEFAULT_COM_PORT_DELAY_SECONDS
+        # Amount of time to wait after opening com port before trying to optionally flush rx buffer
+        self.__delay_after_open_seconds = Board.BOOT_TIME_SECONDS
+        self.__ports_have_been_opened = False
 
     def __str__(self):
         s = f"{self.board_name} {self._user_board_name} {self._repl.sn} [{self._repl.name}]: {self._repl.device}"
@@ -176,59 +187,114 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
         """
         return self._user_board_name
 
-    def open_probe(self):
-        if self._probe:
-            self._probe.open()
+    @property
+    def probe(self):
+        return self.__probe
+
+    def __open_probe(self):
+        if self.probe:
+            self.probe.open()
+            # When connecting to the device, opening the probe may reset the device.
+            # If the ports are part of the device, then a wait is required
+            # for microcontroller to boot.
+            self.__handle_reset = True
 
     def open_and_init_board(self):
-        self.open_probe()
-        self.open_ports()
-        self.reset_module()
+        self.__handle_reset = True
+        self.__open_probe()
+        if self.probe:
+            self.reset_module(reopen_ports=True)
+        else:
+            # If there isn't a probe, then the com port must be opened
+            # so that a soft reset can be issued.
+            self.open_ports()
+            self.reset_module(reopen_ports=True)
+
         self._initialized = True
 
     def close_ports(self):
-        self.python_uart.close()
-        if self._zephyr and self.zephyr_uart:
-            self.zephyr_uart.close()
+        if self.__ports_have_been_opened:
+            self.python_uart.close_raw_repl_uart()
+            self.python_uart.close()
+            if self.zephyr_uart:
+                self.zephyr_uart.close()
+                logger.info(f"Closed Zephyr Uart {self.zephyr_uart.port_name}")
 
     def open_ports(self):
-        PythonUart.__init__(self, self._repl.device)
-        if self._zephyr:
-            ZephyrUart.__init__(self, self._zephyr.device)
+        # If the com ports are from the microcontroller (not the board),
+        # then the device must boot and setup the USB interface.
+        if self.__handle_reset:
+            time.sleep(self.__com_port_delay_seconds)
+            found = len(
+                port_helpers.get_ports_with_serial_number(self._repl.sn))
+            if not found:
+                raise RuntimeError(
+                    f"Could not find serial port for {self._repl.sn}")
+
+        self.python_uart.wrapped_open(self.__delay_after_open_seconds, self.__handle_reset)
+        if self.zephyr_uart:
+            self.zephyr_uart.wrapped_open()
+
+        self.__handle_reset = False
+        self.__ports_have_been_opened = True
 
     def close_ports_and_reset(self, reset_probe: bool = True):
-        self.close_ports()
-        if self._probe:
+        self.reset_module(reopen_ports=False)
+        if self.probe:
             if reset_probe:
-                self._probe.reboot()
-            self._probe.close()
+                self.probe.reboot()
+            self.probe.close()
         self._initialized = False
 
-    def reset_module(self):
+    def reset_module(self, reopen_ports: bool = True):
         """Hard reset the module with the debug probe if available, otherwise soft reset.
         """
-        if self._probe:
-            self._probe.reset_target()
-            time.sleep(MicroPythonBoard.BOOT_TIME_SECONDS)
+        if self.probe:
+            self.hard_reset_module(reopen_ports)
         else:
-            self.soft_reset_module(False)
+            self.soft_reset_module(reopen_ports)
 
-    def soft_reset_module(self, wait_response: bool = True):
-        """Soft reset the module by sending Ctrl-D to the Python REPL."""
-        resp = None
-        if self._repl.source.casefold() == ComPortSource.BOARD.name.casefold():
-            if wait_response:
-                resp = self.python_uart.send(
-                    b'\x04', MicroPythonBoard.BOOT_TIME_SECONDS)
-            else:
-                self.python_uart.send_raw(b'\x04')
-                time.sleep(MicroPythonBoard.BOOT_TIME_SECONDS)
-        else:
-            self.python_uart.send_raw(b'\x04')
-            self.close_ports()
-            time.sleep(MicroPythonBoard.BOOT_TIME_SECONDS)
+    def hard_reset_module(self, reopen_ports: bool = True):
+        """
+        Since the UARTs may be connected to the Python processor's USB interface, 
+        the ports are closed and then reopened.
+        For simplicity, the com port is always closed first and then opened
+        after the reset is issued.
+        """
+        logger.info("Hard reset module")
+        self.__handle_reset = True
+        self.close_ports()
+        self.probe.reset_target()
+        if reopen_ports:
             self.open_ports()
-        return resp
+
+    def soft_reset_module(self, reopen_ports: bool = True):
+        """Soft reset the module by sending Ctrl-D to the Python REPL."""
+        # If a failure occurred when trying to open raw REPL, then the normal REPL is closed
+        # and a reset cannot be sent.
+        logger.info("Soft reset module")
+        self.__handle_reset = True
+        self.python_uart.send_raw(b'\x04')
+        self.python_uart.port.flush()
+        self.close_ports()
+        if reopen_ports:
+            self.open_ports()
+
+    def coms_from_device(self) -> bool:
+        """ Com ports are from a USB port on the microcontoller """
+        return self.repl_from_device() or self.zephyr_from_device()
+
+    def repl_from_board(self) -> bool:
+        return self._repl.source.casefold() == ComPortSource.BOARD.name.casefold()
+
+    def repl_from_device(self) -> bool:
+        return self._repl.source.casefold() == ComPortSource.DEVICE.name.casefold()
+
+    def zephyr_from_device(self) -> bool:
+        if self._zephyr:
+            return self._zephyr.source.casefold() == ComPortSource.DEVICE.name.casefold()
+        else:
+            return False
 
     @property
     def ports(self) -> dict:
@@ -252,12 +318,12 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
             raise ValueError("File path invalid")
         if not board_name:
             raise ValueError("Board name invalid")
-        if not self._probe:
+        if not self.probe:
             raise RuntimeError("No probe to program with")
 
         # open_and_init_board may not have been called.
-        self.open_probe()
-        if not self._probe.id:
+        self.__open_probe()
+        if not self.probe.id:
             raise ValueError("Probe ID invalid")
 
         match = False
@@ -275,20 +341,24 @@ class MicroPythonBoard(Board, PythonUart, ZephyrUart):
 
         # Python J-link programming doesn't work for Lyra24
         if "lyra24".casefold() in board_name.casefold():
-            self._probe.close()
-            program_lyra24(file_path, str(self._probe.id))
+            self.probe.close()
+            program_lyra24(file_path, str(self.probe.id))
         else:
-            self._probe.program_target(file_path, addr)
+            self.probe.program_target(file_path, addr)
 
         if self._initialized:
+            self.__handle_reset = True
             self.open_ports()
 
-        logger.info(f"Read version to confirm programming for {self._user_board_name}")
+        logger.info(
+            f"Read version to confirm programming for {self._user_board_name}")
 
 # TODO: How do we differentiate between the different boards?
 # The USB PID/VID can be used for devices that have a USB interface (Pinnacle 100 DVK and BL5340).
 # The MG100 uses an FTDI device so discovery via VID/PID will not work.
 # The board config passed to get_connected could have a board property to identify the board.
+
+
 class Pinnacle100Dvk(MicroPythonBoard):
     """
     A class to represent the Pinnacle 100 DVK Board.

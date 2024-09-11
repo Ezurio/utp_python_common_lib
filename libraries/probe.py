@@ -84,6 +84,8 @@ class Probe:
     def open(self):
         """
         Open the USB connection to the probe and connect to the target.
+
+        Warning: Opening the probe may reset the target.
         """
         raise NotImplementedError
 
