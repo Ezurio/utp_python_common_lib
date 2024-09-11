@@ -78,8 +78,8 @@ Init Board
     # Remove main.py (if it exists) to prevent it from running.
     Board Delete Script    ${board}    main.py
     Board Reset Module    ${board}
-    ${resp}=    Call Method    ${board.python_uart}    send    import os
-    ${resp}=    Call Method    ${board.python_uart}    send    import sys
+    User REPL Send Error Not Expected    ${board}    import os
+    User REPL Send Error Not Expected    ${board}    import sys
 
     # Setup the XRay uploader to use the test plan associated with DUT1
     # (This reads the machine name from the board.)
@@ -97,14 +97,14 @@ De-Init Board
 
 Switch Board to Raw REPL
     [Arguments]    ${board}
-    Call Method    ${board}    close_repl_uart
-    Call Method    ${board}    open_raw_repl_uart
+    Call Method    ${board.python_uart}    close_repl_uart
+    Call Method    ${board.python_uart}    open_raw_repl_uart
 
 Switch Board to User REPL
     [Arguments]    ${board}
 
-    Call Method    ${board}    close_raw_repl_uart
-    Call Method    ${board}    open_repl_uart
+    Call Method    ${board.python_uart}    close_raw_repl_uart
+    Call Method    ${board.python_uart}    open_repl_uart
 
 Run Script on Board
     [Documentation]    Run a script on the board and return the output. This uses raw REPL.
@@ -112,7 +112,7 @@ Run Script on Board
     [Arguments]    ${board}    ${script}
 
     Switch Board to Raw REPL    ${board}
-    ${resp}=    Call Method    ${board.python_raw_repl_uart}    execfile    ${script}
+    ${resp}=    Call Method    ${board.python_uart.raw_repl}    execfile    ${script}
     Switch Board to User REPL    ${board}
 
     RETURN    ${resp}
@@ -122,10 +122,10 @@ Run Script on Board Expect Response
     [Arguments]    ${board}    ${script}    ${expected_response}=${DEFAULT_RUN_SCRIPT_RESP}
 
     Switch Board to Raw REPL    ${board}
-    ${resp}=    Call Method    ${board.python_raw_repl_uart}    execfile    ${script}
+    ${resp}=    Call Method    ${board.python_uart.raw_repl}    execfile    ${script}
     Switch Board to User REPL    ${board}
 
-    # Convert byte string into text before comparison 
+    # Convert byte string into text before comparison
     # (Should be Equals As Strings doesn't do this)
     ${resp_str}=    Convert To String    ${resp}
     Should Contain    ${resp_str}    ${expected_response}    ignore_case=True
@@ -144,7 +144,7 @@ Upload Script to Board
     [Arguments]    ${board}    ${src_script}    ${dst_script}
 
     Switch Board to Raw REPL    ${board}
-    ${resp}=    Call Method    ${board}    upload_py_file    ${src_script}    ${dst_script}
+    Call Method    ${board.python_uart.raw_repl}    fs_put    ${src_script}    ${dst_script}
     Switch Board to User REPL    ${board}
 
 User REPL Send
@@ -181,7 +181,7 @@ Raw REPL Exec
     [Documentation]    Execute a command using the board's raw REPL interface.
     [Arguments]    ${board}    ${cmd}
 
-    ${resp}=    Call Method    ${board.python_raw_repl_uart}    exec    ${cmd}
+    ${resp}=    Call Method    ${board.python_uart.raw_repl}    exec    ${cmd}
 
     RETURN    ${resp}
 
@@ -189,7 +189,7 @@ Raw REPL Exec NoRet
     [Documentation]    Execute a command using the board's raw REPL interface.
     [Arguments]    ${board}    ${cmd}
 
-    Call Method    ${board.python_raw_repl_uart}    exec    ${cmd}
+    Call Method    ${board.python_uart.raw_repl}    exec    ${cmd}
 
 Zephyr Shell Send
     [Documentation]    Send a command using the board's Zephyr shell interface.
@@ -214,7 +214,7 @@ Board Reset Module
 Board Terminate Script
     [Arguments]    ${board}
 
-    Call Method    ${board}    quit_running_app
+    Call Method    ${board.python_uart}    quit_running_app
     Sleep    100ms
 
 Board Delete Script
@@ -227,9 +227,7 @@ Board Delete Script
 Board Soft Reboot
     [Arguments]    ${board}
 
-    ${resp}=    Call Method    ${board}    soft_reset_module
-
-    RETURN    ${resp}
+    Call Method    ${board}    soft_reset_module
 
 Get Board Addr
     [Arguments]    ${board}
