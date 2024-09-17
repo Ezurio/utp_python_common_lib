@@ -104,7 +104,8 @@ class MicroPythonBoard(Board):
                             key=operator.attrgetter('location', 'device'))
                     except:
                         logger.info(
-                            "Unable to sort ports by location and device. If populated, using device field.")
+                            "Unable to sort ports by location and device."
+                            "If populated, using device field.")
                         for y in matching_ports:
                             if str(port.sn) in y.serial_number:
                                 if "device" in port:
@@ -231,7 +232,8 @@ class MicroPythonBoard(Board):
                 raise RuntimeError(
                     f"Could not find serial port for {self._repl.sn}")
 
-        self.python_uart.wrapped_open(self.__delay_after_open_seconds, self.__handle_reset)
+        self.python_uart.wrapped_open(
+            self.__delay_after_open_seconds, self.__handle_reset)
         if self.zephyr_uart:
             self.zephyr_uart.wrapped_open()
 
@@ -423,7 +425,7 @@ class BL654UsbDongle(MicroPythonBoard, Board):
         """
 
         boards = []
-        detected_ports = list_ports.comports()
+        detected_ports = port_helpers.get_ports()
         if len(detected_ports) < 0:
             return boards
 
