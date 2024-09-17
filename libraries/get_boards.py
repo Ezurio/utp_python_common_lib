@@ -7,33 +7,37 @@ import yaml
 logger = logger_get(__name__)
 
 
-def get_boards(config_file: str):
+def get_boards(config_file: str, use_double_underscore: bool = False) -> list[str]:
     """ 
     Extract board names for DUTs using names and properties.
-    Removes duplicates.
-
     Args:
         config_file (str): The rack configuration file
+        use_double_underscore (bool): Use double underscore to separate the board 
+        name (programming file name) from the board qualifiers. Default is False.
+
     """
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
 
     names = []
     for board in config['boards']:
-        # only include characters up to the second underscore
-        # maybe a list of valid board names would be better (PROD-14154)
         try:
             if "dut" in board['properties']:
-                lst = board['name'].casefold().split("_")
-                name = lst[0]
-                if len(lst) > 1:
-                    name += "_" + lst[1]
-                if len(lst) > 2 and lst[2] == "dvk":
-                    name += "_" + lst[2]
-                names.append(name)
+                if use_double_underscore:
+                    lst = board['name'].casefold().split("__")
+                    name = lst[0]
+                    names.append(name)
+                else:
+                    lst = board['name'].casefold().split("_")
+                    name = lst[0]
+                    if len(lst) > 1:
+                        name += "_" + lst[1]
+                    if len(lst) > 2 and lst[2] == "dvk":
+                        name += "_" + lst[2]
+                    names.append(name)
         except:
             pass
-    
+
     # remove duplicate names from list
     names = list(dict.fromkeys(names))
 
@@ -51,6 +55,8 @@ if __name__ == "__main__":
 
     parser.add_argument('-c', '--config_file', required=True,
                         help="The configuration file that describes the boards")
+    parser.add_argument('-u', '--double_underscore', action='store_true', default=False,
+                        help="Use double underscore to separate the board name from the board qualifiers")
     args = parser.parse_args()
 
-    get_boards(args.config_file)
+    get_boards(args.config_file, args.double_underscore)
