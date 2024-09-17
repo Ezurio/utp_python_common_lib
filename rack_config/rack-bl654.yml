@@ -1,8 +1,8 @@
 ---
-name: Configuration for rack taco1. This is a development system.
-
+name: Configuration for BL654 rack.
+notes: For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
 boards:
-  - name: bl654_dvk_mcuboot_disabled
+  - name: bl654_dvk.mcuboot_disabled
     ports:
       - sn: 987DC1E6503B2DDD
         index: 0
@@ -17,7 +17,6 @@ boards:
     probe:
       sn: 483148395
       type: jlink
-      # For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
       family: nRF52840_xxAA
     properties:
       - dut
@@ -38,7 +37,6 @@ boards:
     probe:
       sn: 483066765
       type: jlink
-      # For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
       family: nRF52840_xxAA
     properties:
       - dut
