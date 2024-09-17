@@ -10,6 +10,10 @@ inputs:
   test_dir:
     description: The repository that contains the tests
     required: true
+  freeze:
+    description: Generate frozen manifest file and commit hash
+    required: false
+    default: "True"
 
 runs:
   using: composite
@@ -19,7 +23,9 @@ runs:
         gh auth setup-git
         conda run -p ${{inputs.robot_env}} west init -l ${{inputs.test_dir}}
         conda run -p ${{inputs.robot_env}} west update -f always
-        conda run -p ${{inputs.robot_env}} west manifest --freeze -o "frozen_manifest.yml"
-        cd ${{inputs.test_dir}}
-        git rev-parse HEAD > ../frozen_commit_hash.txt
+        if [ "${{inputs.freeze}}" == "True" ]; then
+          conda run -p ${{inputs.robot_env}} west manifest --freeze -o "frozen_manifest.yml"
+          cd ${{inputs.test_dir}}
+          git rev-parse HEAD > ../frozen_commit_hash.txt
+        fi
       shell: bash -euo pipefail {0}
