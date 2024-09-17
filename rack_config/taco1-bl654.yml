@@ -1,0 +1,46 @@
+---
+name: Configuration for rack taco1. This is a development system.
+
+boards:
+  - name: bl654_dvk_mcuboot_disabled
+    ports:
+      - sn: 987DC1E6503B2DDD
+        index: 0
+        type: repl
+        source: device
+        device: COM26
+      - sn: 987DC1E6503B2DDD
+        index: 1
+        type: zephyr_unused
+        source: device
+        device: COM28
+    probe:
+      sn: 483148395
+      type: jlink
+      # For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
+      family: nRF52840_xxAA
+    properties:
+      - dut
+      - ble
+      - gatt_client
+  - name: bl654_dvk
+    ports:
+      - sn: 107C407560CF0277
+        index: 0
+        type: repl
+        source: device
+        device: COM31
+      - sn: 107C407560CF0277
+        index: 1
+        type: zephyr_unused
+        source: device
+        device: COM30
+    probe:
+      sn: 483066765
+      type: jlink
+      # For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
+      family: nRF52840_xxAA
+    properties:
+      - dut
+      - ble
+      - gatt_server
