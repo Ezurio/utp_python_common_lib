@@ -48,29 +48,30 @@ def get_hex_path_and_versions(build_dir: str, board_name: str, suffix: str = "",
     # If the result contains newlines, split the string
     hex_folder = sub_folder
     sub_folder_list = sub_folder.split('\n')
-    found = False
+    logger.debug(f"{sub_folder_list=}")
     if len(sub_folder_list) > 1:
-        # If there is a folder with build.*_1.2.3.4 in its name, then pick it
+        # If there is a folder with build.*_1.2.3.4 in its name, then it is a candidate
         for folder in sub_folder_list:
-            # It is easier to parse without /zephyr in the folder name
-            if os.path.basename(folder) != "zephyr":
-                if folder.count('.') == 4:
-                    # Need original folder name for hex file search
-                    hex_folder = folder
-                    # Replace the last '.' with '_' and skip 'build.' so
-                    # that the version number can be extracted the same as Lyra
-                    split = folder.split('.')
-                    sub_folder = split[1] + '.' + \
-                        split[2] + '.' + split[3] + '_' + split[4]
-                    found = True
-            if found:
-                break
+            if os.path.basename(folder) != "zephyr" or folder.count('.') < 4:
+                sub_folder_list.remove(folder)
+
+        # Use the shortest name because it is the most likely to be the correct one
+        logger.debug(f"{sub_folder_list=}")
+        sub_folder = min(sub_folder_list, key=len)
+        logger.debug(f"shortest: {sub_folder=}")
+        # Need original folder name for hex file search
+        hex_folder = sub_folder
+        # Remove the 'build.' prefix and the 'zephyr' suffix for easier version extraction
+        sub_folder = sub_folder.replace('build.', '').replace('/zephyr', '')
+        # Replace the last '.' with '_' so
+        # that the version number can be extracted the same as Lyra
+        sub_folder = sub_folder.rsplit('.', 1)[0] + '_' + sub_folder.rsplit('.', 1)[1]
 
     short_version = ""
     long_version = ""
     try:
         split = os.path.basename(sub_folder).split('_')
-        logger.debug(f"split: {split}")
+        logger.debug(f"{split=}")
         short_version = os.path.basename(sub_folder).split('_')[-2]
         logger.debug(f"{short_version=}")
         long_version = short_version + "+" + split[-1]
