@@ -20,7 +20,8 @@ def convert_to_bool(value: str) -> bool:
     return value.lower() in ("yes", "true", "t", "1")
 
 
-def program_board(config_file: str, board_to_program: str, hex_path: str, device="", mass_erase=True, unlock=False):
+def program_board(config_file: str, board_to_program: str, hex_path: str, device="",
+                  mass_erase=True, unlock=False, use_double_underscore: bool = False):
     """ 
     Program a board with a hex file using the configuration file to get 
     the probe type and serial number.
@@ -32,9 +33,12 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
         config_file (str): The configuration file
         board_to_program (str): The [partial but unique] name of board to program
         hex_path (str): The path to the hex file
-        device (str, optional): The part number of the device. If programming fails, this may be required. Defaults to "".
+        device (str, optional): The part number of the device. If programming fails, 
+        this may be required. Defaults to "".
         mass_erase (bool, optional): Mass erase the device. Defaults to False.
         unlock (bool, optional): Unlock the device. Defaults to False.
+        use_double_underscore (bool, optional): If true, board names must match 
+        exactly (up to the double underscore). Default is False. 
 
     Returns:
         Tuple[bool, int, int]: Success, number of boards programmed, number of boards failed
@@ -53,6 +57,10 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
             name = board['name'].casefold()
             if board_to_program not in name:
                 continue
+            if use_double_underscore:
+                name = name.split("__")[0]
+                if board_to_program != name:
+                    continue
 
             probe = board['probe']
             serial_number = str(probe['sn'])
@@ -109,8 +117,10 @@ if __name__ == "__main__":
                         help="The partial but unique name of the board(s) to program")
     parser.add_argument('-f', '--hex_file', required=True,
                         help="The absolute path to the hex file")
+    parser.add_argument('-u', '--double_underscore', action='store_true', default=False,
+                        help="Use double underscore to separate the board name from the board qualifiers")
     args = parser.parse_args()
 
     logger = logger_setup(__file__, args.debug)
 
-    program_board(args.config_file, args.board, args.hex_file)
+    program_board(args.config_file, args.board, args.hex_file, use_double_underscore=args.double_underscore)

@@ -98,7 +98,7 @@ runs:
           fi
 
           output_folder="${{inputs.output_folder}}/${board}"
-          status=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/program_board.py -c ${rack_cfg} -b ${board} -f "${hex_path}")
+          status=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/program_board.py -c ${rack_cfg} -b ${board} -f "${hex_path}" --double_underscore)
           if [[ $status == *"Success"* ]]; then
             echo "Programming board ${board} successful"
             ${BASE_CMD} -v rack_config:${rack_cfg} -v release_version:${long_version} -v board_name:${board} -d ${output_folder} \
