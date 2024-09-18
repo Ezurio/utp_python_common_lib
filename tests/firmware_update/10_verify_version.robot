@@ -39,7 +39,9 @@ Setup
     ${boards}    Create List
     FOR    ${b}    IN    @{settings_board}
         ${match}=    Evaluate    '${board_name}'.lower() in '${b.user_board_name}'.lower()
-        IF    ${match}
+        # Both must have a '.' or both must not have a '.'
+        ${xnor}=    Evaluate    not (('.' in '${board_name}') ^ ('.' in '${b.user_board_name}'))
+        IF    ${match} and ${xnor}
             Append To List    ${boards}    ${b}
         END
     END
