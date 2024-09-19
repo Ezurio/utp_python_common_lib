@@ -27,9 +27,9 @@ class dotdict(dict):
 
 
 class DebugProbeType(Enum):
-    DVKPROBE = 0x00  # Laird Connectivity DVK Probe (RP2040)
+    DVKPROBE = 0x00  # Ezurio DVK Probe (RP2040)
     JLINK = 0x01  # Segger J-Link
-
+    USB_SWD = 0x02 # Ezurio Programming Kit
 
 class ComPortType(Enum):
     REPL = 0x00  # Python REPL serial port

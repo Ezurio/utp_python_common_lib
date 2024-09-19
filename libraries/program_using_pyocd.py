@@ -11,6 +11,8 @@ def program_with_dvk_probe(file_path: str, serial_number: str, device="", mass_e
         cmd = ["pyocd", "flash", "--probe", serial_number, file_path]
 
         if device != "":
+            # J-Link requires suffix but pyocd doesn't.
+            device = device.replace("_xxAA", "")
             cmd.insert(-1, "--target")
             cmd.insert(-1, device)
         else:
@@ -50,3 +52,7 @@ def program_with_dvk_probe(file_path: str, serial_number: str, device="", mass_e
     except FileNotFoundError as e:
         logger.error(f"File not found: {e}")
         return False
+
+
+# These are the same for now
+program_with_usb_swd = program_with_dvk_probe

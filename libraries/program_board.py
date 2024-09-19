@@ -1,7 +1,7 @@
 from lc_util import logger_setup, logger_get
 import argparse
 from program_using_commander_cli import program_lyra24
-from program_using_pyocd import program_with_dvk_probe
+from program_using_pyocd import program_with_dvk_probe, program_with_usb_swd
 from program_using_nrfjprog import program_nrf
 import yaml
 
@@ -79,6 +79,8 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
                 ok = program_lyra24(**params)
             elif probe_type == "dvkprobe":
                 ok = program_with_dvk_probe(**params)
+            elif probe_type == "usb_swd":
+                ok = program_with_usb_swd(**params)
             elif probe_type == "jlink":
                 ok = program_nrf(**params)
             else:
