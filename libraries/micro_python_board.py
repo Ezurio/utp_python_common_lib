@@ -4,6 +4,7 @@
 from board import Board, ComPort, BoardConfig, ComPortType, ComPortSource, DebugProbeType
 from dvk_probe import DvkProbe
 from jlink_probe import JLinkProbe
+from usb_swd_probe import UsbSwdProbe
 from probe import Probe
 from python_uart import PythonUart
 from lc_util import logger_setup, logger_get
