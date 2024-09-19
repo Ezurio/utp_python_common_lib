@@ -86,7 +86,7 @@ runs:
           fi
 
         else
-          echo "Board list wasn't provide. Collating all files into a single file."
+          echo "Board list wasn't provided. Collating all files into a single file."
 
           files=$(find ${{inputs.xml_results}} -name "*.xml")
           if [ -n "${files}" ]; then
