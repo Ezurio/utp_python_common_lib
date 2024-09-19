@@ -2,7 +2,7 @@
 name: Configuration for the Lyra24 Rack in Cedarburg.
 
 boards:
-  - name: lyra24_p10_i2c_spi
+  - name: lyra24_p10__i2c_spi
     ports:
       - sn: 449007698
         index: 0
@@ -18,7 +18,7 @@ boards:
       - i2c_click
       - ble
       - gatt_client
-  - name: lyra24_p20_gpio
+  - name: lyra24_p20__gpio
     ports:
       - sn: 449007246
         index: 0
@@ -33,7 +33,7 @@ boards:
       - gpio_click
       - ble
       - gatt_server
-  - name: lyra24_s10_ext_ant
+  - name: lyra24_s10__ext_ant
     ports:
       - sn: 449006191
         index: 0

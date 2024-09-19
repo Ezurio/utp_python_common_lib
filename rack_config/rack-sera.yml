@@ -2,7 +2,7 @@
 name: Configuration for Sera NX040 DVK test rack. This is a development system.
 
 boards:
-  - name: sera_nx040_dvk_spi_i2c
+  - name: sera_nx040_dvk__spi_i2c
     ports:
       - sn: E6620CD64F947D37
         index: 0
@@ -23,7 +23,7 @@ boards:
       - spi_click
       - i2c_click
       - dut
-  - name: sera_nx040_dvk_gpio
+  - name: sera_nx040_dvk__gpio
     ports:
       - sn: E6620CD64F8C6736
         index: 0

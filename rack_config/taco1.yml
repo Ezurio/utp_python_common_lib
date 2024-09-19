@@ -2,7 +2,7 @@
 name: Configuration for rack taco1. This is a development system.
 
 boards:
-  - name: sera_nx040_dvk_spi_i2c
+  - name: sera_nx040_dvk__spi_i2c
     ports:
       - sn: E6620CD64F9E7139
         index: 0
@@ -23,7 +23,7 @@ boards:
       - spi_click
       - i2c_click
       - dut
-  - name: sera_nx040_dvk_gpio
+  - name: sera_nx040_dvk__gpio
     ports:
       - sn: E6620CD64F6A9F34
         index: 0

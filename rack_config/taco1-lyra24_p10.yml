@@ -2,7 +2,7 @@
 name: Configuration for rack taco1. This is a development system.
 
 boards:
-  - name: Lyra24_p10_a
+  - name: Lyra24_p10__a
     ports:
       - sn: 449008448
         index: 0
@@ -16,7 +16,7 @@ boards:
       - ble
       - gatt_client
       - dut
-  - name: Lyra24_p10_b
+  - name: Lyra24_p10__b
     ports:
       - sn: 449008461
         index: 0
