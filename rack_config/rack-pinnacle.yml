@@ -1,23 +1,5 @@
 boards:
-  - name: bl5340_dvk
-    ports:
-      - sn: D2745A4316F36132
-        index: 0
-        type: repl
-        source: device
-      - sn: D2745A4316F36132
-        index: 1
-        type: zephyr_disabled
-        source: device
-    probe:
-      sn: 483128809
-      type: jlink
-      family: nRF5340_xxAA
-    properties:
-      - ble
-      - gatt_client
-      - dut
-  - name: pinnacle_100_dvk
+  - name: pinnacle_100_dvk__a
     ports:
       - sn: 3627E19102126576
         index: 0
@@ -33,6 +15,24 @@ boards:
         device: COM8
     probe:
       sn: 483067488
+      type: jlink
+      family: nRF52840_xxAA
+    properties:
+      - ble
+      - gatt_client
+      - dut
+  - name: pinnacle_100_dvk__b
+    ports:
+      - sn: 3383591F7906DF6F
+        index: 0
+        type: repl
+        source: device
+      - sn: 3383591F7906DF6F
+        index: 1
+        type: zephyr_disabled
+        source: device
+    probe:
+      sn: 483128091
       type: jlink
       family: nRF52840_xxAA
     properties:

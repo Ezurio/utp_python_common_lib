@@ -1,19 +1,5 @@
 boards:
-  - name: mg100
-    ports:
-      - sn: FT4G4XBZ
-        index: 0
-        type: repl
-        source: board
-    probe:
-      sn: 600102567
-      type: jlink
-      family: nRF52840_xxAA
-    properties:
-      - ble
-      - gatt_client
-      - dut
-  - name: bl5340_dvk
+  - name: bl5340_dvk__a
     ports:
       - sn: D2745A4316F36132
         index: 0
@@ -25,6 +11,24 @@ boards:
         source: device
     probe:
       sn: 483128809
+      type: jlink
+      family: nRF5340_xxAA
+    properties:
+      - ble
+      - gatt_client
+      - dut
+  - name: bl5340_dvk__b
+    ports:
+      - sn: 83D1F9A1DB2EBDCF
+        index: 0
+        type: repl
+        source: device
+      - sn: 83D1F9A1DB2EBDCF
+        index: 1
+        type: zephyr_disabled
+        source: device
+    probe:
+      sn: 483128830
       type: jlink
       family: nRF5340_xxAA
     properties:

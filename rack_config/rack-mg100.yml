@@ -1,0 +1,29 @@
+boards:
+  - name: mg100__a
+    ports:
+      - sn: FT4G4XBZ
+        index: 0
+        type: repl
+        source: board
+    probe:
+      sn: 600102567
+      type: jlink
+      family: nRF52840_xxAA
+    properties:
+      - ble
+      - gatt_client
+      - dut
+  - name: mg100__b
+    ports:
+      - sn: D200MEQ0
+        index: 0
+        type: repl
+        source: board
+    probe:
+      sn: 600103435
+      type: jlink
+      family: nRF52840_xxAA
+    properties:
+      - ble
+      - gatt_server
+      - dut
