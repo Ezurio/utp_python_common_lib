@@ -1,0 +1,16 @@
+---
+name: Configuration for the RS2xx rack.
+
+boards:
+  - name: rs2xx_mcuboot
+    ports:
+      - sn: FTAP8R8H
+        index: 0
+        source: board
+        type: repl
+    probe:
+      sn: 600102570
+      type: jlink
+      family: Cortex-M33
+    properties:
+      - dut
