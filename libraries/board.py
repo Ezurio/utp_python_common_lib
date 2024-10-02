@@ -109,7 +109,11 @@ class Board(object):
     #:
     #: Amount of time to wait after board reset before trying to use/flush com port.
     BOOT_TIME_SECONDS = 3.0
-
+    #: :meta hide-value:
+    #:
+    #: Without scripts the board boots in about 4 seconds. With scripts 8+ seconds.
+    BOOT_TIME_SECONDS_RS2XX = 10.0
+    
     def __init__(self, id: str = ''):
         self.__initialized = False
         self.__id = id

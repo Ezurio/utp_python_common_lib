@@ -23,6 +23,7 @@ class MicroPythonBoard(Board):
     A class to represent a generic MicroPython Board.
     A user can use board config files to find any board that supports MicroPython.
     """
+    DEFAULT_FLUSH_ATTEMPTS = 3
 
     @classmethod
     def get_specified(cls, boards_conf: list[BoardConfig]) -> list['MicroPythonBoard']:
@@ -180,6 +181,9 @@ class MicroPythonBoard(Board):
         self.__delay_after_open_seconds = Board.BOOT_TIME_SECONDS
         self.__ports_have_been_opened = False
 
+        if "rs2xx" in self._user_board_name.casefold():
+            self.__delay_after_open_seconds = Board.BOOT_TIME_SECONDS_RS2XX
+
     def __str__(self):
         s = f"{self.board_name} {self._user_board_name} {self._repl.sn} [{self._repl.name}]: {self._repl.device}"
         if self._zephyr:
@@ -238,7 +242,7 @@ class MicroPythonBoard(Board):
                     f"Could not find serial port for {self._repl.sn}")
 
         self.python_uart.wrapped_open(
-            self.__delay_after_open_seconds, self.__handle_reset)
+            self.__delay_after_open_seconds, MicroPythonBoard.DEFAULT_FLUSH_ATTEMPTS if self.__handle_reset else 0)
         if self.zephyr_uart:
             self.zephyr_uart.wrapped_open()
 

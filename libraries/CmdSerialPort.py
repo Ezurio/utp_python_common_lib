@@ -1,5 +1,6 @@
 import threading
 import logging
+import time
 
 from SerialPort import SerialPort
 
@@ -25,6 +26,7 @@ class CmdSerialPort(SerialPort):
         self._clear_cmd_queue_timeout_sec = SerialPort.CLEAR_QUEUE_TIMEOUT_DEFAULT
         self._cmd_queue_monitor_event = threading.Event()
         self._monitor_cmd_rx_queue = False
+        self._found_delimiter = False
 
     def __cmd_rx_thread(self):
         while not self._stop_cmd_threads:
@@ -37,6 +39,7 @@ class CmdSerialPort(SerialPort):
                         d_len = len(self._rx_delimiter)
                         # If the delimiter is found, process the response
                         if (len(self._temp_cmd) >= d_len) and (bytes(self._temp_cmd[-d_len::]) == self._rx_delimiter):
+                            self._found_delimiter = True
                             cmd = bytes(self._temp_cmd).decode(
                                 'utf-8', 'ignore')
                             # Remove the delimiter from the response
@@ -232,3 +235,23 @@ class CmdSerialPort(SerialPort):
         self.__resume_cmd_queue_monitor()
 
         return resp
+
+    def flush_rx(self, count=3, delay=0.5) -> bool:
+        """ Send tx delimiter multiple times to flush the rx buffer and return
+        True if the rx delimiter is found in the response.
+
+        This can be used to determine if the RS2xx is in REPL mode.
+        This can also be used to make sure the RS2xx UART is awake (when in REPL mode).
+        """
+        self.__pause_cmd_queue_monitor()
+        self._cmd_received_event.clear()
+        self._found_delimiter = False
+        for i in range(count):
+            self.send_raw(self._tx_delimiter)
+            self._cmd_received_event.wait(delay)
+            if self._found_delimiter:
+                logging.debug(f"Found delimiter in loop {i}")
+                break
+        self.__resume_cmd_queue_monitor()
+
+        return self._found_delimiter
