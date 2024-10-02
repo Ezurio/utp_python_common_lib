@@ -75,7 +75,9 @@ def program_board(config_file: str, board_to_program: str, hex_path: str, device
             if "unlock" in probe:
                 params['unlock'] = convert_to_bool(probe['unlock'])
 
-            if "lyra24" in name:
+            # The Lyra24 and RS2xx systems have JLink probes, but 
+            # simplicity commander-cli is used to program them.
+            if "lyra24" in name or "rs2xx" in name:
                 ok = program_lyra24(**params)
             elif probe_type == "dvkprobe":
                 ok = program_with_dvk_probe(**params)
