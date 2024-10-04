@@ -75,6 +75,8 @@ class MicroPythonBoard(Board):
 
         if len(boards_conf) > 0:
             probes = Probe.get_connected_probes(with_comports=False)
+            if len(probes) == 0:
+                logger.warn("No probes found")
             for board in boards_conf:
                 repl = None
                 zephyr = None
