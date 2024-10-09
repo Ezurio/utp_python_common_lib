@@ -123,9 +123,11 @@ class MicroPythonBoard(Board):
                             if "name" not in port:
                                 port.name = "Zephyr shell"
                             zephyr = port
-                    else:
-                        logger.error(
-                            "Could not find any matching communcation ports")
+                    elif len(boards_conf) > 1:
+                        # If there are mulitple boards, then this will most likely occur.
+                        # If none of them match, then the board is not connected or
+                        # there is a problem in the configuration file.
+                        logger.debug("Ports did not match")
 
                 # If the board configuration specifies a probe with a serial number,
                 # try to find it in the list of connected probes.
