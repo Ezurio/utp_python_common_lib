@@ -7,7 +7,7 @@ Library             String
 Suite Setup         Setup
 Suite Teardown      Teardown
 Test Setup          Test Setup
-Test Timeout        10 minutes
+Test Timeout        2 minutes
 
 
 *** Variables ***
@@ -135,7 +135,7 @@ BLE Single Connection Extended 2M PHY Peripheral Disconnect
 
 BLE Single Connection Legacy 1M PHY Stress
     [Documentation]    Repeated connect and disconnect with peripheral and central swapping between DUT1 and DUT2
-
+    [Timeout]    16 minutes
     Set Tags    PROD-2457
 
     ${loops_remaining}=    Set Variable    ${10}
