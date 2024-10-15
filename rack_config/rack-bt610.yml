@@ -4,15 +4,10 @@ name: Configuration for the BT610 rack.
 boards:
   - name: bt610__a
     ports:
-      - sn: FTG7QJ49
+      - sn: "046536025020322055355530323036203431303297969903"
         index: 0
         source: board
         type: repl
-        device: COM7
-      - sn: "046536025020322055355530323036203431303297969903"
-        index: 1
-        source: board
-        type: unused_usb_swd
         device: COM38
     probe:
       sn: "046536025020322055355530323036203431303297969903"
@@ -24,15 +19,10 @@ boards:
       - dut
   - name: bt610__b
     ports:
-      - sn: FTANYM9C
-        index: 0
-        source: board
-        type: repl
-        device: COM6
       - sn: "046536025020322038523254333031323232303597969903"
         index: 0
         source: board
-        type: unused_usb_swd
+        type: repl
         device: COM37
     probe:
       sn: "046536025020322038523254333031323232303597969903"
