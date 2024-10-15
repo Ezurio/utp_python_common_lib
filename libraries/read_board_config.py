@@ -106,7 +106,7 @@ def read_board_config(board_config_file=DEFAULT_CONFIG_FILE, desired_properties:
 
             # Find a board with all desired properties, the order of the input list matters.
             for sublist in desired_properties:
-                for b in board_configurations:
+                for b in board_configurations[:]:
                     properties = b['properties']
                     if properties:
                         properties = [item.upper() for item in properties]

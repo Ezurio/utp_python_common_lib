@@ -51,7 +51,7 @@ def get_hex_path_and_versions(build_dir: str, board_name: str, suffix: str = "",
     logger.debug(f"{sub_folder_list=}")
     if len(sub_folder_list) > 1:
         # If there is a folder with build.*_1.2.3.4 in its name, then it is a candidate
-        for folder in sub_folder_list:
+        for folder in sub_folder_list[:]:
             if os.path.basename(folder) != "zephyr" or folder.count('.') < 4:
                 sub_folder_list.remove(folder)
 
@@ -65,7 +65,8 @@ def get_hex_path_and_versions(build_dir: str, board_name: str, suffix: str = "",
         sub_folder = sub_folder.replace('build.', '').replace('/zephyr', '')
         # Replace the last '.' with '_' so
         # that the version number can be extracted the same as Lyra
-        sub_folder = sub_folder.rsplit('.', 1)[0] + '_' + sub_folder.rsplit('.', 1)[1]
+        sub_folder = sub_folder.rsplit(
+            '.', 1)[0] + '_' + sub_folder.rsplit('.', 1)[1]
 
     short_version = ""
     long_version = ""

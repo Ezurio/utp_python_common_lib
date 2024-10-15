@@ -137,7 +137,7 @@ class MicroPythonBoard(Board):
                 if "probe" in board:
                     bprobe = board.probe
                     if "sn" in bprobe:
-                        for p in probes:
+                        for p in probes[:]:
                             if p.id == bprobe.sn:
                                 probe = p
                                 probes.remove(p)
