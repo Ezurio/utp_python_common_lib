@@ -103,21 +103,21 @@ Heap overflow test
     ${resp}=    DUT1 User REPL Send    gc.collect()
     ${resp}=    DUT1 User REPL Send    gc.mem_free()
     ${free1}=    Convert To Integer    ${resp}
-    ${resp}=    DUT1 User REPL Send    ${buff_var}\=bytearray(${buff_size})
+    ${resp}=    DUT1 User REPL Send    ${buff_var}=bytearray(${buff_size})
     ${resp}=    DUT1 User REPL Send    gc.mem_free()
     ${free2}=    Convert To Integer    ${resp}
     ${diff}=    Evaluate    ${free1}-${free2}
     IF    ${diff} < ${buff_size}
         Fail    Not enough space allocated for buffer
     END
-    ${resp}=    DUT1 User REPL Send    ${buff_var}\=None
+    ${resp}=    DUT1 User REPL Send    ${buff_var}=None
     ${resp}=    DUT1 User REPL Send    gc.collect()
     ${resp}=    DUT1 User REPL Send    gc.mem_free()
     ${free3}=    Convert To Integer    ${resp}
     IF    ${free3} > ${free1} and ${free3} < ${free2}
         Fail    ${free3} should be less than ${free1} and greater than ${free2}
     END
-    ${resp}=    DUT1 User REPL Send    ${buff_var}\=bytearray(${free1})
+    ${resp}=    DUT1 User REPL Send    ${buff_var}=bytearray(${free1})
     Should Contain    ${resp}    MemoryError
     ${resp}=    DUT1 User REPL Send    gc.mem_free()
     ${free4}=    Convert To Integer    ${resp}
@@ -149,9 +149,9 @@ ZCBOR Encode Decode
     ${new_obj}=    Set Variable    n
 
     DUT1 User REPL Send    import canvas
-    DUT1 User REPL Send    ${obj}\=${obj_data}
-    DUT1 User REPL Send    ${cbor}\=canvas.zcbor_from_obj(${obj},0)
-    DUT1 User REPL Send    ${new_obj}\=canvas.zcbor_to_obj(${cbor})
+    DUT1 User REPL Send    ${obj}=${obj_data}
+    DUT1 User REPL Send    ${cbor}=canvas.zcbor_from_obj(${obj},0)
+    DUT1 User REPL Send    ${new_obj}=canvas.zcbor_to_obj(${cbor})
     ${resp}=    DUT1 User REPL Send    print(${new_obj})
     Should Be Equal As Strings    ${resp}    ${obj_data}
 
@@ -186,13 +186,13 @@ Write Read Rename Delete File
     ${file}=    Set Variable    f
     ${file_rename}=    Set Variable    rename_test_1234
 
-    DUT1 User REPL Send    ${file}\=open('${file_name}','${write_mode}')
+    DUT1 User REPL Send    ${file}=open('${file_name}','${write_mode}')
     ${resp}=    DUT1 User REPL Send    ${file}.write(${file_contents})
     ${write_len}=    Convert To Integer    ${resp}
     DUT1 User REPL Send    ${file}.close()
     ${file_size}=    DUT1 User REPL Send    os.stat('${file_name}')[6]
     Should Be Equal As Integers    ${write_len}    ${file_size}
-    DUT1 User REPL Send    ${file}\=open('${file_name}','${read_mode}')
+    DUT1 User REPL Send    ${file}=open('${file_name}','${read_mode}')
     ${resp}=    DUT1 User REPL Send    ${file}.read()
     Should Contain    ${resp}    ${file_contents}
     DUT1 User REPL Send    ${file}.close()

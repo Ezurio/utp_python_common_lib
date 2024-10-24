@@ -59,7 +59,7 @@ Setup Board for Ranging
     [Arguments]    ${board}
 
     Run Ranging Script on Board    ${board}
-    User REPL Send NoRet    ${board}    config['anchor_mode']\=1
+    User REPL Send NoRet    ${board}    config['anchor_mode']=1
     User REPL Send NoRet    ${board}    config_save()
     ${resp}=    User REPL Send    ${board}    os.listdir()
     Should Contain    ${resp}    config.cb
