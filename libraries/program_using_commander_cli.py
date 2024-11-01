@@ -10,6 +10,9 @@ if platform.system() == "Linux":
     PROGRAM_PATH = "/usr/local/bin/commander-cli/commander-cli"
 elif platform.system() == "Windows":
     PROGRAM_PATH = "commander-cli.exe"
+elif platform.system() == "Darwin":
+    logger.info("macOS: If programming Lyra boards, make sure to install commander-cli and include it in your PATH")
+    PROGRAM_PATH = "Commander-cli.app"
 else:
     raise Exception("Unsupported OS")
 
