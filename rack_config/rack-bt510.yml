@@ -2,7 +2,7 @@
 name: Configuration for the BT510 rack.
 
 boards:
-  - name: bt510.mcuboot_disabled.client__a
+  - name: bt510__a
     ports:
       - sn: "046536025020322038523254333031323033303197969903"
         index: 0
@@ -16,7 +16,7 @@ boards:
       - ble
       - gatt_server
       - dut
-  - name: bt510.mcuboot_disabled.client__b
+  - name: bt510__b
     ports:
       - sn: "046536025020322055355530313036203333303997969903"
         index: 0

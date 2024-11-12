@@ -2,7 +2,7 @@
 name: Configuration for BL654 rack.
 notes: For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
 boards:
-  - name: bl654_dvk.mcuboot_disabled
+  - name: bl654_dvk__a
     ports:
       - sn: 987DC1E6503B2DDD
         index: 0
@@ -22,7 +22,7 @@ boards:
       - dut
       - ble
       - gatt_client
-  - name: bl654_dvk
+  - name: bl654_dvk__b
     ports:
       - sn: 107C407560CF0277
         index: 0
