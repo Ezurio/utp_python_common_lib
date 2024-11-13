@@ -66,8 +66,6 @@ Setup
     User REPL Send Error Not Expected    ${dut1}    cs1 = Pin("MB_CS", Pin.OUT, Pin.PULL_NONE)
     IF    ${board1_type} == ${LYRA_BOARD_TYPE}
         User REPL Send Error Not Expected    ${dut1}    spi1 = SPI(("USART0","MB_SCK", "MB_MOSI", "MB_MISO"), cs1)
-        # See PROD-14706
-        User REPL Send Error Not Expected    ${dut1}    spi1.configure(1000000, 1, 1, SPI.MSB)
     ELSE
         User REPL Send Error Not Expected    ${dut1}    spi1 = SPI("spi@40023000", cs1)
     END
