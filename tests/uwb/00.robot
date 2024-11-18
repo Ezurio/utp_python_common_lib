@@ -73,7 +73,7 @@ Verify Board Range
 
     WHILE    $total_time > ${0}
         # This print is for debugging/logging purposes only.
-        User REPL Send    ${board}    print(devices)
+        User REPL Send Error Not Expected    ${board}    print(devices)
         TRY
             ${resp}=    User REPL Send    ${board}
             ...    print(devices['${peer_board_id}']['range'])
