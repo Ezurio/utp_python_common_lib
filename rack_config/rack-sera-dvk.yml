@@ -40,19 +40,6 @@ boards:
     properties:
       - uwb
       - ble
-      - gatt_server
+      - gatt_client
       - gpio_click
       - dut
-  - name: Lyra24P_10dBm
-    ports:
-      - sn: 449008463
-        index: 0
-        source: board
-        type: repl
-    probe:
-      sn: 449008463
-      type: jlink
-      family: Cortex-M33
-    properties:
-      - ble
-      - gatt_client
