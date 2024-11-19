@@ -51,7 +51,7 @@ Run Ranging Script on Board
 
     # The variable robot_test_rack is used to prevent the script from
     # starting because callbacks don't occur in the raw REPL.
-    User REPL Send NoRet    ${board}    robot_test_rack = True
+    User REPL Send Error Not Expected    ${board}    robot_test_rack = True
     Run Script on Board Expect Response    ${board}    ${TWO_WAY_RANGE_SCRIPT}
     User REPL Send Error Not Expected    ${board}    start_demo()
 
@@ -59,8 +59,8 @@ Setup Board for Ranging
     [Arguments]    ${board}
 
     Run Ranging Script on Board    ${board}
-    User REPL Send NoRet    ${board}    config['anchor_mode']=1
-    User REPL Send NoRet    ${board}    config_save()
+    User REPL Send Error Not Expected    ${board}    config['anchor_mode']=1
+    User REPL Send Error Not Expected    ${board}    config_save()
     ${resp}=    User REPL Send    ${board}    os.listdir()
     Should Contain    ${resp}    config.cb
     Board Reset Module    ${board}

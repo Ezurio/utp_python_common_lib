@@ -588,8 +588,8 @@ Scan With Filter
         Fail    Unknown scan filter type requested: ${filter_type}
     END
 
-    User REPL Send NoRet    ${board}    scanner.set_phys(${phy1} | ${phy2})
-    User REPL Send NoRet    ${board}    scanner.set_timing(${interval}, ${window})
+    User REPL Send Error Not Expected    ${board}    scanner.set_phys(${phy1} | ${phy2})
+    User REPL Send Error Not Expected    ${board}    scanner.set_timing(${interval}, ${window})
     ${found}=    User REPL Send
     ...    ${board}
     ...    do_scan(${SCAN_TIMEOUT_SECONDS}, ${active})
@@ -611,8 +611,8 @@ Scan For Scan Response
     ...    ${window}
 
     Run Scan Script on Board    ${board}
-    User REPL Send NoRet    ${board}    scanner.set_phys(${phy1} | ${phy2})
-    User REPL Send NoRet    ${board}    scanner.set_timing(${interval}, ${window})
+    User REPL Send Error Not Expected    ${board}    scanner.set_phys(${phy1} | ${phy2})
+    User REPL Send Error Not Expected    ${board}    scanner.set_timing(${interval}, ${window})
 
     ${two_scan_cmd_timeouts}=    Evaluate    ${SCAN_CMD_TIMEOUT_SECONDS} * 2
 

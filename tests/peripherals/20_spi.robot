@@ -89,7 +89,7 @@ SPI TEST BANK
     # Let the device know we want to access its write array. Do this by clocking in
     # a WREN instruction.
     # -------------------------------------------------------------------------------
-    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${WREN}")
+    User REPL Send Error Not Expected    ${dut1}    ${spi}.transceive(b"${WREN}")
     # -------------------------------------------------------------------------------
     # Now write it - the write command is 0x2.
     # -------------------------------------------------------------------------------
@@ -97,12 +97,12 @@ SPI TEST BANK
     ${write_cmd}=    STRING_LIB.Right    ${WRITE}    2
     ${hex_write_address_data}=    Set Variable    ${write_cmd}${hex_write_address}${write_string_data}
     ${byte_write_address_data}=    STRING_LIB.ConvertHexadecimalStringtoByteArray    ${hex_write_address_data}
-    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${byte_write_address_data}")
+    User REPL Send Error Not Expected    ${dut1}    ${spi}.transceive(b"${byte_write_address_data}")
     # -------------------------------------------------------------------------------
     # Verify the write enable latch is set by reading it back.
     # -------------------------------------------------------------------------------
-    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${RDSR}")
-    User REPL Send NoRet    ${dut1}    ${spi}.transceive(b"${WRDI}")
+    User REPL Send Error Not Expected    ${dut1}    ${spi}.transceive(b"${RDSR}")
+    User REPL Send Error Not Expected    ${dut1}    ${spi}.transceive(b"${WRDI}")
     # -------------------------------------------------------------------------------
     # Write cycle delay.
     # -------------------------------------------------------------------------------
