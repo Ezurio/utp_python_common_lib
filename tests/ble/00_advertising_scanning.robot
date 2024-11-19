@@ -479,8 +479,8 @@ BLE AdScan 1M Phy Legacy Connectible Scannable Active Scan With Scan Response Da
     Scan For Scan Response
     ...    ${settings_board[1]}
     ...    ${board1_adv_name}
-    ...    {ble.PHY_1M}
-    ...    {ble.PHY_1M}
+    ...    ble.PHY_1M
+    ...    ble.PHY_1M
     ...    260
     ...    260
 
