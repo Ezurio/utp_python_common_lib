@@ -6,9 +6,9 @@ boards:
         type: repl
         source: board
     probe:
-      sn: 600102567
-      type: jlink
-      family: nRF52840_xxAA
+      sn: "0465360250203220334b4354313035323130303797969903"
+      type: usb_swd
+      family: nRF52840
     properties:
       - ble
       - gatt_client
@@ -20,9 +20,9 @@ boards:
         type: repl
         source: board
     probe:
-      sn: 600103435
-      type: jlink
-      family: nRF52840_xxAA
+      sn: "046536025020322038523254323031323531303597969903"
+      type: usb_swd
+      family: nRF52840
     properties:
       - ble
       - gatt_server
