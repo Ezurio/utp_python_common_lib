@@ -160,7 +160,7 @@ User REPL Send
     RETURN    ${resp}
 
 User REPL Send NoRet
-    [Documentation]    Send a command using the board's user REPL interface.
+    [Documentation]    Send a command using the board's user REPL interface and ignore response. This will not catch exceptions.
     [Arguments]    ${board}    ${cmd}    ${timeout}=${1.0}
 
     Call Method    ${board.python_uart}    send    ${cmd}    ${timeout}
@@ -251,7 +251,7 @@ Get Board Type
     ${resp}=    Replace String    ${resp}    \r\n    ${EMPTY}
 
     ${is_lyra}=    Run Keyword And Return Status    Should Contain    ${resp}    lyra    ignore_case=True
-    IF   ${is_lyra} == ${True}
+    IF    ${is_lyra} == ${True}
         RETURN    ${LYRA_BOARD_TYPE}
     ELSE
         RETURN    ${resp}
