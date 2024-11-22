@@ -8,7 +8,7 @@ Library     ./common_lib/libraries/read_board_config.py    WITH NAME    BoardCon
 
 
 *** Variables ***
-${rack_config}                  ${EMPTY}
+${station_config}               ${EMPTY}
 ${settings_board}               @{EMPTY}
 ${LYRA_BOARD_TYPE}              'Lyra'
 ${ZEPHYR_BOARD_TYPE}            'zephyr'
@@ -35,14 +35,14 @@ Get Boards
     ...    ${minimum_boards}=1
     ...    ${desired_properties}=@{EMPTY}
 
-    ${rack_config_empty}=    Is Value Empty    ${rack_config}
-    IF    ${rack_config_empty}
+    ${station_config_empty}=    Is Value Empty    ${station_config}
+    IF    ${station_config_empty}
         # If the test is running locally (on a pc), then use the default board configuration file.
         # It isn't an error if there isn't a configuration file or if boards aren't found.
         ${boards_conf}=    BoardConfig.Read Board Config
     ELSE
         # Boards must be found when running on a rack.
-        ${boards_conf}=    BoardConfig.Read Board Config    ${rack_config}    ${desired_properties}
+        ${boards_conf}=    BoardConfig.Read Board Config    ${station_config}    ${desired_properties}
     END
 
     ${boards_config_empty}=    Is Value Empty    ${boards_conf}

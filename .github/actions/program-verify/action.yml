@@ -20,16 +20,16 @@ inputs:
       Set to False when programming non-DUT boards.
     required: false
     default: "True"
-  rack_config:
+  station_config:
     description: |
-      The rack configuration file name with the entire path.
+      The station file name with the entire path.
       This is the base name if a board list is provided.
     required: true
   board_list:
     description: |
       The [partial but unique] name of the board to program.
       This can also be a list of boards delimited by a space or comma.
-      If a board list is provided, the rack configuration file name is appended 
+      If a board list is provided, the station file name is appended 
       with a hyphen and the board name.
     required: true
   binary_base:
@@ -54,9 +54,9 @@ runs:
       run: |
         # Look for hex files with board names that are in the input list.
 
-        # Strip .yml extension from rack_config
-        rack_config_base="${{inputs.rack_config}}"
-        rack_config_base="${rack_config_base%.yml}"
+        # Strip .yml extension from station_config
+        station_config_base="${{inputs.station_config}}"
+        station_config_base="${station_config_base%.yml}"
 
         IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
 
@@ -70,11 +70,11 @@ runs:
 
           IFS=',' read -r hex_path short_version long_version <<< "$path_and_versions"
 
-          # Check for a rack_config file with the board name appended or use default
-          if test -f "${rack_config_base}-${board}.yml"; then
-            rack_cfg="${rack_config_base}-${board}.yml"
+          # Check for a station_config file with the board name appended or use default
+          if test -f "${station_config_base}-${board}.yml"; then
+            station_cfg="${station_config_base}-${board}.yml"
           else
-            rack_cfg="${{inputs.rack_config}}"
+            station_cfg="${{inputs.station_config}}"
           fi
 
           if [ -z "$hex_path" ]; then
@@ -98,10 +98,10 @@ runs:
           fi
 
           output_folder="${{inputs.output_folder}}/${board}"
-          status=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/program_board.py -c ${rack_cfg} -b ${board} -f "${hex_path}" --double_underscore)
+          status=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/program_board.py -c ${station_cfg} -b ${board} -f "${hex_path}" --double_underscore)
           if [[ $status == *"Success"* ]]; then
             echo "Programming board ${board} successful"
-            ${BASE_CMD} -v rack_config:${rack_cfg} -v release_version:${long_version} -v board_name:${board} -d ${output_folder} \
+            ${BASE_CMD} -v station_config:${station_cfg} -v release_version:${long_version} -v board_name:${board} -d ${output_folder} \
               common_lib/tests/firmware_update/10_verify_version.robot
           else
             echo "Error: Programming board ${board} failed"

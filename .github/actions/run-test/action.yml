@@ -21,20 +21,20 @@ inputs:
     description: |
       Optional list of boards to run the tests on (delimited by a space or comma).
       This DOES NOT limit a test to a specific board.
-      If a board list is provided, the rack configuration file name is appended 
+      If a board list is provided, the station file name is appended 
       with a hyphen and the board name. If it exists, it will be used.
     required: false
     default: ""
-  rack_config:
+  station_config:
     description: |
-      The rack configuration file name with the entire path.
+      The station file name with the entire path.
       This is the base name if a board list is provided.
     required: true
   test_list:
     description: |
       Test file or folder to run in common_lib/tests.
       This can be a single test or a list of tests delimited by a space or comma.
-      The test name is appended to the rack config file name and used if it exists.
+      The test name is appended to the station config file name and used if it exists.
     required: true
 runs:
   using: composite
@@ -43,37 +43,37 @@ runs:
         IFS=', ' read -ra TEST <<< "${{inputs.test_list}}"
         IFS=', ' read -ra BOARDS <<< "${{inputs.board_list}}"
 
-        # Strip .yml extension from rack_config
-        rack_config_base="${{inputs.rack_config}}"
-        rack_config_base="${rack_config_base%.yml}"
+        # Strip .yml extension from station_config
+        station_config_base="${{inputs.station_config}}"
+        station_config_base="${station_config_base%.yml}"
 
         # If board list is provided, run tests on each board.
-        # Different rack_config files are used to specify what board is the DUT.
+        # Different station_config files are used to specify what board is the DUT.
         if [ -n "${BOARDS[*]}" ]; then
           for board in "${BOARDS[@]}"; do
             for i in "${TEST[@]}"; do
               output_folder="${{inputs.output_folder}}/${board}"
 
-              # Check for test specific rack_config files
+              # Check for test specific station_config files
               # This is part of what controls which boards are used for a test.
               # The other part, board properties, occurs in the Robot test framework.
               #
-              if test -f "${rack_config_base}-${board}.yml"; then
-                rack_cfg="${rack_config_base}-${board}.yml"
-              elif test -f "${rack_config_base}-${i}.yml"; then
-                rack_cfg="${rack_config_base}-${i}.yml"
-              elif test -f "${rack_config_base}-${board}-${i}.yml"; then
-                rack_cfg="${rack_config_base}-${board}-${i}.yml"
+              if test -f "${station_config_base}-${board}.yml"; then
+                station_cfg="${station_config_base}-${board}.yml"
+              elif test -f "${station_config_base}-${i}.yml"; then
+                station_cfg="${station_config_base}-${i}.yml"
+              elif test -f "${station_config_base}-${board}-${i}.yml"; then
+                station_cfg="${station_config_base}-${board}-${i}.yml"
               else
-                rack_cfg="${{inputs.rack_config}}"
+                station_cfg="${{inputs.station_config}}"
               fi
 
-              ${BASE_CMD} -v rack_config:${rack_cfg} -d ${output_folder} -o $i.xml common_lib/tests/$i
+              ${BASE_CMD} -v station_config:${station_cfg} -d ${output_folder} -o $i.xml common_lib/tests/$i
             done
           done
         else
           for i in "${TEST[@]}"; do
-            ${BASE_CMD} -v rack_config:${{inputs.rack_config}} -d ${{inputs.output_folder}} -o $i.xml common_lib/tests/$i
+            ${BASE_CMD} -v station_config:${{inputs.station_config}} -d ${{inputs.output_folder}} -o $i.xml common_lib/tests/$i
           done
         fi
       env:

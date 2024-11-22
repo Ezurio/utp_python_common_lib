@@ -20,8 +20,8 @@ inputs:
       Set to False when programming non-DUT boards.
     required: false
     default: "True"
-  rack_config:
-    description: The rack configuration file name with the entire path.
+  station_config:
+    description: The station file name with the entire path.
     required: true
   release_version:
     description: |
@@ -39,7 +39,7 @@ runs:
   steps:
     - run: >
         conda run -p ${{inputs.robot_env}} python -m robot
-        -v rack_config:${{inputs.rack_config}}
+        -v station_config:${{inputs.station_config}}
         -v file_name:${{inputs.file_name}}
         -v release_version:${{inputs.release_version}}
         -v board_name:${{inputs.board_name}}
