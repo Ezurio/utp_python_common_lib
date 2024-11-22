@@ -1,5 +1,5 @@
 ---
-name: Configuration for the BT510 rack.
+name: Configuration for the BT510 station.
 
 boards:
   - name: bt510__a

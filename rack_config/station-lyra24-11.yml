@@ -1,5 +1,5 @@
 ---
-name: Configuration for the Lyra24 Rack in Cedarburg.
+name: Configuration for the Lyra24 station in Cedarburg.
 
 boards:
   - name: lyra24_p10__i2c_spi

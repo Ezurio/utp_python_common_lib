@@ -1,5 +1,5 @@
 ---
-name: Configuration for the BT610 rack.
+name: Configuration for the BT610 station.
 
 boards:
   - name: bt610__a

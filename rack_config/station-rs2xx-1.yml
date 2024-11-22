@@ -1,5 +1,5 @@
 ---
-name: Configuration for the RS2xx rack.
+name: Configuration for the RS2xx station.
 
 boards:
   - name: rs2xx_mcuboot

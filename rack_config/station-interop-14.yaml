@@ -1,5 +1,5 @@
 ---
-name: Configuration for Interoperablitity test rack in Cedarburg.
+name: Configuration for Interoperablitity test station in Cedarburg.
 
 boards:
   - name: Lyra24P_10dBm

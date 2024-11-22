@@ -1,5 +1,5 @@
 ---
-name: Configuration for BL654 rack.
+name: Configuration for BL654 station.
 notes: For the BL654_DVK, a ValueError occurred if the full chip name was not specified.
 boards:
   - name: bl654_dvk__a
