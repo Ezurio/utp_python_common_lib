@@ -4,16 +4,16 @@ name: Configuration for Sera NX040 DVK test station in Cedarburg.
 boards:
   - name: sera_nx040_dvk__spi_i2c_a
     ports:
-      - sn: E6620CD64F169937
+      - sn: E6620CD64F947D37
         index: 0
         source: board
         type: zephyr_disabled
-      - sn: E6620CD64F169937
+      - sn: E6620CD64F947D37
         index: 1
         source: board
         type: repl
     probe:
-      sn: E6620CD64F169937
+      sn: E6620CD64F947D37
       type: dvkprobe
       family: nrf52833
     properties:
@@ -25,16 +25,16 @@ boards:
       - dut
   - name: sera_nx040_dvk__gpio_b
     ports:
-      - sn: E6620CD64F335437
+      - sn: E6620CD64F8C6736
         index: 0
         source: board
         type: zephyr_disabled
-      - sn: E6620CD64F335437
+      - sn: E6620CD64F8C6736
         index: 1
         source: board
         type: repl
     probe:
-      sn: E6620CD64F335437
+      sn: E6620CD64F8C6736
       type: dvkprobe
       family: nrf52833
     properties:
