@@ -179,7 +179,7 @@ User REPL Send Expect True
     [Arguments]    ${board}    ${cmd}    ${timeout}=${1.0}
 
     ${check}=    Call Method    ${board.python_uart}    send    ${cmd}    ${timeout}
-    Should Be True    ${check}
+    Should Be True    '${check}' == 'True'
 
 Raw REPL Exec
     [Documentation]    Execute a command using the board's raw REPL interface.
