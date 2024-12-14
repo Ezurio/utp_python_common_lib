@@ -1,4 +1,5 @@
 import canvas_ble as ble
+from canvas_ble import UUID
 import time
 
 connection = None
@@ -28,12 +29,11 @@ def cb_discon(conn):
 
 def cb_notify(event):
     global notify_message
-    notify_message = event.data.decode('utf-8')
-
-
-def cb_indicate(event):
     global indicate_message
-    indicate_message = event.data.decode('utf-8')
+    if event.notify == True:
+        notify_message = event.data.decode('utf-8')
+    else:
+        indicate_message = event.data.decode('utf-8')
 
 def init_client() -> bool:
     global gatt_client
@@ -51,13 +51,13 @@ def init_client() -> bool:
 
     if current_state == 1:
         gatt_client = ble.GattClient(connection)
+        gatt_client.set_callback(cb_notify)
         gatt_client.discover()
         time.sleep_ms(1000)
-        gatt_client.set_name("b8d00001-6329-ef96-8a4d-55b376d8b25a", "WriteChar")
-        gatt_client.set_name("b8d00002-6329-ef96-8a4d-55b376d8b25a", "ReadChar")
-        gatt_client.set_name(
-            "b8d00003-6329-ef96-8a4d-55b376d8b25a", "IndicateChar")
-        gatt_client.set_name("b8d00004-6329-ef96-8a4d-55b376d8b25a", "NotifyChar")
+        gatt_client.set_name(UUID('b8d00001-6329-ef96-8a4d-55b376d8b25a'), "WriteChar")
+        gatt_client.set_name(UUID('b8d00002-6329-ef96-8a4d-55b376d8b25a'), "ReadChar")
+        gatt_client.set_name(UUID('b8d00003-6329-ef96-8a4d-55b376d8b25a'), "IndicateChar")
+        gatt_client.set_name(UUID('b8d00004-6329-ef96-8a4d-55b376d8b25a'), "NotifyChar")
         wrapped_print("client ready")
         return True
     else:

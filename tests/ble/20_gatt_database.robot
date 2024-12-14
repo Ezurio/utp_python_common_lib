@@ -15,42 +15,37 @@ ${SERVER_SCRIPT}=           common_lib${/}scripts${/}BLE_scripts${/}init_server.
 ${CLIENT_SCRIPT}=           common_lib${/}scripts${/}BLE_scripts${/}init_client.py
 
 ${BLE_ADVERT_NAME}=         C
-${RSSI_ERROR}=              -127
-${RSSI_DIFF_THRESHOLD}=     10
 ${CMD_TIMEOUT}=             ${15.0}
 
 
 *** Tasks ***
 Gatt Database Initialise
-    [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Check the custom service and characteristics are present.
+    [Documentation]    Initialize GATT database on the server. Client connects to the server and discover the GATT database. Verify that the custom service and characteristics are present.
 
     Set Tags    PROD-5400
 
     User REPL Send Error Not Expected    ${settings_board[1]}    gatt_dict = gatt_client.get_dict()    ${5.0}
-    # In order to limit the size of the print, only the test service is requested.
-    ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict['Service 1'])
+    ${resp}=    User REPL Send    ${settings_board[1]}    print(gatt_dict)
     ${resp}=    Convert To String    ${resp}
 
-    Should Contain    ${resp}    B8D00001-6329-EF96-8A4D-55B376D8B25A
-    Should Contain    ${resp}    WriteChar
-    Should Contain    ${resp}    B8D00002-6329-EF96-8A4D-55B376D8B25A
-    Should Contain    ${resp}    ReadChar
-    Should Contain    ${resp}    B8D00003-6329-EF96-8A4D-55B376D8B25A
-    Should Contain    ${resp}    NotifyChar
-    Should Contain    ${resp}    B8D00004-6329-EF96-8A4D-55B376D8B25A
-    Should Contain    ${resp}    IndicateChar
+    Should Contain    ${resp}    b8d00000-6329-ef96-8a4d-55b376d8b25a
+    Should Contain    ${resp}    b8d00001-6329-ef96-8a4d-55b376d8b25a
+    Should Contain    ${resp}    b8d00002-6329-ef96-8a4d-55b376d8b25a
+    Should Contain    ${resp}    b8d00003-6329-ef96-8a4d-55b376d8b25a
+    Should Contain    ${resp}    b8d00004-6329-ef96-8a4d-55b376d8b25a
 
 Gatt Database Read
-    [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
+    [Documentation]    Set the value of a characteristic on the server and read it from the client. Verify that the value matches.
 
     Set Tags    PROD-5401
 
-    ${resp}=    User REPL Send    ${settings_board[0]}    gatt_server.write("ReadChar", bytes("Hello Client", "utf-8"))
+    ${resp}=    User REPL Send Error Not Expected    ${settings_board[0]}    gatt_server.write("ReadChar", bytes("Hello Client", "utf-8"))
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
 
-    ${resp}=    User REPL Send    ${settings_board[1]}    read_val = gatt_client.read("ReadChar")
+    ${resp}=    User REPL Send    ${settings_board[1]}    read_val = bytearray(20)
+    ${resp}=    User REPL Send Error Not Expected    ${settings_board[1]}    gatt_client.read("ReadChar", read_val)
     ${resp}=    Convert To String    ${resp}
 
     ${resp}=    User REPL Send    ${settings_board[1]}    print(read_val.decode("utf-8"))
@@ -59,10 +54,10 @@ Gatt Database Read
     Should Contain    ${resp}    Hello Client
 
 Gatt Database Write
-    [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
+    [Documentation]    Write a characteristic from the client and verify that the value is received by the server.
 
     Set Tags    PROD-5402
-    ${resp}=    User REPL Send
+    ${resp}=    User REPL Send Error Not Expected
     ...    ${settings_board[1]}
     ...    gatt_client.write("WriteChar", bytes("Hello Server", "utf-8"))
     ${resp}=    Convert To String    ${resp}
@@ -75,15 +70,13 @@ Gatt Database Write
     Should Contain    ${resp}    Hello Server
 
 Gatt Database Notify
-    [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
+    [Documentation]    Client enables notifications on a characteristic. Server verifies the subscription and sends a notification. Verify that it is received by the client.
 
     Set Tags    PROD-5403
-    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.set_callbacks(cb_notify, cb_indicate)
-    ${resp}=    Convert To String    ${resp}
 
     ${resp}=    User REPL Send
     ...    ${settings_board[1]}
-    ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_NOTIFY)
+    ...    gatt_client.subscribe("NotifyChar", True)
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
@@ -106,7 +99,7 @@ Gatt Database Notify
 
     ${resp}=    User REPL Send
     ...    ${settings_board[1]}
-    ...    gatt_client.enable("NotifyChar", ble.GattClient.CCCD_STATE_DISABLE)
+    ...    gatt_client.subscribe("NotifyChar")
     ${resp}=    Convert To String    ${resp}
 
     Wait for data
@@ -116,16 +109,13 @@ Gatt Database Notify
     Should Contain    ${resp}    False
 
 Gatt Database Indicate
-    [Documentation]    Initialize GATT database on the server. Connect to the server and read the GATT database. Set a custom value on the server, read it on the client.
+    [Documentation]    Client enables indications on a characteristic. Server verifies the subscription and sends an indication. Verify that it is received by the client.
 
     Set Tags    PROD-5404
 
-    ${resp}=    User REPL Send    ${settings_board[1]}    gatt_client.set_callbacks(cb_notify, cb_indicate)
-    ${resp}=    Convert To String    ${resp}
-
     ${resp}=    User REPL Send
     ...    ${settings_board[1]}
-    ...    gatt_client.enable("IndicateChar", ble.GattClient.CCCD_STATE_INDICATE)
+    ...    gatt_client.subscribe("IndicateChar", False, True)
     ${resp}=    Convert To String    ${resp}
 
     Wait for data

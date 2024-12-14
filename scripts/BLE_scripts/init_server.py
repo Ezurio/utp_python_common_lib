@@ -1,4 +1,5 @@
 import canvas_ble as ble
+from canvas_ble import UUID
 import gc
 
 connection = None
@@ -56,43 +57,29 @@ def cb_indicate(event_object):
 
 # Start the gatt server
 db = {
-    "Service 1": {
-        "Name": "TestService",
-        "UUID": "b8d00000-6329-ef96-8a4d-55b376d8b25a",
-        "Characteristic 1": {
-            "Name": "WriteChar",
-            "UUID": "b8d00001-6329-ef96-8a4d-55b376d8b25a",
-            "Length": 20,
-            "Read Encryption": "None",
-            "Write Encryption": "None",
-            "Capability": "Write",
-            "Callback": write_cb
+    UUID('b8d00000-6329-ef96-8a4d-55b376d8b25a'): {
+        UUID('b8d00001-6329-ef96-8a4d-55b376d8b25a'): {
+            'name': 'WriteChar',
+            'flags': ble.GattServer.FLAG_WRITE_NO_ACK,
+            'length': 20,
+            'callback': write_cb
         },
-        "Characteristic 2": {
-            "Name": "ReadChar",
-            "UUID": "b8d00002-6329-ef96-8a4d-55b376d8b25a",
-            "Length": 20,
-            "Read Encryption": "None",
-            "Write Encryption": "None",
-            "Capability": "Read"
+        UUID('b8d00002-6329-ef96-8a4d-55b376d8b25a'): {
+            'name': 'ReadChar',
+            'flags': ble.GattServer.FLAG_READ,
+            'length': 20,
         },
-        "Characteristic 3": {
-            "Name": "IndicateChar",
-            "UUID": "b8d00003-6329-ef96-8a4d-55b376d8b25a",
-            "Length": 20,
-            "Read Encryption": "None",
-            "Write Encryption": "None",
-            "Capability": "Indicate",
-            "Callback": cb_indicate
+        UUID('b8d00003-6329-ef96-8a4d-55b376d8b25a'): {
+            'name': 'IndicateChar',
+            'flags': ble.GattServer.FLAG_INDICATE,
+            'length': 20,
+            'callback': cb_indicate
         },
-        "Characteristic 4": {
-            "Name": "NotifyChar",
-            "UUID": "b8d00004-6329-ef96-8a4d-55b376d8b25a",
-            "Length": 20,
-            "Read Encryption": "None",
-            "Write Encryption": "None",
-            "Capability": "Notify",
-            "Callback": cb_notify
+        UUID('b8d00004-6329-ef96-8a4d-55b376d8b25a'): {
+            'name': 'NotifyChar',
+            'flags': ble.GattServer.FLAG_NOTIFY,
+            'length': 20,
+            'callback': cb_notify
         }
     }
 }
