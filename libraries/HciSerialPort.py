@@ -9,6 +9,7 @@ import hci.command
 import hci.event
 import logging
 
+
 class HciSerialPort():
     """Serial port implementation to communicate with Infineon Bluetooth HCI devices
     """
@@ -17,6 +18,7 @@ class HciSerialPort():
     CLEAR_QUEUE_TIMEOUT = 0.1
     WRITE_RAM_MAX_SIZE = 240
 
+    OPCODE_DOWNLOAD_MINIDRIVER = 0xFC2E
     OPCODE_WRITE_RAM = 0xFC4C
     OPCODE_LAUNCH_RAM = 0xFC4E
     OPCODE_UPDATE_BAUDRATE = 0xFC18
@@ -194,6 +196,17 @@ class HciSerialPort():
         (success, _) = self.send_command_wait_response(hci.command.HCI_Reset())
         if not success:
             raise Exception('Failed HCI reset')
+
+    def send_download_minidriver(self):
+        """Download minidriver command (Infineon Vendor Specific HCI command)
+
+        Raises:
+            Exception: raise exception if no response
+        """
+        (success, _) = self.send_command_wait_response(
+            hci.command.CommandPacket(self.OPCODE_DOWNLOAD_MINIDRIVER, bytes()))
+        if not success:
+            raise Exception('Failed download minidriver')
 
     def write_ram(self, address: int, data: io.BytesIO, pad: int = FLASH_PAD, verify: bool = False):
         """Write RAM command (Infineon Vendor Specific HCI command)
