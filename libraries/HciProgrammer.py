@@ -31,6 +31,7 @@ class HciProgrammer():
             Exception: raise exception on error
         """
         self.hci_port.send_hci_reset()
+        self.hci_port.send_download_minidriver()
         minidriver_bin = io.BytesIO()
         if intelhex.hex2bin(self.mini_driver_path, minidriver_bin, start=self.MINIDRIVER_LOAD_ADDR, size=self.MINI_DRIVER_MAX_SIZE, pad=self.hci_port.RAM_PAD):
             raise Exception('Could not convert minidriver to binary')
@@ -53,7 +54,7 @@ class HciProgrammer():
         self.hci_port.send_chip_erase()
         logging.info('Chip erase finished')
 
-    def program_firmware(self, baud_rate: int = 115200, file_path: str | None = None, chip_erase_enable: bool = False):
+    def program_firmware(self, baud_rate: int = HCI_DEFAULT_BAUDRATE, file_path: str | None = None, chip_erase_enable: bool = False):
         """Program the firmware file
 
         Args:
@@ -82,8 +83,9 @@ class HciProgrammer():
             elif file_ext != 'hcd':
                 raise Exception('Invalid file extension, must be .hex or .hcd')
 
-            logging.info(f'Changing baud to {baud_rate}')
-            self.hci_port.change_baud_rate(baud_rate)
+            if baud_rate != self.HCI_DEFAULT_BAUDRATE:
+                logging.info(f'Changing baud to {baud_rate}')
+                self.hci_port.change_baud_rate(baud_rate)
 
             if is_hex:
                 logging.info('Programming firmware...')
