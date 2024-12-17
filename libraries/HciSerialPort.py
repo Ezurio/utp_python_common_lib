@@ -31,11 +31,12 @@ class HciSerialPort():
     FLASH_PAD = 0xFF
     RAM_PAD = 0x00
 
-    SERIAL_PORT_RX_TIMEOUT_SECS = 0.000003 # Based on 1 byte at 3000000 baud
+    SERIAL_PORT_RX_TIMEOUT_SECS = 0.0006076 # Based on 7 bytes at 115200 baud (a full HCI command complete event)
     SERIAL_PORT_RX_SIZE_BYTES = 1024
 
     def __init__(self):
         self.port = None
+        self.rx_bytes = []
         self.rx_queue = None
         self.stop_threads = False
         self.queue_monitor_event = threading.Event()
@@ -77,24 +78,30 @@ class HciSerialPort():
         self.queue_monitor_event.set()
 
     def __serial_port_rx_thread(self):
-        rx_bytes = []
+        self.rx_bytes.clear()
         if not self.rx_queue or not self.port:
             raise Exception('Null object')
         while True:
             if self.stop_threads:
                 break
             try:
-                rx_bytes.extend(self.port.read(self.SERIAL_PORT_RX_SIZE_BYTES))
-                packets, unprocessed = hci.from_binary(bytearray(rx_bytes))
+                self.rx_bytes.extend(self.port.read(
+                    self.SERIAL_PORT_RX_SIZE_BYTES))
+                packets, unprocessed = hci.from_binary(
+                    bytearray(self.rx_bytes))
                 if len(packets) > 0 and len(unprocessed) > 0:
-                    rx_bytes.clear()
-                    rx_bytes.extend(unprocessed)
+                    self.rx_bytes.clear()
+                    self.rx_bytes.extend(unprocessed)
                 for pkt in packets:
                     logging.debug(f'RX {pkt.binary.hex(",")}')
                     self.rx_queue.put(pkt)
-                    rx_bytes.clear()
+                    self.rx_bytes.clear()
             except Exception as e:
                 # logging.warning(str(e))
+                if len(self.rx_bytes) > 0:
+                    logging.debug(
+                        f'Unhandled HCI bytes: {bytearray(self.rx_bytes).hex(",")}')
+                    self.rx_bytes.pop(0)
                 pass
 
     def send_command_wait_response(self, packet: hci.command.CommandPacket, timeout: float = 1, tries: int = 1) -> tuple:
@@ -186,6 +193,7 @@ class HciSerialPort():
             return
         with self.rx_queue.mutex:
             self.rx_queue.queue.clear()
+            self.rx_bytes.clear()
 
     def send_hci_reset(self):
         """Send HCI reset and wait for response
@@ -252,7 +260,7 @@ class HciSerialPort():
                     logging.debug(f'Read CRC: {hex(read_crc)}')
                     if data_crc != read_crc:
                         raise Exception(
-                            f'Write verification failed. {read_crc} != {data_crc}')
+                            f'Write verification failed. {hex(read_crc)} != {hex(data_crc)}')
 
                 all_data = all_data[write_len:]
                 bytes_written += write_len
@@ -272,6 +280,7 @@ class HciSerialPort():
         Raises:
             Exception: raise exception if no response
         """
+        logging.debug(f'Launch RAM {hex(address)}')
         (success, _) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_LAUNCH_RAM, address.to_bytes(4, self.LITTLE_ENDIAN)))
         if not success:
