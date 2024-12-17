@@ -191,6 +191,7 @@ class If820Board(DvkProbe):
                 logging.error(f"Board not found with port {port}")
                 return ERR_BOARD_NOT_FOUND
 
+        logging.info(f"Entering HCI download mode on board {board.probe.id}")
         if self.hci_uart:
             self.hci_uart.close()
         self._hci_uart = HciSerialPort()
