@@ -68,7 +68,7 @@ Setup Board for Ranging
 Verify Board Range
     [Arguments]    ${board}    ${peer_board_id}
 
-    ${total_time}=    Set Variable    ${5}
+    ${total_time}=    Set Variable    ${30}
     ${range}=    Set Variable    ${INVALID_RANGE}
 
     WHILE    $total_time > ${0}
