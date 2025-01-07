@@ -507,7 +507,7 @@ Setup
 
     ${tmp}=    Get Board Addr    ${settings_board[1]}
     Set Global Variable    ${board2_addr}    ${tmp}
-    Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board1_addr}
+    Set Global Variable    ${board2_adv_name}    ${BLE_ADVERT_NAME}${board2_addr}
 
     ${tmp}=    Get Board Type    ${settings_board[0]}
     Set Global Variable    ${board1_type}    ${tmp}
