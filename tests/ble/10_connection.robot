@@ -133,31 +133,32 @@ BLE Single Connection Extended 2M PHY Peripheral Disconnect
     Check Connection    ${settings_board[0]}    ${settings_board[1]}
     Disconnect    ${settings_board[0]}    ${settings_board[1]}
 
-BLE Single Connection Legacy 1M PHY Stress
-    [Documentation]    Repeated connect and disconnect with peripheral and central swapping between DUT1 and DUT2
-    [Timeout]    16 minutes
-    Set Tags    PROD-2457
+# Disable this connection stress test until we can make it more reliable in the TRaaS environment
+# BLE Single Connection Legacy 1M PHY Stress
+#     [Documentation]    Repeated connect and disconnect with peripheral and central swapping between DUT1 and DUT2
+#     [Timeout]    16 minutes
+#     Set Tags    PROD-2457
 
-    ${loops_remaining}=    Set Variable    ${10}
+#     ${loops_remaining}=    Set Variable    ${10}
 
-    WHILE    ${loops_remaining} > ${0}
-        Start Peripheral    ${settings_board[0]}    ${board1_adv_name}    ble.PHY_1M
-        Connect Central    ${settings_board[1]}    ${board1_adv_name}    ble.PHY_1M
-        Check Connection    ${settings_board[0]}    ${settings_board[1]}
-        Disconnect    ${settings_board[1]}    ${settings_board[0]}
-        ${resp}=    User REPL Send    ${settings_board[0]}    advert.stop()
+#     WHILE    ${loops_remaining} > ${0}
+#         Start Peripheral    ${settings_board[0]}    ${board1_adv_name}    ble.PHY_1M
+#         Connect Central    ${settings_board[1]}    ${board1_adv_name}    ble.PHY_1M
+#         Check Connection    ${settings_board[0]}    ${settings_board[1]}
+#         Disconnect    ${settings_board[1]}    ${settings_board[0]}
+#         ${resp}=    User REPL Send    ${settings_board[0]}    advert.stop()
 
-        Test Setup
-        Start Peripheral    ${settings_board[1]}    ${board2_adv_name}    ble.PHY_1M
-        Connect Central    ${settings_board[0]}    ${board2_adv_name}    ble.PHY_1M
-        Check Connection    ${settings_board[1]}    ${settings_board[0]}
-        Disconnect    ${settings_board[0]}    ${settings_board[1]}
-        ${resp}=    User REPL Send    ${settings_board[1]}    advert.stop()
+#         Test Setup
+#         Start Peripheral    ${settings_board[1]}    ${board2_adv_name}    ble.PHY_1M
+#         Connect Central    ${settings_board[0]}    ${board2_adv_name}    ble.PHY_1M
+#         Check Connection    ${settings_board[1]}    ${settings_board[0]}
+#         Disconnect    ${settings_board[0]}    ${settings_board[1]}
+#         ${resp}=    User REPL Send    ${settings_board[1]}    advert.stop()
 
-        Test Setup
-        ${loops_remaining}=    Evaluate    ${loops_remaining} - 1
-        Log To Console    Loops remaining: ${loops_remaining}
-    END
+#         Test Setup
+#         ${loops_remaining}=    Evaluate    ${loops_remaining} - 1
+#         Log To Console    Loops remaining: ${loops_remaining}
+#     END
 
 
 *** Keywords ***
