@@ -41,6 +41,12 @@ inputs:
       Appended to board name when looking for folders. For example, "_mcuboot"
     required: false
     default: ""
+  file_name:
+    description: |
+      The file name to search for. For example, "merged.hex"
+    required: false
+    default: "merged.hex"
+    
 outputs:
   non_timestamped_version:
     description: The short version of the firmware
@@ -64,7 +70,7 @@ runs:
         for board in "${BOARDS[@]}"; do
           iteration=$((iteration + 1))
 
-          path_and_versions=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/get_hex_path_and_versions.py -o "${{inputs.binary_base}}" -b "${board}" -s "${{inputs.suffix}}")
+          path_and_versions=$(conda run -p ${{inputs.robot_env}} python common_lib/libraries/get_hex_path_and_versions.py -o "${{inputs.binary_base}}" -b "${board}" -s "${{inputs.suffix}}" -f "${{inputs.file_name}}")
 
           echo "path_and_versions: $path_and_versions"
 

@@ -1,5 +1,5 @@
 boards:
-  - name: bl5340_dvk__a
+  - name: bl5340_dvk_cpuapp__a
     ports:
       - sn: D2745A4316F36132
         index: 0
@@ -17,7 +17,7 @@ boards:
       - ble
       - gatt_client
       - dut
-  - name: bl5340_dvk__b
+  - name: bl5340_dvk_cpuapp__b
     ports:
       - sn: 83D1F9A1DB2EBDCF
         index: 0

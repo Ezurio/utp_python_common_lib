@@ -78,3 +78,41 @@ def program_lyra24(file_path: str, serial_number: str, device="", mass_erase=Tru
     except FileNotFoundError as e:
         logger.error(f"File not found: {e}")
         return False
+
+def program_sl917(file_path: str, serial_number: str, device="SiWG917Y111MGABA",
+        mass_erase=False, unlock=False):
+    """Flash a firmware file to a device using Simplicity commander-cli."""
+    try:
+        if unlock:
+            unlock_device(serial_number)
+
+        cmd = [PROGRAM_PATH, "flash", "--timestamp",
+               "--serialno", serial_number, file_path]
+
+        # Add optional arguments
+
+        if device != "":
+            cmd.insert(-1, "--device")
+            cmd.insert(-1, device)
+
+        logger.info(f"Running command: {' '.join(cmd)}")
+
+        # Raise an exception if the command fails,
+        # capture stdout and stderr, and return them as strings
+        result = subprocess.run(cmd,
+                                check=True,
+                                capture_output=True,
+                                text=True
+                                )
+
+        logger.debug(f"Command output: {result.stdout}")
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error occurred: {e.stderr}")
+        return False
+    except PermissionError as e:
+        logger.error(f"Permission denied: {e}")
+        return False
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        return False

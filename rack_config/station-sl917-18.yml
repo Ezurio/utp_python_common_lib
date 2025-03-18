@@ -1,0 +1,32 @@
+---
+name: Configuration for Veda SL917 test station in Cedarburg.
+
+boards:
+  - name: brd2911a__a
+    ports:
+      - sn: 449004361
+        index: 0
+        source: board
+        type: repl
+    probe:
+      sn: 449004361
+      type: jlink
+      family: Cortex-M4
+    properties:
+      - ble
+      - gatt_server
+      - dut
+  - name: brd2911a__b
+    ports:
+      - sn: 449004369
+        index: 0
+        source: board
+        type: repl
+    probe:
+      sn: 449004369
+      type: jlink
+      family: Cortex-M4
+    properties:
+      - ble
+      - gatt_client
+      - dut

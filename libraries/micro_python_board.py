@@ -13,7 +13,7 @@ import time
 import port_helpers
 import operator
 import itertools
-from program_using_commander_cli import program_lyra24
+from program_using_commander_cli import program_lyra24, program_sl917
 
 logger = logger_get(__name__)
 
@@ -350,10 +350,16 @@ class MicroPythonBoard(Board):
         if self._initialized:
             self.close_ports()
 
-        # Python J-link programming doesn't work for Lyra24
+        # Python J-link programming doesn't work for Lyra24 or SL917
         if "lyra24".casefold() in board_name.casefold():
             self.probe.close()
             program_lyra24(file_path, str(self.probe.id))
+        elif "brd2911a".casefold() in board_name.casefold():
+            self.probe.close()
+            program_sl917(file_path, str(self.probe.id))
+        elif "brd2708a".casefold() in board_name.casefold():
+            self.probe.close()
+            program_sl917(file_path, str(self.probe.id))
         else:
             self.probe.program_target(file_path, addr)
 
