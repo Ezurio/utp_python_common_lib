@@ -8,6 +8,9 @@ import re
 import os
 import time
 
+# Number of times to try failed programming
+NUM_PROGRAMMING_RETRIES = 3
+
 logger = logger_get(__name__)
 
 def convert_to_bool(value: str) -> bool:
@@ -203,22 +206,34 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                     if "unlock" in probe:
                         params['unlock'] = convert_to_bool(probe['unlock'])
 
-                    # The Lyra24, RS2xx, and SL917 systems have JLink probes, but 
-                    # simplicity commander-cli is used to program them.
-                    ok = False
-                    probe_type = probe['type'].casefold()
-                    if "lyra24" in board['name'] or re.match(r'^rs26\d$', board['name']):
-                        ok = program_lyra24(**params)
-                    elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
-                        ok = program_sl917(**params)
-                    elif probe_type == "dvkprobe":
-                        ok = program_with_dvk_probe(**params)
-                    elif probe_type == "usb_swd":
-                        ok = program_with_usb_swd(**params)
-                    elif probe_type == "jlink":
-                        ok = program_nrf(**params)
-                    else:
-                        logger.error(f"Unsupported probe type {probe_type}")
+                    # Program the image using the appropriate programming function
+                    retries = NUM_PROGRAMMING_RETRIES 
+                    while True:
+                        ok = False
+                        probe_type = probe['type'].casefold()
+                        if "lyra24" in board['name'] or re.match(r'^rs26\d$', board['name']):
+                            ok = program_lyra24(**params)
+                        elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
+                            ok = program_sl917(**params)
+                        elif probe_type == "dvkprobe":
+                            ok = program_with_dvk_probe(**params)
+                        elif probe_type == "usb_swd":
+                            ok = program_with_usb_swd(**params)
+                        elif probe_type == "jlink":
+                            ok = program_nrf(**params)
+                        else:
+                            logger.error(f"Unsupported probe type {probe_type}")
+                            break
+
+                        if ok:
+                            logger.debug("Programming successful")
+                            break
+                        elif retries > 0:
+                            logger.info("Programming failed, retrying...")
+                            retries -= 1
+                        else:
+                            logger.error("Programming failed, no retries left")
+                            break
 
                     # Check the result of the programming
                     if not ok and last_result:
