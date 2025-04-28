@@ -98,7 +98,7 @@ class Board(object):
     #: :meta hide-value:
     #:
     #: Amount of time to wait after board reset before trying to open com port
-    DEFAULT_COM_PORT_DELAY_SECONDS = 0.1
+    DEFAULT_COM_PORT_DELAY_SECONDS = 0.5
     #: :meta hide-value:
     #:
     #: Amount of time to wait after board reset before trying to open com port
@@ -108,7 +108,7 @@ class Board(object):
     #: :meta hide-value:
     #:
     #: Amount of time to wait after board reset before trying to use/flush com port.
-    BOOT_TIME_SECONDS = 3.0
+    BOOT_TIME_SECONDS = 5.0
     #: :meta hide-value:
     #:
     #: Without scripts the board boots in about 4 seconds. With scripts 8+ seconds.

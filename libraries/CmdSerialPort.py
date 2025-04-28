@@ -188,7 +188,7 @@ class CmdSerialPort(SerialPort):
         """Clear all received responses from the queue
         """
         logging.debug(
-            f'[{self._port.name}] Clear CMD RX queue ({len(self._cmd_rx_queue)})')
+            f'[{self._port.name}] Clear CMD RX queue (temp={bytes(self._temp_cmd)}, {len(self._cmd_rx_queue)})')
         self._cmd_rx_queue = []
         self._temp_cmd = []
 
