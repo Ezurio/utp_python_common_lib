@@ -22,6 +22,35 @@ def convert_to_bool(value: str) -> bool:
     """
     return value.lower() in ("yes", "true", "t", "1")
 
+def newest_image(old: tuple, new: tuple):
+    """
+    This function compares two image tuples and returns the newest one.
+    Assumes the version number is in the format "major.minor.patch+timestamp".
+
+    :param old: The old image tuple (filename, version)
+    :param new: The new image tuple (filename, version)
+
+    :returns: The newest image tuple
+    """
+    def parse_version(version: str):
+        """
+        Parse a version string in the format "major.minor.patch+timestamp" into a tuple.
+        """
+        match = re.match(r"(\d+)\.(\d+)\.(\d+)\+(\d+)", version)
+        if not match:
+            raise ValueError(f"Invalid version string format: '{version}'. Expected format is 'major.minor.patch+timestamp'.")
+        major, minor, patch, timestamp = match.groups()
+        return int(major), int(minor), int(patch), int(timestamp)
+
+    if old is None:
+        return new
+    elif new is None:
+        return old
+    else:
+        old_version = parse_version(old[1])
+        new_version = parse_version(new[1])
+        return new if new_version > old_version else old
+
 def find_image_file(config, base: str, image_type: str, image_name: str):
     """
     This function finds the programming image file(s) for a particular image
@@ -50,7 +79,11 @@ def find_image_file(config, base: str, image_type: str, image_name: str):
         # Make the filename list empty
         image_name_info['filename'] = []
 
+    # Check each of the filename patterns in the filename list
     for filename in image_name_info['filename']:
+        # Search all of the files in our base directory for a match against
+        # the filename pattern
+        newest_match = None
         for dirpath, dirnames, filenames in os.walk(base):
             for f in filenames:
                 path = os.path.join(dirpath, f)
@@ -59,21 +92,14 @@ def find_image_file(config, base: str, image_type: str, image_name: str):
                     # Convert "2.1.99.12345678" to "2.1.99+12345678"
                     version = re.sub(r'^(\d+\.\d+\.\d+)\.(\d+)$', r'\1+\2', m.group(1))
 
-                    # Create the output list if it doesn't exist
-                    if output is None:
-                        output = []
+                    # Select this file if it is newer
+                    newest_match = newest_image(newest_match, (path, version))
 
-                    # Check to see if we already have this filename
-                    skip = False
-                    for t in output:
-                        if os.path.basename(t[0]) == os.path.basename(path):
-                            # We already have this filename, so skip it
-                            skip = True
-                            break
-
-                    # Add this filename and version to the lists
-                    if not skip:
-                        output.append((path, version))
+        # Add this filename's file to the output list
+        if newest_match:
+            if output is None:
+                output = []
+            output.append(newest_match)
 
     # Return what we found from above
     return output
