@@ -7,6 +7,8 @@ import yaml
 import re
 import os
 import time
+import requests
+import shutil
 
 # Number of times to try failed programming
 NUM_PROGRAMMING_RETRIES = 3
@@ -104,7 +106,86 @@ def find_image_file(config, base: str, image_type: str, image_name: str):
     # Return what we found from above
     return output
 
-def program_boards(test: bool, config_file: str, images: str, binary_base: str, release_base: str):
+def download_image_file(config, base: str, image_type: str, image_name: str):
+    """
+    This function downloads the image file from a URL specified in the configuration.
+    It is used as a fallback if the image file is not found in the specified base directory.
+    
+    :param config: Parsed station config file
+    :param base: Base directory to store the downloaded image
+    :param image_type: Type of the image
+    :param image_name: Name of the image to be downloaded
+
+    :returns: A list of tuples (filename, version) for each file found or None if no files
+        are found.
+    """
+    output = None
+    
+    # Fetch the information about the image name from the config data
+    image_name_info = config['images'][image_type]['allowed'][image_name]
+
+    # Make sure that we have a valid filename list
+    if type(image_name_info['filename']) is list:
+        # If the filename is a list, use it as is
+        pass
+    elif type(image_name_info['filename']) is str:
+        # If the filename is not a list, make it into one
+        image_name_info['filename'] = [ image_name_info['filename'] ]
+    else:
+        # Make the filename list empty
+        image_name_info['filename'] = []
+
+    # Make sure that we have a valid URL list
+    if type(image_name_info['url']) is list:
+        # If the URL is a list, use it as is
+        pass
+    elif type(image_name_info['url']) is str:
+        # If the URL is not a list, make it into one
+        image_name_info['url'] = [ image_name_info['url'] ]
+    else:
+        # Make the URL list empty
+        image_name_info['url'] = []
+
+    # Filename list and URL list should be the same length
+    if len(image_name_info['filename']) != len(image_name_info['url']):
+        logger.error(f"Filename and URL lists are not the same length for image {image_name}")
+        return None
+
+    # Iterate through the URL list and download each file
+    for url, filename in zip(image_name_info['url'], image_name_info['filename']):
+        # Fetch the file from the URL
+        dl_filename = None
+        try:
+            dl_filename = os.path.join(base, os.path.basename(url))
+            logger.debug(f"Downloading image from {url} to {dl_filename}")
+
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            with open(dl_filename, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            logger.debug("Download complete")
+        except requests.RequestException as e:
+            logger.error(f"Failed to fetch image from URL {url}: {e}")
+            continue
+
+        if dl_filename:
+            # Match the filename against the filename pattern
+            m = re.match(filename, dl_filename)
+            if m:
+                # Convert "2.1.99.12345678" to "2.1.99+12345678"
+                version = re.sub(r'^(\d+\.\d+\.\d+)\.(\d+)$', r'\1+\2', m.group(1))
+
+                # Create the output list if it doesn't exist
+                if output is None:
+                    output = []
+
+                # Add the downloaded file to the output list
+                output.append((dl_filename, version))
+
+    return output
+
+def program_boards(test: bool, config_file: str, images: str, binary_base: str, release_base: str, tmp_dir: str):
     """
     This function will program all of the boards for a single test station.
     The station config is used to define the list of boards as well as the
@@ -137,6 +218,8 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
       are located for the current build under test
     :param release_base: Pathname to the directory where released binary
       are located
+    :param tmp_dir: Pathname to the directory where temporary files
+      should be stored
     """
     # Convert the images string into a list
     image_list = re.split(r'[\s,]+', images)
@@ -202,10 +285,15 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
 
             # Iterate through the programming image names and program each one
             for image_name in programming_image_names:
-                # Find a filename for the image to program
+                # Find a filename for the image to program. Search in this order:
+                # 1. The current build under test
+                # 2. The released build
+                # 3. Download the image from a URL
                 files = find_image_file(config, binary_base, image_type, image_name)
                 if files is None:
                     files = find_image_file(config, release_base, image_type, image_name)
+                if files is None:
+                    files = download_image_file(config, tmp_dir, image_type, image_name)
                 if files is None:
                     logger.error("Failed to find a valid image file for board {} image name {}".
                                     format(board['name'], image_name))
@@ -294,4 +382,13 @@ if __name__ == "__main__":
 
     logger = logger_setup(__file__, args.debug)
 
-    program_boards(args.test, args.config_file, args.images, args.binary_base, args.release_base)
+    # Create a temporary directory to store downloaded images
+    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    try:
+        # Program the boards using the provided arguments
+        program_boards(args.test, args.config_file, args.images, args.binary_base, args.release_base, tmp_dir)
+    finally:
+        # Clean up the temporary directory
+        shutil.rmtree(tmp_dir, ignore_errors=True)
