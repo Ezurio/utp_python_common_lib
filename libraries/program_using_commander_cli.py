@@ -16,10 +16,12 @@ elif platform.system() == "Darwin":
 else:
     raise Exception("Unsupported OS")
 
-def unlock_device(serial_number: str):
+def unlock_device(serial_number: str, device: str):
     try:
-        cmd = [PROGRAM_PATH, "security", "unlock",
-               "--serialno", serial_number]
+        cmd = [PROGRAM_PATH, "device", "unlock", "--serialno", serial_number]
+        if len(device) > 0:
+            cmd.append("--device")
+            cmd.append(device)
 
         logger.info(f"Unlock command: {' '.join(cmd)}")
 
@@ -43,14 +45,12 @@ def program_lyra24(file_path: str, serial_number: str, device="", mass_erase=Tru
     """Flash a firmware file to a device using Simplicity commander-cli."""
     try:
         if unlock:
-            unlock_device(serial_number)
+            unlock_device(serial_number, device)
 
-        cmd = [PROGRAM_PATH, "flash", "--timestamp",
-               "--serialno", serial_number, file_path]
+        cmd = [PROGRAM_PATH, "flash", "--timestamp", "--serialno", serial_number, file_path]
 
         # Add optional arguments
-
-        if device != "":
+        if len(device) > 0:
             cmd.insert(-1, "--device")
             cmd.insert(-1, device)
 
@@ -83,9 +83,6 @@ def program_sl917(file_path: str, serial_number: str, device="SiWG917Y111MGABA",
         mass_erase=False, unlock=False):
     """Flash a firmware file to a device using Simplicity commander-cli."""
     try:
-        if unlock:
-            unlock_device(serial_number)
-
         cmd = [PROGRAM_PATH, "flash", "--timestamp",
                "--serialno", serial_number, file_path]
 
