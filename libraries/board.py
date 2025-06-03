@@ -64,6 +64,12 @@ class Properties(Enum):
     GATT_CLIENT = 7
     # The board supports the MicroPython Bluetooth GATT server
     GATT_SERVER = 8
+    # The board supports the SMP OS management group
+    SMP_OS = 9
+    # The board supports the SMP filesystem management group
+    SMP_FILE = 10
+    # The board supports the SMP image management group
+    SMP_IMG = 11
 
 
 class ComPort(dotdict):
