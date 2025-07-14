@@ -7,9 +7,9 @@ logger = logger_get(__name__)
 FAMILY_VALUES = ["NRF51", "NRF52", "NRF53", "NRF91"]
 
 
-def program_nrf(file_path: str, serial_number: str, device="", mass_erase=False, unlock=True, erase_qspi=False):
+def program_nrfjprog(file_path: str, serial_number: str, device="", mass_erase=False, unlock=True, erase_qspi=False):
     """Flash a firmware file to a device using a J-Link (on board device or external probe).
-    
+
     Args:
         unlock (bool, optional): For Nordic, this means recover the device. Defaults to True.
     """

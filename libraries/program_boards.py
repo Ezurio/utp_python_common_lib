@@ -2,7 +2,8 @@ from lc_util import logger_setup, logger_get
 import argparse
 from program_using_commander_cli import program_lyra24, program_sl917
 from program_using_pyocd import program_with_dvk_probe, program_with_usb_swd
-from program_using_nrfjprog import program_nrf
+from program_using_nrfjprog import program_nrfjprog
+from program_using_nrfutil import program_nrfutil
 import yaml
 import re
 import os
@@ -66,7 +67,7 @@ def find_image_file(config, base: str, image_type: str, image_name: str):
         are found.
     """
     output = None
-    
+
     # Fetch the information about the image name from the config data
     image_name_info = config['images'][image_type]['allowed'][image_name]
 
@@ -110,7 +111,7 @@ def download_image_file(config, base: str, image_type: str, image_name: str):
     """
     This function downloads the image file from a URL specified in the configuration.
     It is used as a fallback if the image file is not found in the specified base directory.
-    
+
     :param config: Parsed station config file
     :param base: Base directory to store the downloaded image
     :param image_type: Type of the image
@@ -120,7 +121,7 @@ def download_image_file(config, base: str, image_type: str, image_name: str):
         are found.
     """
     output = None
-    
+
     # Fetch the information about the image name from the config data
     image_name_info = config['images'][image_type]['allowed'][image_name]
 
@@ -267,13 +268,13 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
             # Now that we've selected an image name, check to see if we have a "first" image
             # to also program.
             if 'first' in image and image['first']:
-                # image['first'] is an image name, possibly with a variable substitution that 
+                # image['first'] is an image name, possibly with a variable substitution that
                 # needs to be replaced with the current image name as $(image_name)
                 first_image_name = image['first'].replace("$(image_name)", image_name)
 
                 # Add the first image to the start of the list
                 programming_image_names.insert(0, first_image_name)
-    
+
             # Check for a "last" image to program
             if 'last' in image and image['last']:
                 # image['last'] is an image name, possibly with a variable substitution that
@@ -321,7 +322,7 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                         params['unlock'] = convert_to_bool(probe['unlock'])
 
                     # Program the image using the appropriate programming function
-                    retries = NUM_PROGRAMMING_RETRIES 
+                    retries = NUM_PROGRAMMING_RETRIES
                     while True:
                         ok = False
                         probe_type = probe['type'].casefold()
@@ -329,12 +330,14 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                             ok = program_lyra24(**params)
                         elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
                             ok = program_sl917(**params)
+                        elif "bl54l15" in board['name']:
+                            ok = program_nrfutil(**params)
                         elif probe_type == "dvkprobe":
                             ok = program_with_dvk_probe(**params)
                         elif probe_type == "usb_swd":
                             ok = program_with_usb_swd(**params)
                         elif probe_type == "jlink":
-                            ok = program_nrf(**params)
+                            ok = program_nrfjprog(**params)
                         else:
                             logger.error(f"Unsupported probe type {probe_type}")
                             break
