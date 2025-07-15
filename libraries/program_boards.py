@@ -2,7 +2,6 @@ from lc_util import logger_setup, logger_get
 import argparse
 from program_using_commander_cli import program_lyra24, program_sl917
 from program_using_pyocd import program_with_dvk_probe, program_with_usb_swd
-from program_using_nrfjprog import program_nrfjprog
 from program_using_nrfutil import program_nrfutil
 import yaml
 import re
@@ -330,14 +329,12 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                             ok = program_lyra24(**params)
                         elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
                             ok = program_sl917(**params)
-                        elif "bl54l15" in board['name']:
-                            ok = program_nrfutil(**params)
                         elif probe_type == "dvkprobe":
                             ok = program_with_dvk_probe(**params)
                         elif probe_type == "usb_swd":
                             ok = program_with_usb_swd(**params)
                         elif probe_type == "jlink":
-                            ok = program_nrfjprog(**params)
+                            ok = program_nrfutil(**params)
                         else:
                             logger.error(f"Unsupported probe type {probe_type}")
                             break
