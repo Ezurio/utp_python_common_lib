@@ -1,14 +1,22 @@
 from lc_util import logger_get
 import subprocess
+from pathlib import Path
 
 logger = logger_get(__name__)
+
+NETWORK_CORE = "network"
+NETWORK_CORE_FILE_NAME = "CPUNET"
 
 
 def program_nrfutil(file_path: str, serial_number: str, device="", mass_erase=False, unlock=True):
     """Flash a firmware file to a device using a J-Link (on board device or external probe).
 
     Args:
-        unlock (bool, optional): For Nordic, this means recover the device. Defaults to True.
+        file_path (str): Path to the firmware file to be flashed.
+        serial_number (str): Serial number of the device to be programmed.
+        device (str, optional): Device name or identifier. Defaults to "".
+        mass_erase (bool, optional): Whether to perform a mass erase before programming. Defaults to False.
+        unlock (bool, optional): Whether to unlock the device before programming. Defaults to True.
     """
     try:
         recover_cmd = ["nrfutil", "device", "recover",
@@ -19,7 +27,16 @@ def program_nrfutil(file_path: str, serial_number: str, device="", mass_erase=Fa
                        "--firmware", file_path]
         options = ["--options", "verify=VERIFY_READ"]
 
-        if unlock:
+        recover_device = unlock
+
+        # If it is network core firmware, program the network core
+        if NETWORK_CORE_FILE_NAME in Path(file_path).name:
+            net_core = ["--core", NETWORK_CORE]
+            program_cmd.extend(net_core)
+            # Do not recover the network core because that will clear the application core
+            recover_device = False
+
+        if recover_device:
             result = subprocess.run(recover_cmd,
                                     check=True,
                                     capture_output=True,
