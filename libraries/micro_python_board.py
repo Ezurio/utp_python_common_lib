@@ -59,7 +59,6 @@ class MicroPythonBoard(Board):
                     type: repl
                     source: device
 
-
         Returns:
             list['MicroPythonBoard']: List of connected boards
         """
@@ -148,7 +147,7 @@ class MicroPythonBoard(Board):
                             logger.warn(
                                 f"Matching probe not found for board {name} with serial number {bprobe.sn}")
                 if repl:
-                    boards.append(MicroPythonBoard(repl, name, zephyr, probe))
+                    boards.append(MicroPythonBoard(repl, name, zephyr, probe, config=board))
 
         return boards
 
@@ -156,12 +155,14 @@ class MicroPythonBoard(Board):
                  board_name: str = "",
                  zephyr: ComPort | None = None,
                  probe: Probe | None = None,
-                 id: str = ''):
+                 id: str = '',
+                 config: BoardConfig | None = None):
         super().__init__(id=id)
         self._repl = repl
         self._zephyr = zephyr
         self.__probe = probe
         self._user_board_name = board_name
+        self.config = config
         self.__ports = dict()
         self.python_uart = PythonUart(self._repl.device)
         self.__ports["python"] = self._repl.device
