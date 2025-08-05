@@ -120,11 +120,15 @@ class MicroPythonBoard(Board):
                         if port.type.casefold() == ComPortType.REPL.name.casefold():
                             if "name" not in port:
                                 port.name = "Python REPL"
-                            repl = port
+                            # use the first REPL port found in the list, ignore others
+                            if not repl:
+                                repl = port
                         elif port.type.casefold() == ComPortType.ZEPHYR.name.casefold():
                             if "name" not in port:
                                 port.name = "Zephyr shell"
-                            zephyr = port
+                            # use the first Zephyr port found in the list, ignore others
+                            if not zephyr:
+                                zephyr = port
                     elif len(boards_conf) > 1:
                         # If there are mulitple boards, then this will most likely occur.
                         # If none of them match, then the board is not connected or
@@ -144,7 +148,7 @@ class MicroPythonBoard(Board):
                                     probe.family = bprobe.family
                                 break
                         if probe is None:
-                            logger.warn(
+                            logger.warning(
                                 f"Matching probe not found for board {name} with serial number {bprobe.sn}")
                 if repl:
                     boards.append(MicroPythonBoard(repl, name, zephyr, probe, config=board))
@@ -268,7 +272,7 @@ class MicroPythonBoard(Board):
 
     def hard_reset_module(self, reopen_ports: bool = True):
         """
-        Since the UARTs may be connected to the Python processor's USB interface, 
+        Since the UARTs may be connected to the Python processor's USB interface,
         the ports are closed and then reopened.
         For simplicity, the com port is always closed first and then opened
         after the reset is issued.
