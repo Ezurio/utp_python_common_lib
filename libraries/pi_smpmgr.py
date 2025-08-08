@@ -2,6 +2,8 @@ import subprocess
 import os
 import re
 
+SMPMGR_TIMEOUT = 10 # seconds
+
 def smpmgr_upgrade(device_name: str, file: str, slot: int = 1) -> bool:
     """
     Perform an OTA upgrade of the DUT given by the device name using the specified file.
@@ -16,7 +18,7 @@ def smpmgr_upgrade(device_name: str, file: str, slot: int = 1) -> bool:
 
         # Run the upgrade command using the smpmgr tool
         result = subprocess.run(
-            ["smpmgr", "--ble", device_name, "upgrade", "--slot", str(slot), file],
+            ["smpmgr", "--timeout", str(SMPMGR_TIMEOUT), "--ble", device_name, "upgrade", "--slot", str(slot), file],
             check=True,
             capture_output=True,
             text=True,
@@ -104,7 +106,7 @@ def smpmgr_get_status(device_name: str) -> list:
 
         # Run the status command using the smpmgr tool
         result = subprocess.run(
-            ["smpmgr", "--ble", device_name, "image", "state-read"],
+            ["smpmgr", "--timeout", str(SMPMGR_TIMEOUT), "--ble", device_name, "image", "state-read"],
             check=True,
             capture_output=True,
             text=True,
@@ -133,7 +135,7 @@ def smpmgr_confirm(device_name: str, hash_str: str) -> bool:
 
         # Run the confirm command using the smpmgr tool
         result = subprocess.run(
-            ["smpmgr", "--ble", device_name, "image", "state-write", hash_str, "true"],
+            ["smpmgr", "--timeout", str(SMPMGR_TIMEOUT), "--ble", device_name, "image", "state-write", hash_str, "true"],
             check=True,
             capture_output=True,
             text=True,
@@ -162,7 +164,7 @@ def smpmgr_reset(device_name: str) -> bool:
 
         # Run the reset command using the smpmgr tool
         result = subprocess.run(
-            ["smpmgr", "--ble", device_name, "os", "reset"],
+            ["smpmgr", "--timeout", str(SMPMGR_TIMEOUT), "--ble", device_name, "os", "reset"],
             check=True,
             capture_output=True,
             text=True,
