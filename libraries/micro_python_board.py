@@ -76,7 +76,7 @@ class MicroPythonBoard(Board):
         if len(boards_conf) > 0:
             probes = Probe.get_connected_probes(with_comports=False)
             if len(probes) == 0:
-                logger.warn("No probes found")
+                logger.warning("No probes found")
             for board in boards_conf:
                 repl = None
                 zephyr = None
@@ -176,7 +176,7 @@ class MicroPythonBoard(Board):
         else:
             self.zephyr_uart = None
             self.__ports["zephyr_shell"] = ""
-        self._handle_reset = True
+        self.__handle_reset = True
         # Amount of time to wait after resetting board before trying to open com port
         if self.coms_from_device():
             self.__com_port_delay_seconds = Board.DEFAULT_COM_PORT_FROM_DEVICE_DELAY_SECONDS
