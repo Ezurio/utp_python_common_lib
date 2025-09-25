@@ -2,8 +2,8 @@ import os.path
 import tempfile
 from upload_robot_xray import upload_robot_to_xray
 
-xray_product = None
-xray_test_plan = None
+xray_machine = None
+xray_version = None
 xray_output_file = None
 
 class xray_listener:
@@ -14,21 +14,19 @@ class xray_listener:
         # Can't setup here if we want to auto set up from yaml file.
         pass
 
-    def setup(self, product, test_plan, output_file):
-        global xray_product, xray_test_plan, xray_output_file
-        xray_product = product
-        xray_test_plan = test_plan
+    def setup(self, machine, version, output_file):
+        # Save the parameters
+        global xray_machine, xray_version, xray_output_file
+        xray_machine = machine
+        xray_version = version
         xray_output_file = output_file
 
     def close(self):
-        global xray_product, xray_test_plan, xray_output_file
-        if xray_product and xray_test_plan and xray_output_file:           
-            print("Uploading Robot Framework XML reports: "+xray_output_file+" to Xray Cloud: Product: "+xray_product+" Test Plan: "+xray_test_plan+"...")
+        global xray_machine, xray_version, xray_output_file
+        if xray_machine and xray_version and xray_output_file:           
             try:
-                upload_robot_to_xray(xray_product, xray_test_plan, xray_output_file)
+                upload_robot_to_xray(xray_machine, xray_version, xray_output_file)
             except Exception as e:
                 print(e)
-            else:
-                print("Uploaded Robot Framework XML reports to Xray Cloud: Product: "+xray_product+" Test Plan: "+xray_test_plan+" successfully!")
         else:
-            print("No product, test plan or output file specified. Skipping upload to Xray Cloud.")
+            print("No machine, version or output file specified. Skipping upload to Xray.")
