@@ -5,6 +5,7 @@ from HciSerialPort import HciSerialPort
 from HciProgrammer import HciProgrammer
 from EzSerialPort import EzSerialPort
 from SerialPort import SerialPort
+from ifx_firmware_cfg import ifx_firmware_cfg
 
 ERR_OK = 0
 ERR_BOARD_NOT_FOUND = -1
@@ -19,6 +20,17 @@ class If820Board(DvkProbe):
     LP_MODE = DvkProbe.GPIO_20
     CONNECTION = DvkProbe.GPIO_21
     BOOT_DELAY = 1
+
+    FW_CFG = ifx_firmware_cfg()
+    FW_CFG.minidriver_load_addr = 0x00270400
+    FW_CFG.mini_driver_max_size = 15 * 1024
+    FW_CFG.hci_default_baudrate = 115200
+    FW_CFG.ss_addr = 0x500000
+    FW_CFG.ss_len = 0x1400
+    FW_CFG.ds_addr = 0x501400
+    FW_CFG.flash_size = 256 * 1024
+    FW_CFG.launch_firmware_addr = 0x00000000
+    FW_CFG.hci_flash_baudrate = 3000000
 
     @staticmethod
     def get_board():
@@ -87,6 +99,17 @@ class If820Board(DvkProbe):
         str_mac = bytearray(response).hex()
         return str_mac
 
+    def __init__(self, probe: DvkProbe = None):
+        if probe is None:
+            self._probe = None
+        else:
+            self._probe = super().__init__(probe.id, probe.description, probe.ports)
+        self._hci_port_name = ""
+        self._puart_port_name = ""
+        self._hci_uart = None
+        self._p_uart = None
+        self._is_initialized = False
+
     def open_and_init_board(self, wait_for_boot: bool = True) -> object | None:
         """Opens the IF820 PUART at the default baud rate,
         opens the DvkProbe, and resets the IF280 Module.
@@ -130,17 +153,6 @@ class If820Board(DvkProbe):
             if reset_probe:
                 self.probe.reboot()
             self.probe.close()
-        self._is_initialized = False
-
-    def __init__(self, probe: DvkProbe = None):
-        if probe is None:
-            self._probe = None
-        else:
-            self._probe = super().__init__(probe.id, probe.description, probe.ports)
-        self._hci_port_name = ""
-        self._puart_port_name = ""
-        self._hci_uart = None
-        self._p_uart = None
         self._is_initialized = False
 
     @property
@@ -197,7 +209,7 @@ class If820Board(DvkProbe):
         self._hci_uart = HciSerialPort()
         logging.debug(f"Opening HCI port {board.hci_port_name}")
         self.hci_uart.open(board.hci_port_name,
-                           HciProgrammer.HCI_DEFAULT_BAUDRATE)
+                           self.FW_CFG.hci_default_baudrate)
         board.probe.open()
         board.probe.reset_target()
         board.probe.close()
@@ -210,9 +222,9 @@ class If820Board(DvkProbe):
             raise Exception("Failed to enter HCI download mode")
 
         self.hci_programmer = HciProgrammer(minidriver, self.hci_port_name,
-                                            HciProgrammer.HCI_DEFAULT_BAUDRATE, chip_erase)
+                                            self.FW_CFG.hci_default_baudrate, chip_erase, self.FW_CFG)
         self.hci_programmer.program_firmware(
-            HciProgrammer.HCI_FLASH_FIRMWARE_BAUDRATE, firmware, chip_erase)
+            self.FW_CFG.hci_flash_baudrate, firmware, chip_erase, self.FW_CFG)
         return ERR_OK
 
     def cancel_flash_firmware(self):
