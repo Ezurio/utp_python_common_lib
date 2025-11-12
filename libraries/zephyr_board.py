@@ -62,8 +62,8 @@ class ZephyrBoard(Board):
 
     def __init__(self, probe: DvkProbe):
         super().__init__()
-        self.python_uart = PythonUart(probe.ports['python'])
-        self.zephyr_uart = ZephyrUart(probe.ports['zephyr_shell'])
+        self.python_uart = PythonUart(probe.ports['uart1'])
+        self.zephyr_uart = ZephyrUart(probe.ports['uart0'])
         self.__probe = DvkProbe(
             probe.id, probe.description, probe.ports, probe.family)
 

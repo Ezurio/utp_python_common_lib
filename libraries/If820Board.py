@@ -1,17 +1,22 @@
 import logging
 import time
 from dvk_probe import DvkProbe
-from HciSerialPort import HciSerialPort
-from HciProgrammer import HciProgrammer
 from EzSerialPort import EzSerialPort
-from SerialPort import SerialPort
+from ifx_board import IfxBoard
 from ifx_firmware_cfg import ifx_firmware_cfg
 
-ERR_OK = 0
-ERR_BOARD_NOT_FOUND = -1
+IF820_FW_CFG = ifx_firmware_cfg(minidriver_load_addr=0x00270400,
+                                mini_driver_max_size=15 * 1024,
+                                hci_default_baudrate=115200,
+                                ss_addr=0x500000,
+                                ss_len=0x1400,
+                                ds_addr=0x501400,
+                                flash_size=256 * 1024,
+                                launch_firmware_addr=0x00000000,
+                                hci_flash_baudrate=3000000)
 
 
-class If820Board(DvkProbe):
+class If820Board(IfxBoard):
 
     BT_DEV_WAKE = DvkProbe.GPIO_16
     BT_HOST_WAKE = DvkProbe.GPIO_17
@@ -19,18 +24,6 @@ class If820Board(DvkProbe):
     CYSPP = DvkProbe.GPIO_19
     LP_MODE = DvkProbe.GPIO_20
     CONNECTION = DvkProbe.GPIO_21
-    BOOT_DELAY = 1
-
-    FW_CFG = ifx_firmware_cfg()
-    FW_CFG.minidriver_load_addr = 0x00270400
-    FW_CFG.mini_driver_max_size = 15 * 1024
-    FW_CFG.hci_default_baudrate = 115200
-    FW_CFG.ss_addr = 0x500000
-    FW_CFG.ss_len = 0x1400
-    FW_CFG.ds_addr = 0x501400
-    FW_CFG.flash_size = 256 * 1024
-    FW_CFG.launch_firmware_addr = 0x00000000
-    FW_CFG.hci_flash_baudrate = 3000000
 
     @staticmethod
     def get_board():
@@ -40,23 +33,7 @@ class If820Board(DvkProbe):
         Returns:
         Board to connect to.
         """
-        board = None
-        boards = If820Board.get_connected_boards()
-        if len(boards) == 0:
-            raise Exception(
-                f"Error!  No Boards found.")
-
-        choice = 0
-        if len(boards) > 1:
-            print("Which board do you want to use?")
-            for i, board in enumerate(boards):
-                print(f"{i}: {board.probe.id}")
-            choice = int(input("Enter the number of the board: "))
-        if choice > (len(boards) - 1):
-            raise Exception(
-                f"Error!  Invalid Board Number.")
-
-        return boards[choice]
+        return If820Board(IfxBoard.get_board())
 
     @staticmethod
     def get_connected_boards() -> list['If820Board']:
@@ -66,12 +43,9 @@ class If820Board(DvkProbe):
             List: List of IF820 boards
         """
         boards = []
-        for probe in DvkProbe.get_connected_probes():
-            board = If820Board(probe)
-            board._probe = probe
-            board._hci_port_name = probe.ports['zephyr_shell']
-            board._puart_port_name = probe.ports['python']
-            boards.append(board)
+        for board in IfxBoard.get_connected_boards():
+            new_board = If820Board(board)
+            boards.append(new_board)
         return boards
 
     @staticmethod
@@ -81,10 +55,10 @@ class If820Board(DvkProbe):
         Returns:
             If820Board: IF820 board or None if not found
         """
-        for board in If820Board.get_connected_boards():
-            if board.hci_port_name == com_port or board.puart_port_name == com_port:
-                return board
-        return None
+        board = IfxBoard.get_board_by_com_port(com_port)
+        if board is None:
+            return None
+        return If820Board(board)
 
     @staticmethod
     def check_if820_response(request: str, response):
@@ -99,16 +73,11 @@ class If820Board(DvkProbe):
         str_mac = bytearray(response).hex()
         return str_mac
 
-    def __init__(self, probe: DvkProbe = None):
-        if probe is None:
-            self._probe = None
+    def __init__(self, parent: IfxBoard | None = None):
+        if parent is None:
+            super().__init__()
         else:
-            self._probe = super().__init__(probe.id, probe.description, probe.ports)
-        self._hci_port_name = ""
-        self._puart_port_name = ""
-        self._hci_uart = None
-        self._p_uart = None
-        self._is_initialized = False
+            super().__init__(parent.probe)
 
     def open_and_init_board(self, wait_for_boot: bool = True) -> object | None:
         """Opens the IF820 PUART at the default baud rate,
@@ -139,97 +108,6 @@ class If820Board(DvkProbe):
         self._is_initialized = True
         return res[1]
 
-    def close_ports_and_reset(self, reset_probe: bool = True):
-        """Close all UART ports and reset the probe and module
-
-        Args:
-            reset_probe (bool, optional): Resetting the probe resets the IO and the module.. Defaults to True.
-        """
-        if self.hci_uart:
-            self.hci_uart.close()
-        if self.p_uart:
-            self.p_uart.close()
-        if self.probe:
-            if reset_probe:
-                self.probe.reboot()
-            self.probe.close()
-        self._is_initialized = False
-
-    @property
-    def probe(self):
-        """Pico Probe / Dvk Probe"""
-        return self._probe
-
-    @property
-    def hci_port_name(self):
-        """HCI UART Port Name (i.e. COM10)"""
-        return self._hci_port_name
-
-    @property
-    def puart_port_name(self):
-        """PUART Port Name (i.e. COM10)"""
-        return self._puart_port_name
-
-    @property
-    def hci_uart(self):
-        """HCI UART Port Instance"""
-        return self._hci_uart
-
-    @property
-    def p_uart(self):
-        """PUART Port Instance"""
-        return self._p_uart
-
-    @property
-    def is_initialized(self):
-        return self._is_initialized
-
-    def enter_hci_download_mode(self, port: str = str()) -> int:
-        """Put the board into HCI download mode.
-
-        Parameters:
-            port (str): Optional: HCI COM port. If not specified (None) and there is more than one
-            board is connected, the user will be prompted to select a board.
-
-        Returns:
-            int: 0 if successful, negative error code if not successful
-        """
-        board = self
-        if port:
-            board_found = self.get_board_by_com_port(port)
-            if board_found:
-                board = board_found
-            else:
-                logging.error(f"Board not found with port {port}")
-                return ERR_BOARD_NOT_FOUND
-
-        logging.info(f"Entering HCI download mode on board {board.probe.id}")
-        if self.hci_uart:
-            self.hci_uart.close()
-        self._hci_uart = HciSerialPort()
-        logging.debug(f"Opening HCI port {board.hci_port_name}")
-        self.hci_uart.open(board.hci_port_name,
-                           self.FW_CFG.hci_default_baudrate)
-        board.probe.open()
-        board.probe.reset_target()
-        board.probe.close()
-        self.hci_uart.close()
-        return ERR_OK
-
-    def flash_firmware(self, minidriver: str, firmware: str, chip_erase: bool = False) -> int:
-        res = self.enter_hci_download_mode()
-        if res != ERR_OK:
-            raise Exception("Failed to enter HCI download mode")
-
-        self.hci_programmer = HciProgrammer(minidriver, self.hci_port_name,
-                                            self.FW_CFG.hci_default_baudrate, chip_erase, self.FW_CFG)
-        self.hci_programmer.program_firmware(
-            self.FW_CFG.hci_flash_baudrate, firmware, chip_erase, self.FW_CFG)
-        return ERR_OK
-
-    def cancel_flash_firmware(self):
-        self.hci_programmer.hci_port.close()
-
     def reset_module(self, wait_for_boot: bool = True) -> tuple:
         """Reset the module.
 
@@ -246,6 +124,30 @@ class If820Board(DvkProbe):
             If820Board.check_if820_response(
                 self.p_uart.EVENT_SYSTEM_BOOT, ez_rsp)
         return ez_rsp
+
+    def enter_hci_download_mode(self, fw_cfg: ifx_firmware_cfg = IF820_FW_CFG, port: str = None) -> int:
+        """Put the board into HCI download mode.
+        Args:
+            fw_cfg (ifx_firmware_cfg): Firmware configuration parameters
+            port (str): Optional: HCI COM port. If not specified (None) the existing board port will be used.
+        Returns:
+            int: result code
+        """
+        return super().enter_hci_download_mode(fw_cfg, port)
+
+    def flash_firmware(self, minidriver: str, firmware: str, fw_cfg: ifx_firmware_cfg = IF820_FW_CFG, chip_erase: bool = False) -> int:
+        """Flash firmware to the device over HCI.
+
+        Args:
+            minidriver (str): minidriver file path
+            firmware (str): firmware file path
+            fw_cfg (ifx_firmware_cfg, optional): firmware configuration. Defaults to IF820_FW_CFG.
+            chip_erase (bool, optional): whether to perform chip erase. Defaults to False.
+
+        Returns:
+            int: result code
+        """
+        return super().flash_firmware(minidriver, firmware, fw_cfg, chip_erase)
 
     def stop_advertising(self):
         """Stop BLE advertising.
@@ -265,25 +167,3 @@ class If820Board(DvkProbe):
         res = self.p_uart.wait_event(cmd)
         If820Board.check_if820_response(cmd, res)
         return res[1]
-
-    def reconfig_puart(self, baud: int):
-        """Reconfigure the PUART baud rate.
-
-        Args:
-            baud (int): Baud rate to set
-        """
-        self.p_uart.close()
-        self.p_uart.open(
-            self.puart_port_name, baud)
-
-    def open_hci_uart_raw(self, baud: int):
-        """Open the HCI UART as a raw serial port.
-
-        Args:
-            baud (int): Baud rate to set
-        """
-        if self.hci_uart:
-            self.hci_uart.close()
-        self._hci_uart = SerialPort()
-        self.hci_uart.open(
-            self.hci_port_name, baud)
