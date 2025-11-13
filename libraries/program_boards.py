@@ -1,12 +1,14 @@
 from lc_util import logger_setup, logger_get
 import argparse
-from program_using_commander_cli import program_lyra24, program_sl917
-from program_using_pyocd import program_with_dvk_probe, program_with_usb_swd
-from program_using_nrfutil import program_nrfutil
+import program_using_commander_cli
+import program_using_pyocd
+import program_using_nrfutil
 import yaml
 import re
 import os
 import time
+import subprocess
+import concurrent.futures
 import requests
 import shutil
 import board_config_util
@@ -104,6 +106,64 @@ def download_image_file(config, base: str, image_type: str, image_name: str):
 
     return output
 
+def execute_board_steps(board):
+    """
+    Execute the programming steps for a given board.
+
+    :param board: The board configuration containing the steps to execute.
+
+    :returns: tuple[str, bool, str]: A tuple containing the board name, success
+      status, and log output.
+    """
+    output_log = [ ]
+    for step in board['steps']:
+        action = step['action']
+        if action == "command":
+            for cmd in step['cmd']:
+                success = False
+                for attempt in range(NUM_PROGRAMMING_RETRIES):
+                    output_log.append(f"{board['name']}: Attempt {attempt + 1}: Running command: {' '.join(cmd)}")
+
+                    try:
+                        result = subprocess.run(cmd,
+                                                check=True,
+                                                capture_output=True,
+                                                text=True
+                                                )
+                        output_log.append(f"{board['name']}: STDOUT: {result.stdout}")
+                        if result.stderr:
+                            output_log.append(f"{board['name']}: STDERR: {result.stderr}")
+                        success = True
+                        break
+
+                    except subprocess.CalledProcessError as e:
+                        output_log.append(f"{board['name']}: Attempt {attempt + 1}: Error occurred.")
+                        output_log.append(f"{board['name']}: STDOUT: {e.stdout}")
+                        output_log.append(f"{board['name']}: STDERR: {e.stderr}")
+                        if attempt < NUM_PROGRAMMING_RETRIES - 1:
+                            output_log.append(f"{board['name']}: Retrying...")
+                            time.sleep(1)  # Short delay before retrying
+
+                    except FileNotFoundError as e:
+                        output_log.append(f"{board['name']}: Fatal error: Command not found: {e.filename}")
+                        return (board['name'], False, "\n".join(output_log))
+
+                if not success:
+                    output_log.append(f"{board['name']}: All attempts failed.")
+                    return (board['name'], False, "\n".join(output_log))
+
+        elif action == "wait":
+            wait_time = step['time']
+            output_log.append(f"{board['name']}: Waiting for {wait_time} seconds")
+            time.sleep(wait_time)
+
+        else:
+            output_log.append(f"{board['name']}: Unknown action {action} in board steps")
+            return (board['name'], False, "\n".join(output_log))
+
+    output_log.append(f"{board['name']}: All steps completed successfully")
+    return (board['name'], True, "\n".join(output_log))
+
 def program_boards(test: bool, config_file: str, images: str, binary_base: str, release_base: str, tmp_dir: str):
     """
     This function will program all of the boards for a single test station.
@@ -151,9 +211,11 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
     for board in config['boards']:
         logger.debug("Programming board {}".format(board['name']))
 
+        # Prepare a list of operations to perform
+        board['steps'] = [ ]
+
         # Set up defaults for script output values
-        last_version = None
-        last_result = True
+        board['last_version'] = None
 
         # Loop to use each debug probe connected to the board
         for probe in board['probes']:
@@ -224,11 +286,7 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                     logger.debug(f"Version number {f[1]}")
 
                     # Update the most recent version
-                    last_version = f[1]
-
-                    # In test mode, don't do any programming
-                    if test:
-                        continue
+                    board['last_version'] = f[1]
 
                     # Set up the parameters for the programming function
                     params = {'file_path': f[0], 'serial_number': str(probe['sn'])}
@@ -239,47 +297,53 @@ def program_boards(test: bool, config_file: str, images: str, binary_base: str, 
                     if "unlock" in probe:
                         params['unlock'] = convert_to_bool(probe['unlock'])
 
-                    # Program the image using the appropriate programming function
-                    retries = NUM_PROGRAMMING_RETRIES
-                    while True:
-                        ok = False
-                        probe_type = probe['type'].casefold()
-                        if "lyra24" in board['name'] or re.match(r'^rs26\d$', board['name']):
-                            ok = program_lyra24(**params)
-                        elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
-                            ok = program_sl917(**params)
-                        elif probe_type == "dvkprobe":
-                            ok = program_with_dvk_probe(**params)
-                        elif probe_type == "usb_swd":
-                            ok = program_with_usb_swd(**params)
-                        elif probe_type == "jlink":
-                            ok = program_nrfutil(**params)
-                        else:
-                            logger.error(f"Unsupported probe type {probe_type}")
-                            break
-
-                        if ok:
-                            logger.debug("Programming successful")
-                            break
-                        elif retries > 0:
-                            logger.info("Programming failed, retrying...")
-                            retries -= 1
-                        else:
-                            logger.error("Programming failed, no retries left")
-                            break
-
-                    # Check the result of the programming
-                    if not ok and last_result:
-                        last_result = False
+                    probe_type = probe['type'].casefold()
+                    if "lyra24" in board['name'] or re.match(r'^rs26\d$', board['name']):
+                        board['steps'].append({"action": "command",
+                            "cmd": program_using_commander_cli.program_lyra24_cmd(**params)})
+                    elif "brd2911a" in board['name'] or "brd2708a" in board['name']:
+                        board['steps'].append({"action": "command",
+                            "cmd": program_using_commander_cli.program_sl917_cmd(**params)})
+                    elif probe_type == "dvkprobe" or probe_type == "usb_swd":
+                        board['steps'].append({"action": "command",
+                            "cmd": program_using_pyocd.program_with_dvk_probe_cmd(**params)})
+                    elif probe_type == "jlink":
+                        board['steps'].append({"action": "command",
+                            "cmd": program_using_nrfutil.program_nrfutil_cmd(**params)})
+                    else:
+                        logger.error(f"Unsupported probe type {probe_type}")
+                        break
 
                 # If the image has a wait step, perform the wait
                 image_name_info = config['images'][image_type]['allowed'][image_name]
-                if 'wait' in image_name_info and not test:
-                    logger.debug(f"Waiting {image_name_info['wait']} seconds after programming image {image_name}")
-                    time.sleep(image_name_info['wait'])
+                if 'wait' in image_name_info:
+                    board['steps'].append({"action": "wait",
+                        "time": image_name_info['wait']})
 
+    # If we are not in test mode, perform the programming now
+    if not test:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(config['boards'])) as executor:
+            future_to_board = {executor.submit(execute_board_steps, board): board for board in config['boards']}
+            for future in concurrent.futures.as_completed(future_to_board):
+                board_name, success, log = future.result()
+                board = future_to_board[future]
+                if not success:
+                    logger.error(f"{board_name}: Programming failed")
+                    logger.error(log)
+                    board['program_status'] = False
+                else:
+                    logger.info(f"{board_name}: Programming succeeded")
+                    logger.info(log)
+                    board['program_status'] = True
+    else:
+        # Simulate successful programming in test mode
+        for board in config['boards']:
+            board['program_status'] = True 
+    
+    # Print the programming results
+    for board in config['boards']:
         # Print the board, the expected version number, and the result
-        print("{},{},{}".format(board['name'], last_version, last_result))
+        print("{},{},{}".format(board['name'], board['last_version'], board['program_status']))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
