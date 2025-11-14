@@ -180,13 +180,14 @@ class IfxBoard(DvkProbe):
         board.hci_uart.close()
         return ERR_OK
 
-    def flash_firmware(self, minidriver: str, firmware: str, fw_cfg: ifx_firmware_cfg, chip_erase: bool = False) -> int:
+    def flash_firmware(self, minidriver: str, firmware: str, fw_cfg: ifx_firmware_cfg, chip_erase: bool = False, verify: bool = False) -> int:
         """Flash firmware to the device over HCI.
         Args:
             minidriver (str): minidriver file path
             firmware (str): firmware file path
             fw_cfg (ifx_firmware_cfg): firmware configuration
             chip_erase (bool, optional): whether to perform chip erase. Defaults to False.
+            verify (bool, optional): verify firmware while flashing with CRC checks. Defaults to False.
         Returns:
             int: result code
         """
@@ -197,7 +198,7 @@ class IfxBoard(DvkProbe):
         self.hci_programmer = HciProgrammer(minidriver, self.hci_port_name,
                                             fw_cfg.hci_default_baudrate, chip_erase, fw_cfg)
         self.hci_programmer.program_firmware(
-            fw_cfg.hci_flash_baudrate, firmware, chip_erase, fw_cfg)
+            fw_cfg.hci_flash_baudrate, firmware, chip_erase, fw_cfg, verify)
         return ERR_OK
 
     def cancel_flash_firmware(self):

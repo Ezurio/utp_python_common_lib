@@ -2,7 +2,6 @@ import time
 import serial
 import threading
 import queue
-import io
 import zlib
 import hci
 import hci.command
@@ -27,7 +26,6 @@ class HciSerialPort():
 
     ERASE_ALL_FLASH_MAGIC = 0xFCBEEEEF
     LITTLE_ENDIAN = 'little'
-    LAUNCH_RAM_DELAY = 0.2
     FLASH_PAD = 0xFF
     RAM_PAD = 0x00
 
@@ -93,14 +91,14 @@ class HciSerialPort():
                     self.rx_bytes.clear()
                     self.rx_bytes.extend(unprocessed)
                 for pkt in packets:
-                    logging.debug(f'RX {pkt.binary.hex(",")}')
+                    logging.debug(f'RX {pkt.binary.hex(" ").upper()}')
                     self.rx_queue.put(pkt)
                     self.rx_bytes.clear()
             except Exception as e:
                 # logging.warning(str(e))
                 if len(self.rx_bytes) > 0:
                     logging.debug(
-                        f'Unhandled HCI bytes: {bytearray(self.rx_bytes).hex(",")}')
+                        f'Unhandled HCI bytes: {bytearray(self.rx_bytes).hex(" ").upper()}')
                     self.rx_bytes.pop(0)
                 pass
 
@@ -113,7 +111,7 @@ class HciSerialPort():
             tries -= 1
             self.__pause_queue_monitor()
             self.clear_rx_queue()
-            logging.debug(f'TX {packet.binary.hex(",")}')
+            logging.debug(f'TX {packet.binary.hex(" ").upper()}')
             self.port.write(packet.binary)
             try:
                 resp_pkt = self.rx_queue.get(True, timeout)
@@ -153,7 +151,7 @@ class HciSerialPort():
         (success, payload) = self.send_command_wait_response(hci.command.CommandPacket(
             self.OPCODE_VERIFY_CRC, bytearray(payload)))
         if not success:
-            raise Exception('Failed to verify CRC')
+            raise Exception(f'Failed to verify CRC at 0x{address:08X} length {length}')
         return int.from_bytes(payload, self.LITTLE_ENDIAN)
 
     def open(self, portName: str, baud: int, flow_control: bool = True) -> object:
@@ -216,67 +214,48 @@ class HciSerialPort():
         if not success:
             raise Exception('Failed download minidriver')
 
-    def write_ram(self, address: int, data: io.BytesIO, pad: int = FLASH_PAD, verify: bool = False):
-        """Write RAM command (Infineon Vendor Specific HCI command)
+    def write_ram(self, hex_packets: list[tuple[int, bytes]], verify: bool = False):
+        """Write all hex packets with Write RAM command (Infineon Vendor Specific HCI command)
 
         Args:
-            address (int): Address to write to
-            data (io.BytesIO): All bytes to write
-            pad (int, optional): Pad byte value. If a write buffer contains all pad bytes,
-              it isn't written. Defaults to FLASH_PAD.
-
-        Raises:
-            Exception: raise exception if no response
+            hex_packets (list[tuple[int, bytes]]): List of tuples containing address and data bytes
+            verify (bool, optional): Whether to verify each write operation. Defaults to False.
         """
-        all_data = list(data.getvalue())
-        total_bytes = bytes_left = len(all_data)
-        addr = address
-        write_len = self.WRITE_RAM_MAX_SIZE
-        bytes_written = 0
-        while bytes_left > 0:
-            if bytes_left > self.WRITE_RAM_MAX_SIZE:
-                write_len = self.WRITE_RAM_MAX_SIZE
-            else:
-                write_len = bytes_left
 
-            write_data = all_data[0:write_len]
-            # Check if all bytes are pad bytes, if they are, we dont need to write them
-            no_write = write_data.count(pad) == len(write_data)
-            success = False
-            if no_write:
-                success = True
-                logging.debug('Pad bytes, dont write')
-            else:
-                payload = bytearray(addr.to_bytes(4, self.LITTLE_ENDIAN))
-                payload.extend(write_data)
-                (success, _) = self.send_command_wait_response(
+        total_bytes = sum(len(data) for addr, data in hex_packets)
+        bytes_written = 0
+        for addr, data in hex_packets:
+            data_len = len(data)
+            addr_bytes = addr.to_bytes(4, self.LITTLE_ENDIAN)
+            addr_str = f'0x{addr:08X}'
+            payload = bytearray(addr_bytes)
+            payload.extend(data)
+            logging.debug(f'write_ram {addr_str} len: {data_len}')
+            (success, _) = self.send_command_wait_response(
                     hci.command.CommandPacket(self.OPCODE_WRITE_RAM, payload))
             if success:
-                if not no_write and verify:
+                if verify:
                     # Verify CRC
-                    data_crc = zlib.crc32(bytearray(write_data))
+                    data_crc = zlib.crc32(bytearray(data))
                     logging.debug(f'Data CRC: {hex(data_crc)}')
-                    read_crc = self.__verify_crc(addr, write_len)
+                    read_crc = self.__verify_crc(addr, data_len)
                     logging.debug(f'Read CRC: {hex(read_crc)}')
                     if data_crc != read_crc:
                         raise Exception(
-                            f'Write verification failed. {hex(read_crc)} != {hex(data_crc)}')
+                            f'Write verification failed at {addr_str} length {data_len}, {hex(read_crc)} != {hex(data_crc)}')
 
-                all_data = all_data[write_len:]
-                bytes_written += write_len
-                addr += write_len
-                bytes_left -= write_len
+                bytes_written += data_len
                 logging.debug(
-                    f'write_ram {bytes_written}/{total_bytes} ({round(bytes_written/total_bytes*100, 1)}%)')
+                    f'wrote {bytes_written}/{total_bytes} ({round(bytes_written/total_bytes*100, 1)}%)')
             else:
-                raise Exception(f'Failed to write to address {hex(addr)}')
+                raise Exception(f'Failed to write to address {addr_str}')
 
-    def send_launch_ram(self, address: int):
+    def send_launch_ram(self, address: int, delay: float = 0.25):
         """Launch RAM command (Infineon Vendor Specific HCI command)
 
         Args:
             address (int): address to launch
-
+            delay (float, optional): Delay after launching RAM in seconds. Defaults to None.
         Raises:
             Exception: raise exception if no response
         """
@@ -285,13 +264,13 @@ class HciSerialPort():
             self.OPCODE_LAUNCH_RAM, address.to_bytes(4, self.LITTLE_ENDIAN)))
         if not success:
             raise Exception('Failed launch RAM')
-        time.sleep(self.LAUNCH_RAM_DELAY)
+        time.sleep(delay)
 
-    def send_chip_erase(self, timeout: int = 1):
+    def send_chip_erase(self, timeout: float = 1):
         """Chip erase command (Infineon Vendor Specific HCI command)
 
         Args:
-            timeout (int, optional): Time to wait for response in seconds. Defaults to 1.
+            timeout (float, optional): Time to wait for response in seconds. Defaults to 1.
 
         Raises:
             Exception: raise exception if no response

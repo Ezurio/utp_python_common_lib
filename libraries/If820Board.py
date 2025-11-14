@@ -6,14 +6,11 @@ from ifx_board import IfxBoard
 from ifx_firmware_cfg import ifx_firmware_cfg
 
 IF820_FW_CFG = ifx_firmware_cfg(minidriver_load_addr=0x00270400,
-                                mini_driver_max_size=15 * 1024,
-                                hci_default_baudrate=115200,
-                                ss_addr=0x500000,
-                                ss_len=0x1400,
-                                ds_addr=0x501400,
-                                flash_size=256 * 1024,
                                 launch_firmware_addr=0x00000000,
-                                hci_flash_baudrate=3000000)
+                                hci_default_baudrate=115200,
+                                hci_flash_baudrate=3000000,
+                                load_addr_delay=0.5,
+                                chip_erase_delay=1.0)
 
 
 class If820Board(IfxBoard):
@@ -135,7 +132,7 @@ class If820Board(IfxBoard):
         """
         return super().enter_hci_download_mode(fw_cfg, port)
 
-    def flash_firmware(self, minidriver: str, firmware: str, fw_cfg: ifx_firmware_cfg = IF820_FW_CFG, chip_erase: bool = False) -> int:
+    def flash_firmware(self, minidriver: str, firmware: str, fw_cfg: ifx_firmware_cfg = IF820_FW_CFG, chip_erase: bool = False, verify: bool = False) -> int:
         """Flash firmware to the device over HCI.
 
         Args:
@@ -143,12 +140,11 @@ class If820Board(IfxBoard):
             firmware (str): firmware file path
             fw_cfg (ifx_firmware_cfg, optional): firmware configuration. Defaults to IF820_FW_CFG.
             chip_erase (bool, optional): whether to perform chip erase. Defaults to False.
-
+            verify (bool, optional): verify firmware while flashing with CRC checks. Defaults to False.
         Returns:
             int: result code
         """
-        return super().flash_firmware(minidriver, firmware, fw_cfg, chip_erase)
-
+        return super().flash_firmware(minidriver, firmware, fw_cfg, chip_erase, verify)
     def stop_advertising(self):
         """Stop BLE advertising.
         """
