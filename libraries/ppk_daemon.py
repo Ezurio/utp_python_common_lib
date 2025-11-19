@@ -65,14 +65,14 @@ class PowerProfiler:
         """
         Set the output voltage of the power profiler.
         
-        :param voltage_mv: Voltage in millivolts (800-5000)
+        :param voltage_mv: Voltage in millivolts (0-5000)
         :raises ValueError: If voltage is out of range
         :return: The set voltage in millivolts
         """
         if not self.source_mode:
             raise Exception("Power Profiler not in source mode")
-        if voltage_mv < self.ppk2.vdd_low or voltage_mv > self.ppk2.vdd_high:
-            raise ValueError(f"Voltage must be between {self.ppk2.vdd_low} and {self.ppk2.vdd_high} mV")
+        if voltage_mv < 0 or voltage_mv > self.ppk2.vdd_high:
+            raise ValueError(f"Voltage must be between 0 and {self.ppk2.vdd_high} mV")
         self.ppk2.set_source_voltage(voltage_mv)
         return voltage_mv
 
