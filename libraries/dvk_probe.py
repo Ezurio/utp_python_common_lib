@@ -28,7 +28,7 @@ MAX_READ_WRITE_LEN = 60
 MAX_SETTINGS_SIZE = 256
 PROBE_VENDOR_STRING_LC = 'Laird Connectivity'
 PROBE_VENDOR_STRING_EZ = 'Ezurio'
-PROBE_PRODUCT_STRING = 'DVK Probe CMSIS-DAP'
+PROBE_PRODUCT_STRING = 'DVK Probe'
 
 
 class ProbeSettings(c.Structure):
@@ -93,7 +93,7 @@ class DvkProbe(Probe):
             # Is this the probe we are looking for?
             if (dap_probe.vendor_name == PROBE_VENDOR_STRING_LC or
                 dap_probe.vendor_name == PROBE_VENDOR_STRING_EZ) and \
-                    dap_probe.product_name == PROBE_PRODUCT_STRING:
+                    PROBE_PRODUCT_STRING in dap_probe.product_name:
                 id = dap_probe._unique_id
                 logger.debug(f'Found probe {id}')
 

@@ -121,12 +121,12 @@ class HciProgrammer():
         if fw_cfg is not None:
             self.fw_cfg = fw_cfg
 
+        is_hex = False
+
         if file_path:
             # Check if file exists
             if not os.path.isfile(file_path):
                 raise Exception(f'Firmware file not found: {file_path}')
-
-            is_hex = False
             # Get file extension from path
             file_ext = file_path.split('.')[-1].casefold()
             if file_ext == 'hex':
@@ -136,7 +136,7 @@ class HciProgrammer():
 
         minidriver_loaded = False
         if chip_erase_enable or file_path:
-            if is_hex:
+            if is_hex or file_path is None:
                 logging.info('Loading minidriver...')
                 self.open_com_init_mini_driver()
                 minidriver_loaded = True
@@ -204,4 +204,4 @@ class HciProgrammer():
                         f'HCD progress: {data_index}/{total_bytes} ({round(data_index/total_bytes*100, 1)}%)')
 
             logging.info('Finished programming!')
-            self.hci_port.close()
+        self.hci_port.close()
