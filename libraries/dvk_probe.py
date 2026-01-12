@@ -185,10 +185,12 @@ class DvkProbe(Probe):
         return DAPAccessCMSISDAP.ID
 
     def reset_target(self):
+        self.__probe_handle.connect()
         self.__probe_handle.assert_reset(True)
         time.sleep(0.050)
         self.__probe_handle.assert_reset(False)
         time.sleep(0.050)
+        self.__probe_handle.disconnect()
 
     def write_settings(self, settings: ProbeSettings):
         """DEPRECATED Write the probe settings to the EEPROM
