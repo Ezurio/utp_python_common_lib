@@ -176,6 +176,10 @@ class GapCommands:
     @property
     def CMD_GAP_CONNECT(self): return "gap_connect"
     @property
+    def CMD_GAP_SET_DEVICE_NAME(self): return "gap_set_device_name"
+    @property
+    def CMD_GAP_GET_DEVICE_NAME(self): return "gap_get_device_name"
+    @property
     def EVENT_GAP_CONNECTED(self): return "gap_connected"
     @property
     def EVENT_GAP_CONNECTION_UPDATED(self): return "gap_connection_updated"
