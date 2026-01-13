@@ -123,7 +123,7 @@ class Protocol():
     commands = {
         1: {
             "name": "protocol",
-            1: {"name": "set_parse_mode", "textname": "SPPM", "flashopt": 1, "parameters": [{"type": "uint8", "name": "mode", "textname": "M", "minimum": 0, "maximum": 1}], "returns": []},
+            1: {"name": "set_parse_mode", "textname": "SPPM", "flashopt": 1, "parameters": [{"type": "uint8", "name": "mode", "textname": "M", "minimum": 0, "maximum": 129}], "returns": []},
             2: {"name": "get_parse_mode", "textname": "GPPM", "flashopt": 1, "parameters": [], "returns": [{"type": "uint8", "name": "mode", "textname": "M"}]},
             3: {"name": "set_echo_mode", "textname": "SPEM", "flashopt": 1, "parameters": [{"type": "uint8", "name": "mode", "textname": "M", "minimum": 0, "maximum": 1}], "returns": []},
             4: {"name": "get_echo_mode", "textname": "GPEM", "flashopt": 1, "parameters": [], "returns": [{"type": "uint8", "name": "mode", "textname": "M"}]},
@@ -1025,7 +1025,7 @@ class API():
         self.defaults = dotdict()
         self.defaults.memscope = Packet.EZS_MEMORY_SCOPE_RAM  # used if argument=None
         self.defaults.rxtimeout = None  # wait forever, used if argument=False
-        self.defaults.apiformat = Packet.EZS_API_FORMAT_BINARY  # used if argument=None
+        self.defaults.apiformat = Packet.EZS_API_FORMAT_TEXT  # used if argument=None
         self.defaults.consumeecho = 1  # enabled, used if argument=None
 
         self.reset()

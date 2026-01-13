@@ -3,6 +3,13 @@ from SerialPort import SerialPort
 import ezserial_host_api.ezslib as ez_serial
 
 
+class ProtocolCommands:
+    @property
+    def CMD_PROTOCOL_SET_PARSE_MODE(self): return "protocol_set_parse_mode"
+    @property
+    def CMD_PROTOCOL_GET_PARSE_MODE(self): return "protocol_get_parse_mode"
+
+
 class SystemCommands:
     @property
     def CMD_PING(self): return "system_ping"
@@ -302,7 +309,7 @@ class EzSerialApiMode(Enum):
 
 class EzSerialPort(SerialPort, SystemCommands, BluetoothCommands,
                    SmpCommands, GapCommands, GattServerCommands,
-                   GattClientCommands, GpioCommands, CYSPPCommands):
+                   GattClientCommands, GpioCommands, CYSPPCommands, ProtocolCommands):
     """Serial port implementation to communicate with EZ-Serial devices
     """
     ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
