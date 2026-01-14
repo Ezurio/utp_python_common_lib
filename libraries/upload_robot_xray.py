@@ -16,7 +16,7 @@ XRAY_CLOUD_BASE_URL = "https://xray.cloud.getxray.app/api/v2"
 PROJECT_ID_PROD = '10277'
 ISSUE_TYPE_TEST_EXECUTION = '10058'
 
-def upload_robot_to_xray(machine: str, version: str, result_file: str):
+def upload_robot_to_xray(machine: str, version: str, result_file: str, test_plan: str = None):
     # Validate the input parameters
     if not machine or not version:
         raise Exception("machine and version parameters must be provided")
@@ -32,9 +32,10 @@ def upload_robot_to_xray(machine: str, version: str, result_file: str):
         raise Exception("XRAY_CLIENT_SECRET environment variable not set")
 
     # Get the test plan for the specified machine
-    test_plan = get_test_set_value(machine)
     if not test_plan:
-        raise Exception(f"Could not determine test plan ID for machine {machine}")
+        test_plan = get_test_set_value(machine)
+        if not test_plan:
+            raise Exception(f"Could not determine test plan ID for machine {machine}")
 
     print(f"Uploading Robot Results {result_file} to Xray Cloud for test plan {test_plan}")
     date = time.ctime()
@@ -91,7 +92,7 @@ def get_test_set_value(machine_name: str, test_plan_file: str ="test_plans.yml")
                     test_plan = f"PROD-{value['test_plan']}"
 
     except FileNotFoundError:
-        logging.warn(f"No {test_plan_file} file found")
+        logging.warning(f"No {test_plan_file} file found")
 
     except Exception as e:
         raise e
@@ -108,6 +109,8 @@ if __name__ == "__main__":
                         help="Firmware version to report test execution against")
     parser.add_argument('-r', '--results', required=True,
                         help="Robot Framework XML results file")
+    parser.add_argument('-t', '--test_plan', required=False, default=None,
+                        help="Test plan ID to report test execution against")
     args = parser.parse_args()
 
-    upload_robot_to_xray(args.machine, args.version, args.results)
+    upload_robot_to_xray(args.machine, args.version, args.results, args.test_plan)
