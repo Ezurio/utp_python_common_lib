@@ -85,12 +85,7 @@ class IfxBoard(DvkProbe):
             wait_for_boot (bool, optional): Wait for the boot delay. Defaults to True.
         """
         # open HCI port
-        if self.hci_uart:
-            self.hci_uart.close()
-        self._hci_uart = HciSerialPort()
-        logging.debug(f"Opening HCI port {self.hci_port_name}")
-        self.hci_uart.open(self.hci_port_name,
-                           HciProgrammer.HCI_DEFAULT_BAUDRATE)
+        self.open_hci_uart()
 
         # open dvk probe
         logging.info(f"Opening Dvk Probe ID {self.probe.id}")
@@ -102,6 +97,18 @@ class IfxBoard(DvkProbe):
         # reset dvk and module
         self.reset_module(wait_for_boot)
         self._is_initialized = True
+
+    def open_hci_uart(self, baud: int = HciProgrammer.HCI_DEFAULT_BAUDRATE):
+        """Open the HCI UART port.
+
+        Args:
+            baud (int): Baud rate to set
+        """
+        if self.hci_uart:
+            self.hci_uart.close()
+        self._hci_uart = HciSerialPort()
+        logging.debug(f"Opening HCI port {self.hci_port_name}")
+        self.hci_uart.open(self.hci_port_name, baud)
 
     def close_ports_and_reset(self, reset_probe: bool = True):
         """Close all UART ports and reset the probe and module
@@ -168,12 +175,7 @@ class IfxBoard(DvkProbe):
                 return ERR_BOARD_NOT_FOUND
 
         logging.info(f"Entering HCI download mode on board {board.probe.id}")
-        if board.hci_uart:
-            board.hci_uart.close()
-        board._hci_uart = HciSerialPort()
-        logging.debug(f"Opening HCI port {board.hci_port_name}")
-        board.hci_uart.open(board.hci_port_name,
-                           fw_cfg.hci_default_baudrate)
+        board.open_hci_uart(fw_cfg.hci_default_baudrate)
         board.probe.open()
         board.probe.reset_target()
         board.probe.close()
@@ -199,6 +201,10 @@ class IfxBoard(DvkProbe):
                                             fw_cfg.hci_default_baudrate, chip_erase, fw_cfg)
         self.hci_programmer.program_firmware(
             fw_cfg.hci_flash_baudrate, firmware, chip_erase, fw_cfg, verify)
+        # Reset the device after flashing
+        self.probe.open()
+        self.probe.reset_target()
+        self.probe.close()
         return ERR_OK
 
     def cancel_flash_firmware(self):
@@ -237,3 +243,31 @@ class IfxBoard(DvkProbe):
         self._hci_uart = SerialPort()
         self.hci_uart.open(
             self.hci_port_name, baud)
+
+    def read_bluetooth_address(self) -> str:
+        """Read the Bluetooth address from the device.
+
+        Returns:
+            str: Bluetooth address in format XX:XX:XX:XX:XX:XX
+        """
+        self.open_hci_uart()
+        bt_address = self.hci_uart.read_bd_addr()
+        self.hci_uart.close()
+        return bt_address
+
+    def hci_reset(self):
+        """Send HCI Reset command to the device."""
+        self.open_hci_uart()
+        self.hci_uart.send_hci_reset()
+        self.hci_uart.close()
+
+    def read_local_version_info(self) -> dict:
+        """Read the local version information from the device.
+
+        Returns:
+            dict: Local version information
+        """
+        self.open_hci_uart()
+        version_info = self.hci_uart.read_local_version_information()
+        self.hci_uart.close()
+        return version_info
