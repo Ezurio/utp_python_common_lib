@@ -294,6 +294,39 @@ class HciSerialPort():
             raise Exception('Failed to update baud rate')
         self.port.baudrate = baud
 
+    def read_bd_addr(self) -> str:
+        """Read the Bluetooth Device Address from the device
+
+        Returns:
+            str: Bluetooth Device Address in format XX:XX:XX:XX:XX:XX
+        """
+        (success, payload) = self.send_command_wait_response(
+            hci.command.CommandPacket(hci.command.CommandPacket.OpCode.READ_BD_ADDR))
+        if not success:
+            raise Exception('Failed to read BD_ADDR')
+        bd_addr_bytes = payload[0:6]
+        bd_addr = ':'.join(f'{b:02X}' for b in reversed(bd_addr_bytes))
+        return bd_addr
+
+    def read_local_version_information(self) -> dict:
+        """Read the Local Version Information from the device
+
+        Returns:
+            dict: Local Version Information fields
+        """
+        (success, payload) = self.send_command_wait_response(
+            hci.command.CommandPacket(hci.command.CommandPacket.OpCode.READ_LOCAL_VERSION_INFORMATION))
+        if not success:
+            raise Exception('Failed to read Local Version Information')
+        version_info = {
+            'HCI_version': payload[0],
+            'HCI_revision': int.from_bytes(payload[1:3], self.LITTLE_ENDIAN),
+            'LMP_version': payload[3],
+            'Manufacturer_name': int.from_bytes(payload[4:6], self.LITTLE_ENDIAN),
+            'LMP_subversion': int.from_bytes(payload[6:8], self.LITTLE_ENDIAN)
+        }
+        return version_info
+
     def close(self):
         """Close the serial port.
         """
