@@ -50,12 +50,12 @@ class Properties(Enum):
     DUT = -1
     BLE = 0
     UWB = 1
-    # The board's click interface is configured for the GPIO test
-    GPIO_CLICK = 2
-    # The board's click interface is configured for the I2C test
-    I2C_CLICK = 3
-    # The board's click interface is configured for the SPI test
-    SPI_CLICK = 4
+    # The board is configured for the GPIO test
+    GPIO = 2
+    # The board is configured for the I2C test
+    I2C = 3
+    # The board is configured for the SPI test
+    SPI = 4
     # The board is a USB dongle
     USB_DONGLE = 5
     # The board supports the Zephyr shell
