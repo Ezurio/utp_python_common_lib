@@ -1,7 +1,6 @@
 from probe import Probe
 import ctypes as c
 import logging
-import operator
 from pyocd.probe.pydapaccess import DAPAccessCMSISDAP
 from pyocd.core.helpers import ConnectHelper
 from pyocd.flash.file_programmer import FileProgrammer
@@ -110,8 +109,7 @@ class DvkProbe(Probe):
                                 f'COM port {comport.device} [{comport.serial_number}]')
 
                     # Sort the com ports so that the Zephyr port is first
-                    com_ports.sort(key=operator.attrgetter(
-                        'location', 'device'))
+                    com_ports.sort(key=lambda p: (p.location or '', p.device))
                     if len(com_ports) < 2:
                         logger.warning(
                             f'No COM ports found for probe {id}, skipping this probe')
@@ -120,8 +118,8 @@ class DvkProbe(Probe):
                     probes.append(
                         DvkProbe(dap_probe._unique_id,
                                  PROBE_PRODUCT_STRING,
-                                 {"uart0": com_ports[0].device,
-                                  "uart1": com_ports[1].device}))
+                                 {'uart0': com_ports[0].device,
+                                  'uart1': com_ports[1].device}))
                 else:
                     probes.append(
                         DvkProbe(dap_probe._unique_id, PROBE_PRODUCT_STRING))
