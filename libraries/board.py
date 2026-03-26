@@ -3,7 +3,6 @@ import inspect
 from lc_util import logger_get
 import platform
 import subprocess
-import time
 
 logger = logger_get(__name__)
 
@@ -70,6 +69,8 @@ class Properties(Enum):
     SMP_FILE = 10
     # The board supports the SMP image management group
     SMP_IMG = 11
+    # The board supports a modem
+    MODEM = 12
 
 
 class ComPort(dotdict):
@@ -119,7 +120,7 @@ class Board(object):
     #:
     #: Without scripts the board boots in about 4 seconds. With scripts 8+ seconds.
     BOOT_TIME_SECONDS_RS2XX = 10.0
-    
+
     def __init__(self, id: str = ''):
         self.__initialized = False
         self.__id = id
