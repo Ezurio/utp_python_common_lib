@@ -71,6 +71,8 @@ class Properties(Enum):
     SMP_IMG = 11
     # The board supports a modem
     MODEM = 12
+    # The board supports CAN bus communication
+    CAN = 13
 
 
 class ComPort(dotdict):
